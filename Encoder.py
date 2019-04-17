@@ -4,7 +4,6 @@ from Conv3DLSTMCell import Conv3DLSTMCell
 
 class Encoder(nn.Module):
     def __init__(self,
-                 #device,
                  input_channels,
                  hidden_channels,
                  kernel_size,
@@ -22,7 +21,6 @@ class Encoder(nn.Module):
                                         hidden_kernel_size,
                                         bias=bias
                                         )
-        # self.lstm_cell.to(device)
 
     def forward(self, input_batch):
         """
