@@ -2,7 +2,7 @@ import torch.nn as nn
 from Conv3DLSTMCell import Conv3DLSTMCell
 
 
-class Encoder(nn.Module):
+class LSTMEncoder(nn.Module):
     def __init__(self,
                  input_channels,
                  hidden_channels,
