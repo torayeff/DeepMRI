@@ -39,9 +39,9 @@ class Conv3DLSTMCell(nn.Module):
             bias=bias
         )
 
-    def forward(self, input_batch, hidden=(None, None)):
+    def forward(self, input_batch, hidden=None):
 
-        if (hidden[0] is None) or (hidden[1] is None):
+        if hidden is None:
 
             # get spatial dimensions after input to hidden convolution
             dim1 = math.floor((input_batch.shape[2] - self.kernel_size + 2 * self.padding) / self.stride + 1)
