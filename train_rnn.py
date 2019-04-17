@@ -1,7 +1,9 @@
 import torch
 import datasets
+import utils
 import time
-from LSTMEncoder import Encoder
+from Encoder import Encoder
+from Conv3DRNN import Conv3DGRUCell, Conv3DLSTMCell
 import torch.optim as optim
 
 
@@ -16,6 +18,7 @@ epochs = 1
 iters = 1
 
 model = Encoder(
+    Conv3DGRUCell,
     input_channels=1,
     hidden_channels=1,
     kernel_size=3,
@@ -23,6 +26,7 @@ model = Encoder(
     padding=1,
     hidden_kernel_size=3
 )
+
 model.to(device)
 
 for epoch in range(epochs):
