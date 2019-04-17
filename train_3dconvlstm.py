@@ -1,7 +1,7 @@
 import torch
 import datasets
 import time
-from Encoder import Encoder
+from LSTMEncoder import Encoder
 import torch.optim as optim
 
 
