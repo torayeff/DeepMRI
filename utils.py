@@ -31,3 +31,12 @@ def show_slices(slices):
     fig, axes = plt.subplots(1, len(slices))
     for i, slc in enumerate(slices):
         axes[i].imshow(slc.T, cmap="gray", origin="lower")
+
+
+def count_model_parameters(model):
+    """Counts total parameters of model."""
+
+    total = sum(p.numel() for p in model.parameters())
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    print("Total: {}, Trainable: {}".format(total, trainable))
