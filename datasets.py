@@ -25,7 +25,7 @@ class FMRIDataset(Dataset):
         """Fetches fMRI images."""
 
         x = nib.load(self.file_paths[idx]).get_fdata().transpose((3, 0, 1, 2))  # time, x, y, z
-        x = torch.tensor(x).unsqueeze(1).float()  # add channel dimension
+        x = torch.tensor(x).unsqueeze(1).float()  # add channel dimension, 5D data = time, channel, x, y, z
 
         return x
 

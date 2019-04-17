@@ -1,5 +1,8 @@
 import torch
 import datasets
+import time
+from Encoder import Encoder
+import torch.optim as optim
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -10,7 +13,27 @@ trainset = datasets.FMRIDataset('/home/agajan/data/')
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=6)
 
 epochs = 1
+iters = 1
 
-for epoch in epochs:
+model = Encoder(
+    input_channels=1,
+    hidden_channels=1,
+    kernel_size=3,
+    stride=1,
+    padding=1,
+    hidden_kernel_size=3
+)
+model.to(device)
+
+for epoch in range(epochs):
     for data in trainloader:
-        pass
+        print(data.shape)
+
+        start = time.time()
+        print("Iteration #{} has started".format(iters))
+        iters += 1
+
+        out = model(data.to(device))
+        print(out[0].shape)
+
+        break

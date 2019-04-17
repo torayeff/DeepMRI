@@ -1,4 +1,5 @@
 import torch.nn as nn
+import math
 
 
 class Conv3DLSTMCell(nn.Module):
@@ -13,6 +14,11 @@ class Conv3DLSTMCell(nn.Module):
 
         super().__init__()
 
+        self.hidden_channels = hidden_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+
         # input to hidden convolution for i, f, o, g all together
         self.conv_ih = nn.Conv3d(
             in_channels=input_channels,
@@ -21,7 +27,7 @@ class Conv3DLSTMCell(nn.Module):
             stride=stride,
             padding=padding,
             bias=bias
-        ),
+        )
 
         # hidden to hidden convolution for i, f, o, g all together
         # always stride=1 (keep spatial dimensions)
@@ -32,13 +38,26 @@ class Conv3DLSTMCell(nn.Module):
             kernel_size=hidden_kernel_size,
             stride=1,
             padding=hidden_padding,
-            dilation=1,
             bias=bias
         )
 
-    def forward(self, input, hidden):
+    def forward(self, input_batch, hidden=(None, None)):
+
+        if (hidden[0] is None) or (hidden[1] is None):
+
+            # get spatial dimensions after input to hidden convolution
+            dim1 = math.floor((input_batch.shape[2] - self.kernel_size + 2 * self.padding) / self.stride + 1)
+            dim2 = math.floor((input_batch.shape[3] - self.kernel_size + 2 * self.padding) / self.stride + 1)
+            dim3 = math.floor((input_batch.shape[4] - self.kernel_size + 2 * self.padding) / self.stride + 1)
+
+            # initialize states with zeros
+            h = input_batch.new_zeros(input_batch.shape[0], self.hidden_channels, dim1, dim2, dim3, requires_grad=False)
+            c = input_batch.new_zeros(input_batch.shape[0], self.hidden_channels, dim1, dim2, dim3, requires_grad=False)
+
+            hidden = (h, c)
+
         h_prev, c_prev = hidden
-        gates = self.conv_ih(input) + self.conv_hh(h_prev)
+        gates = self.conv_ih(input_batch) + self.conv_hh(h_prev)
 
         # dim=0 is batch, dim=1 is channel
         i, f, o, g = gates.chunk(4, dim=1)
