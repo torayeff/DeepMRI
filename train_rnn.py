@@ -3,7 +3,7 @@ import datasets
 import utils
 import time
 from Encoder import Encoder
-from Conv3DRNN import Conv3DGRUCell, Conv3DLSTMCell
+from Conv3DRNNCell import Conv3DGRUCell, Conv3DLSTMCell
 import torch.optim as optim
 
 
@@ -17,11 +17,14 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuff
 epochs = 1
 iters = 1
 
+# for 3d conv seq2seq: spatial dimensions of input
+# must be same with spatial dimensions of hidden
+
 model = Encoder(
     Conv3DGRUCell,
     input_channels=1,
-    hidden_channels=1,
-    kernel_size=3,
+    hidden_channels=3,
+    kernel_size=1,
     stride=1,
     padding=1,
     hidden_kernel_size=3

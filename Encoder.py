@@ -28,7 +28,7 @@ class Encoder(nn.Module):
         Args:
             input_batch: 6D tensor (batch, time, input_channel, W, H, D)
         Returns:
-            hidden tensor of shape (batch, time, hidden_channel, W, H, D).
+            Last hidden state tensor of 5D shape (batch, hidden_channel, W, H, D).
         """
 
         hidden = None

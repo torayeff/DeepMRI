@@ -40,6 +40,15 @@ class Conv3DLSTMCell(nn.Module):
         )
 
     def forward(self, input_batch, hidden=None):
+        """
+        Encodes sequence into latent representation.
+        Args:
+            input_batch: 5D tensor of shape (batch_size, channel, W, H, D)
+            hidden: tuple of (hidden, cell) states each of 5D shape (batch_size, hidden_channel, W, H, D)
+
+        Returns:
+            Next (hidden, cell) states of 5D shape.
+        """
 
         if hidden is None:
 
@@ -111,6 +120,16 @@ class Conv3DGRUCell(nn.Module):
         )
 
     def forward(self, input_batch, hidden=None):
+        """
+        Encodes sequence into latent representation.
+        Args:
+            input_batch: 5D tensor of shape (batch_size, channel, W, H, D)
+            hidden: 5D hidden state of shape (batch_size, hidden_channel, W, H, D)
+
+        Returns:
+            Next hidden state tensor of shape 5D.
+        """
+
         if hidden is None:
             # get spatial dimensions after input to hidden convolution
             dim1 = math.floor((input_batch.shape[2] - self.kernel_size + 2 * self.padding) / self.stride + 1)
