@@ -26,9 +26,9 @@ class Encoder(nn.Module):
         """
         Encodes sequence to latent representation.
         Args:
-            input_batch: 6D tensor (batch, time, channel, x, y, z)
+            input_batch: 6D tensor (batch, time, input_channel, W, H, D)
         Returns:
-            Last hidden state.
+            hidden tensor of shape (batch, time, hidden_channel, W, H, D).
         """
 
         hidden = None
