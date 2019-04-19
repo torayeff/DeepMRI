@@ -2,17 +2,15 @@
 Based on "Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation"
 https://arxiv.org/abs/1406.1078
 """
-import torch
 import torch.nn as nn
 
 
 class Seq2Seq(nn.Module):
-    def __init__(self, encoder, decoder, device):
+    def __init__(self, encoder, decoder):
         super().__init__()
 
         self.encoder = encoder
         self.decoder = decoder
-        self.device = device
 
     def forward(self, src_batch, trg_batch):
         """
