@@ -1,50 +1,53 @@
 import torch
 import torch.nn as nn
-import nibabel as nib
-import utils
+import datasets
+from ConvAE import ConvAE
 import time
-import SimpleAE
-
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("Device: ", device)
 
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
-anat = 'fmridata/KKI/1018959/wssd1018959_session_1_anat.nii.gz'
-img = nib.load(anat)
-img_data = img.get_fdata()
-print("Image shape: ", img_data.shape)
+batch_size = 64
+trainset = datasets.Slice3dDataset('/home/agajan/tensors_3d/')
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=6)
 
-# pad
-img_data = utils.pad_3d(img_data)
-print("Padded image shape: ", img_data.shape)
-
-# convert to batch tensor
-x_batch = torch.tensor(img_data).float().unsqueeze(0).unsqueeze(0)  # batch x C x D x H x W
-x_batch = x_batch.to(device)
-print("X batch shape: ", x_batch.shape)
-
-model = SimpleAE()
+model = ConvAE()
 model.to(device)
 model.train()
 
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters())
 
-iters = 100
+num_epochs = 1
+iters = 1
 
-for it in range(1, iters + 1):
-    tic = time.time()
+print("Training started for {} epochs".format(num_epochs))
 
-    optimizer.zero_grad()
-    out = model(x_batch)
-    loss = criterion(x_batch, out)
-    loss.backward()
-    optimizer.step()
+for epoch in range(1, num_epochs + 1):
+    running_loss = 0.0
+    epoch_start = time.time()
 
-    toc = time.time()
-    print("Iteration #{}, Loss: {}, Time: {:.5f}".format(it, loss.item(), toc - tic))
+    for data in trainloader:
+        iter_time = time.time()
 
-    if (it + 1) % 10 == 0:
-        torch.save(model.state_dict(), "models/iter_{}".format(it))
+        optimizer.zero_grad()
+        x = data.to(device)
+
+        out = model(x)
+        loss = criterion(x, out)
+        bp_time = time.time()
+        loss.backward()
+        optimizer.step()
+
+        running_loss += loss.item() * data.size(0)
+        print("Iter #{}, iter time: {:.5f}".format(iters, time.time() - iter_time))
+        iters += 1
+
+    if epoch % 10 == 0:
+        torch.save(model.state_dict(), "models/convae_epoch_{}".format(epoch))
+
+    epoch_loss = running_loss / len(trainset)
+    print("Epoch #{}|{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch, num_epochs, epoch_loss,
+                                                                             time.time() - epoch_start))

@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import datasets
-import utils
 import time
 from Encoder import Encoder
 from Decoder import Decoder

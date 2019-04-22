@@ -3,7 +3,6 @@ from torch.utils.data import Dataset
 import os
 import nibabel as nib
 import pickle
-import utils
 
 
 class FMRIDataset(Dataset):
@@ -43,7 +42,7 @@ class Slice3dDataset(Dataset):
 
         self.file_paths = []
         for file_name in os.listdir(root_dir):
-            if file_name.endswith('.nii.gz'):
+            if file_name.endswith('.tensor'):
                 self.file_paths.append(os.path.join(root_dir, file_name))
 
     def __len__(self):
@@ -57,8 +56,3 @@ class Slice3dDataset(Dataset):
 
         return x
 
-
-trainset = Slice3dDataset('/home/agajan/3d_np_data/')
-print(len(trainset))
-
-print(trainset[0].shape)
