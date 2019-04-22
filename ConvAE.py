@@ -14,6 +14,7 @@ class ConvAE(nn.Module):
                 stride=2,
                 padding=1
             ),
+            nn.BatchNorm3d(16),
             nn.ReLU(),
 
             # N x 16 x 25 x 29 x 24 --> N x 32 x 13 x 15 x 12
@@ -24,6 +25,7 @@ class ConvAE(nn.Module):
                 stride=2,
                 padding=1
             ),
+            nn.BatchNorm3d(32),
             nn.ReLU(),
 
             # N x 32 x 13 x 15 x 12 --> N x 64 x 7 x 8 x 6
@@ -34,6 +36,7 @@ class ConvAE(nn.Module):
                 stride=2,
                 padding=1
             ),
+            nn.BatchNorm3d(64),
             nn.ReLU(),
         )
 
@@ -47,6 +50,7 @@ class ConvAE(nn.Module):
                 padding=1,
                 output_padding=(0, 0, 1)
             ),
+            nn.BatchNorm3d(32),
             nn.ReLU(),
 
             # N x 32 x 13 x 15 x 12 --> N x 16 x 25 x 29 x 24
@@ -58,6 +62,7 @@ class ConvAE(nn.Module):
                 padding=1,
                 output_padding=(0, 0, 1)
             ),
+            nn.BatchNorm3d(16),
             nn.ReLU(),
 
             # N x 16 x 25 x 29 x 24 --> N x 1 x 49 x 58 x 47
@@ -68,7 +73,8 @@ class ConvAE(nn.Module):
                 stride=2,
                 padding=1,
                 output_padding=(0, 1, 0)
-            )
+            ),
+            nn.BatchNorm3d(1)
         )
 
     def forward(self, x):
