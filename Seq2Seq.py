@@ -28,7 +28,7 @@ class Seq2Seq(nn.Module):
 
         hidden_batch = context_batch
 
-        # first input is <sos> in learning phrase represntation
+        # first input is <sos> in learning phrase representation
         # in this case it is tensor of ones
         input_batch = trg_batch.new_ones(trg_batch[:, 0, :, :, :, :].shape)
 
