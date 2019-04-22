@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import datasets
+import Datasets
 from ConvAE import ConvAE
 import time
 
@@ -10,7 +10,8 @@ print("Device: ", device)
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
 batch_size = 64
-trainset = datasets.Slice3dDataset('/home/agajan/tensors_3d/train/')
+# trainset = Datasets.Slice3dDataset('/home/agajan/tensors_3d/train/')
+trainset = Datasets.Slice3dDataset('/home/agajan/smallset/')
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=6)
 print("Total examples: ", len(trainset))
 
@@ -19,9 +20,10 @@ model.to(device)
 model.train()
 
 criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters())
+optimizer = torch.optim.Adam(model.parameters(), eps=1e-04)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.99)
 
-num_epochs = 100
+num_epochs = 10
 iters = 1
 
 print("Training started for {} epochs".format(num_epochs))
@@ -38,7 +40,6 @@ for epoch in range(1, num_epochs + 1):
 
         out = model(x)
         loss = criterion(x, out)
-        bp_time = time.time()
         loss.backward()
         optimizer.step()
 

@@ -8,13 +8,11 @@ import pickle
 class FMRIDataset(Dataset):
     """Functional MRI dataset."""
 
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir):
         """
         Args:
             root_dir: Directory with all fMRI images.
         """
-
-        self.transform = transform
         self.file_paths = []
         for file_name in os.listdir(root_dir):
             if file_name.endswith('.nii.gz'):
@@ -29,22 +27,17 @@ class FMRIDataset(Dataset):
         x = nib.load(self.file_paths[idx]).get_fdata().transpose((3, 0, 1, 2))  # time, x, y, z
         x = torch.tensor(x).unsqueeze(1).float()  # add channel dimension, 5D data = time, channel, x, y, z
 
-        if self.transform:
-            x = self.transform(x)
-
         return x
 
 
 class Slice3dDataset(Dataset):
     """3D slice dataset"""
 
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir):
         """
         Args:
             root_dir: Directory with all 3d slices.
         """
-
-        self.transform = transform
         self.file_paths = []
         for file_name in os.listdir(root_dir):
             if file_name.endswith('.tensor'):
@@ -58,9 +51,6 @@ class Slice3dDataset(Dataset):
 
         with open(self.file_paths[idx], "rb") as f:
             x = pickle.load(f)
-
-        if self.transform:
-            x = self.transform(x)
 
         return x
 

@@ -6,82 +6,72 @@ class ConvAE(nn.Module):
         super().__init__()
 
         self.encoder = nn.Sequential(
-            # N x 1 x D x H x W --> N x 16 x D/2 x H/2 x W/2
+            # N x 1 x 49 x 58 x 47 --> N x 16 x 25 x 29 x 24
             nn.Conv3d(
                 in_channels=1,
                 out_channels=16,
                 kernel_size=3,
-                stride=1,
+                stride=2,
                 padding=1
             ),
             nn.ReLU(),
-            nn.MaxPool3d(kernel_size=2, stride=2),
 
-            # N x 16 x D/2 x H/2 x W/2 --> N x 32 x D/4 x H/4 x W/4
+            # N x 16 x 25 x 29 x 24 --> N x 32 x 13 x 15 x 12
             nn.Conv3d(
                 in_channels=16,
                 out_channels=32,
                 kernel_size=3,
-                stride=1,
+                stride=2,
                 padding=1
             ),
             nn.ReLU(),
-            nn.MaxPool3d(kernel_size=2, stride=2),
 
-            # N x 32 x D/4 x H/4 x W/4 --> N x 32 x D/8 x H/8 x W/8
+            # N x 32 x 13 x 15 x 12 --> N x 64 x 7 x 8 x 6
             nn.Conv3d(
                 in_channels=32,
-                out_channels=32,
+                out_channels=64,
                 kernel_size=3,
-                stride=1,
+                stride=2,
                 padding=1
             ),
             nn.ReLU(),
-            nn.MaxPool3d(kernel_size=2, stride=2)
         )
 
-        self.d_conv1 = nn.Sequential(
-            # N x 32 x D/8 x H/8 x W/8 --> N x 32 x D/4 x H/4 x W/4
-            nn.Conv3d(
-                in_channels=32,
+        self.decoder = nn.Sequential(
+            # N x 64 x 7 x 8 x 6 --> N x 32 x 13 x 15 x 12
+            nn.ConvTranspose3d(
+                in_channels=64,
                 out_channels=32,
                 kernel_size=3,
-                stride=1,
-                padding=1
+                stride=2,
+                padding=1,
+                output_padding=(0, 0, 1)
             ),
-            nn.ReLU()
-        )
+            nn.ReLU(),
 
-        self.d_conv2 = nn.Sequential(
-            # N x 32 x D/4 x H/4 x W/4 --> N x 16 x D/2 x H/2 x W/2
-            nn.Conv3d(
+            # N x 32 x 13 x 15 x 12 --> N x 16 x 25 x 29 x 24
+            nn.ConvTranspose3d(
                 in_channels=32,
                 out_channels=16,
                 kernel_size=3,
-                stride=1,
-                padding=1
+                stride=2,
+                padding=1,
+                output_padding=(0, 0, 1)
             ),
             nn.ReLU(),
-        )
 
-        self.d_conv3 = nn.Sequential(
-            # N x 16 x D/2 x H/2 x W/2 --> N x 1 x D x H x W
-            nn.Conv3d(
+            # N x 16 x 25 x 29 x 24 --> N x 1 x 49 x 58 x 47
+            nn.ConvTranspose3d(
                 in_channels=16,
                 out_channels=1,
                 kernel_size=3,
-                stride=1,
-                padding=1
-            ),
-            nn.ReLU(),
+                stride=2,
+                padding=1,
+                output_padding=(0, 1, 0)
+            )
         )
 
     def forward(self, x):
         out = self.encoder(x)
-        out = self.d_conv1(out)
-        out = nn.functional.interpolate(out, scale_factor=2, mode='trilinear', align_corners=False)
-        out = self.d_conv2(out)
-        out = nn.functional.interpolate(out, scale_factor=2, mode='trilinear', align_corners=False)
-        out = self.d_conv3(out)
-        out = nn.functional.interpolate(out, scale_factor=2, mode='trilinear', align_corners=False)
+        out = self.decoder(out)
         return out

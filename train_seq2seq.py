@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import datasets
+import Datasets
 import time
 from Encoder import Encoder
 from Decoder import Decoder
@@ -12,7 +12,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("Device: ", device)
 
 batch_size = 1
-trainset = datasets.FMRIDataset('/home/agajan/data1/')
+trainset = Datasets.FMRIDataset('/home/agajan/data1/')
 # trainset = datasets.FMRIDataset('/home/user/torayev/data1/')
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=6)
 
