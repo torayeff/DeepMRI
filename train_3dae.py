@@ -10,8 +10,9 @@ print("Device: ", device)
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
 batch_size = 64
-trainset = datasets.Slice3dDataset('/home/agajan/tensors_3d/')
+trainset = datasets.Slice3dDataset('/home/agajan/tensors_3d/train/')
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=6)
+print("Total examples: ", len(trainset))
 
 model = ConvAE()
 model.to(device)
@@ -20,7 +21,7 @@ model.train()
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters())
 
-num_epochs = 1
+num_epochs = 100
 iters = 1
 
 print("Training started for {} epochs".format(num_epochs))
@@ -42,7 +43,7 @@ for epoch in range(1, num_epochs + 1):
         optimizer.step()
 
         running_loss += loss.item() * data.size(0)
-        print("Iter #{}, iter time: {:.5f}".format(iters, time.time() - iter_time))
+        # print("Iter #{}, iter time: {:.5f}".format(iters, time.time() - iter_time))
         iters += 1
 
     if epoch % 10 == 0:
