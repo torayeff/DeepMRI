@@ -55,8 +55,8 @@ class ConvAE(nn.Module):
         self.d_conv2 = nn.Sequential(
             # N x 32 x D/4 x H/4 x W/4 --> N x 16 x D/2 x H/2 x W/2
             nn.Conv3d(
-                in_channels=16,
-                out_channels=1,
+                in_channels=32,
+                out_channels=16,
                 kernel_size=3,
                 stride=1,
                 padding=1
