@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 
-class Encoder(nn.Module):
+class RNNEncoder(nn.Module):
     def __init__(self,
                  rnn,
                  input_channels,

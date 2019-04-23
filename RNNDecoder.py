@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class Decoder(nn.Module):
+class RNNDecoder(nn.Module):
     def __init__(self,
                  rnn,
                  input_channels,

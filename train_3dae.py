@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 import Datasets
-from ConvAE import ConvAE
+from ConvEncoder import ConvEncoder
+from ConvDecoder import ConvDecoder
 import time
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -9,21 +10,31 @@ print("Device: ", device)
 
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
-batch_size = 64
-# trainset = Datasets.Slice3dDataset('/home/agajan/tensors_3d/train/')
-trainset = Datasets.Slice3dDataset('/home/agajan/smallset/')
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=6)
-print("Total examples: ", len(trainset))
+batch_size = 128
+trainset = Datasets.Slice3dDataset('/home/agajan/tensors_3d/train/')
+validset = Datasets.Slice3dDataset('/home/agajan/tensors_3d/valid/')
+# trainset = Datasets.Slice3dDataset('/home/agajan/smallset/')
 
-model = ConvAE()
-model.to(device)
-model.train()
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=6)
+validloader = torch.utils.data.DataLoader(validset, batch_size=batch_size, shuffle=False, num_workers=6)
+print("Total training examples: ", len(trainset))
+print("Total validation examples: ", len(validset))
+
+encoder = ConvEncoder()
+encoder.to(device)
+encoder.train()
+
+decoder = ConvDecoder()
+decoder.to(device)
+decoder.train()
 
 criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), eps=1e-04)
-optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.99)
+parameters = list(encoder.parameters()) + list(decoder.parameters())
 
-num_epochs = 10
+optimizer = torch.optim.Adam(parameters)
+# optimizer = torch.optim.SGD(parameters, lr=0.0002, momentum=0.9)
+
+num_epochs = 50
 iters = 1
 
 print("Training started for {} epochs".format(num_epochs))
@@ -38,18 +49,32 @@ for epoch in range(1, num_epochs + 1):
         optimizer.zero_grad()
         x = data.to(device)
 
-        out = model(x)
+        out = decoder(encoder(x))
+
         loss = criterion(x, out)
         loss.backward()
         optimizer.step()
 
         running_loss += loss.item() * data.size(0)
-        # print("Iter #{}, iter time: {:.5f}".format(iters, time.time() - iter_time))
+        # print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
         iters += 1
 
-    if epoch % 10 == 0:
-        torch.save(model.state_dict(), "models/convae_epoch_{}".format(epoch))
+    if epoch % 5 == 0:
+        torch.save(encoder.state_dict(), "models/conv_encoder_epoch_{}".format(epoch))
+        torch.save(decoder.state_dict(), "models/conv_decoder_epoch_{}".format(epoch))
 
     epoch_loss = running_loss / len(trainset)
     print("Epoch #{}|{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch, num_epochs, epoch_loss,
                                                                              time.time() - epoch_start))
+
+# print("----------------Validation----------------")
+# with torch.no_grad():
+#     running_loss = 0.0
+#     model.eval()
+#     for data in validloader:
+#         x = data.to(device)
+#         out = model(x)
+#         loss = criterion(x, out)
+#         print("batch loss: {}".format(loss.item()))
+#         running_loss += loss.item() * data.size(0)
+#     print("Average loss: {}".format(running_loss / len(validset)))

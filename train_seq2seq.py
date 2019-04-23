@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import Datasets
 import time
-from Encoder import Encoder
-from Decoder import Decoder
+from RNNEncoder import RNNEncoder
+from RNNDecoder import RNNDecoder
 from Seq2Seq import Seq2Seq
 from Conv3DRNNCell import Conv3DGRUCell
 import torch.optim as optim
@@ -19,7 +19,7 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuff
 # for 3d conv seq2seq: spatial dimensions of input
 # must be same with spatial dimensions of hidden
 
-encoder = Encoder(
+encoder = RNNEncoder(
     Conv3DGRUCell,
     input_channels=1,
     hidden_channels=1,
@@ -29,7 +29,7 @@ encoder = Encoder(
     hidden_kernel_size=3
 )
 
-decoder = Decoder(
+decoder = RNNDecoder(
     Conv3DGRUCell,
     input_channels=1,
     hidden_channels=1,
