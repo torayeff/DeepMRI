@@ -50,7 +50,36 @@ class Slice3dDataset(Dataset):
         """Fetches 3d slices."""
 
         with open(self.file_paths[idx], "rb") as f:
-            x = pickle.load(f)
+            x = pickle.load(f)  # channel=1 x w x h x
 
         return x
 
+
+class Feature4dDataset(Dataset):
+    """4D feature dataset."""
+
+    def __init__(self, root_dir, max_seq_len=None):
+        """
+        Args:
+            root_dir: Directory with all 4d features images.
+        """
+        self.file_paths = []
+        for file_name in os.listdir(root_dir):
+            if file_name.endswith('.4dtensor'):
+                self.file_paths.append(os.path.join(root_dir, file_name))
+
+        self.max_seq_len = max_seq_len
+
+    def __len__(self):
+        return len(self.file_paths)
+
+    def __getitem__(self, idx):
+        """Fetches feature tensors."""
+
+        with open(self.file_paths[idx], "rb") as f:
+            x = pickle.load(f)  # time x channel x w x h x d
+
+        if self.max_seq_len:
+            return x[:self.max_seq_len]
+
+        return x
