@@ -5,11 +5,12 @@ import nibabel as nib
 import pickle
 
 
-class FMRIDataset(Dataset):
+class FMRIChannelDataset(Dataset):
     """Functional MRI dataset."""
 
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, channels):
         """
+        Cast time as channel.
         Args:
             root_dir: Directory with all fMRI images.
         """
@@ -18,14 +19,16 @@ class FMRIDataset(Dataset):
             if file_name.endswith('.nii.gz'):
                 self.file_paths.append(os.path.join(root_dir, file_name))
 
+        self.channels = channels
+
     def __len__(self):
         return len(self.file_paths)
 
     def __getitem__(self, idx):
         """Fetches fMRI images."""
 
-        x = nib.load(self.file_paths[idx]).get_fdata().transpose((3, 0, 1, 2))  # time, x, y, z
-        x = torch.tensor(x).unsqueeze(1).float()  # add channel dimension, 5D data = time, channel, x, y, z
+        x = nib.load(self.file_paths[idx]).get_fdata().transpose((3, 0, 1, 2))  # time=channel, x, y, z
+        x = torch.tensor(x).float()[:self.channels]  # time=channel, x, y, z
 
         return x
 
