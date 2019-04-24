@@ -2,7 +2,7 @@ import torch.nn as nn
 
 
 class ConvDecoder(nn.Module):
-    def __init__(self):
+    def __init__(self, out_channels):
         super().__init__()
         self.decode = nn.Sequential(
             # N x 64 x 7 x 8 x 6 --> N x 32 x 13 x 15 x 12
@@ -32,7 +32,7 @@ class ConvDecoder(nn.Module):
             # N x 16 x 25 x 29 x 24 --> N x 1 x 49 x 58 x 47
             nn.ConvTranspose3d(
                 in_channels=16,
-                out_channels=1,
+                out_channels=out_channels,
                 kernel_size=3,
                 stride=2,
                 padding=1,

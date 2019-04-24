@@ -2,13 +2,13 @@ import torch.nn as nn
 
 
 class ConvEncoder(nn.Module):
-    def __init__(self):
+    def __init__(self, input_channels):
         super().__init__()
 
         self.encode = nn.Sequential(
             # N x 1 x 49 x 58 x 47 --> N x 16 x 25 x 29 x 24
             nn.Conv3d(
-                in_channels=1,
+                in_channels=input_channels,
                 out_channels=16,
                 kernel_size=3,
                 stride=2,
