@@ -34,12 +34,12 @@ class ADHDFeatureDataset(Dataset):
 
         fk = self.file_names[idx][:-9] + ".nii.gz"
 
-        y = self.df[self.df['fmri'] == fk]['dx'].item()
+        y = int(self.df[self.df['fmri'] == fk]['dx'].item())
 
         if self.binary and (y > 1):
             y = 1
 
-        return {'x': x, 'y': y, 'fk': fk}
+        return x, y
 
 
 class FMRIChannelDataset(Dataset):
