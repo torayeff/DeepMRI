@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 
 
 def calc_conv_dim(w, k, s, p):
@@ -40,3 +41,32 @@ def count_model_parameters(model):
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     print("Total: {}, Trainable: {}".format(total, trainable))
+
+
+def evaluate_adhd_classifier(classifier, rnn_encoder, criterion, valloader, device):
+    """Evaluate ADHD Classifier."""
+    with torch.no_grad():
+        running_loss = 0.0
+        running_corrects = 0
+        rnn_encoder.eval()
+        classifier.eval()
+
+        total = 0
+        for x, y in valloader:
+            x = x.to(device)
+            y = y.to(device)
+            features = rnn_encoder(x)
+
+            outputs = classifier(features)
+            _, preds = torch.max(outputs, 1)
+            loss = criterion(outputs, y)
+
+            running_loss += loss.item() * y.size(0)
+            running_corrects += torch.sum(preds == y)
+
+            total += y.size(0)
+
+        avg_loss = running_loss / total
+        acc = running_corrects.double() / total
+
+        print("Total examples: {}, Loss: {:.5f}, Accuracy: {:.5f}".format(total, avg_loss, acc))
