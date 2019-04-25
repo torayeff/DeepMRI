@@ -3,6 +3,43 @@ from torch.utils.data import Dataset
 import os
 import nibabel as nib
 import pickle
+import pandas as pd
+
+
+class ADHDFeatureDataset(Dataset):
+    """ADHD features dataset."""
+
+    def __init__(self, root_dir, csv_file, seq_len=None, binary=True, sep=','):
+        self.file_paths = []
+        self.root_dir = root_dir
+        self.csv_file = csv_file
+        self.seq_len = seq_len
+        self.binary = binary
+
+        self.df = pd.read_csv(csv_file, sep=sep)
+
+        for file_name in os.listdir(root_dir):
+            if file_name.endswith('.4dtensor'):
+                self.file_paths.append(os.path.join(root_dir, file_name))
+
+    def __len__(self):
+        return len(self.file_paths)
+
+    def __getitem__(self, idx):
+        with open(self.file_paths[idx], "rb") as f:
+            x = pickle.load(f)  # time x channel x w x h x d
+
+        if self.seq_len:
+            x = x[:self.seq_len]
+
+        fk = self.file_paths[idx][:-9] + ".nii.gz"
+
+        y = int(self.df[self.df['fmri'] == fk]['dx'].item())
+
+        if self.binary and (y > 1):
+            y = 1
+
+        return {'x': x, 'y': y, 'fk': fk}
 
 
 class FMRIChannelDataset(Dataset):
