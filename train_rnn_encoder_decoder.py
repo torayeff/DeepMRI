@@ -11,7 +11,7 @@ print("Device: ", device)
 
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
-batch_size = 4
+batch_size = 16
 trainset = Datasets.Feature4dDataset('/home/agajan/feature_tensors_4d/train/', max_seq_len=50)
 validset = Datasets.Feature4dDataset('/home/agajan/feature_tensors_4d/valid/', max_seq_len=50)
 # trainset = Datasets.Feature4dDataset('/home/agajan/smallset/', max_seq_len=50)
@@ -24,7 +24,7 @@ print("Total validation examples: ", len(validset))
 encoder = RNNEncoder(
     Conv3DGRUCell,
     input_channels=64,
-    hidden_channels=512,
+    hidden_channels=128,
     kernel_size=3,
     stride=1,
     padding=1,
@@ -36,7 +36,7 @@ encoder.train()
 decoder = RNNDecoder(
     Conv3DGRUCell,
     input_channels=64,
-    hidden_channels=512,
+    hidden_channels=128,
     kernel_size=3,
     stride=1,
     padding=1,
@@ -47,8 +47,8 @@ decoder = RNNDecoder(
 decoder.to(device)
 decoder.train()
 
-# encoder.load_state_dict(torch.load('models/step1_rnn_1_encoder_epoch_140'))
-# decoder.load_state_dict(torch.load('models/step1_rnn_1_decoder_epoch_140'))
+encoder.load_state_dict(torch.load('models/adam_rnn_encoder_epoch_69'))
+decoder.load_state_dict(torch.load('models/adam_rnn_decoder_epoch_69'))
 
 criterion = nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
@@ -94,13 +94,13 @@ for epoch in range(1, num_epochs + 1):
         # -------------------Seq2Seq End------------------- #
 
         running_loss += loss.item() * data.size(0)
-        # print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
+        print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
         iters += 1
     scheduler.step(running_loss)
 
-    if epoch % 1 == 0:
-        torch.save(encoder.state_dict(), "models/rnn_512_encoder_epoch_{}".format(epoch))
-        torch.save(decoder.state_dict(), "models/rnn_512_decoder_epoch_{}".format(epoch))
+    # if epoch % 1 == 0:
+    #     torch.save(encoder.state_dict(), "models/rnn_512_encoder_epoch_{}".format(epoch + 3))
+    #     torch.save(decoder.state_dict(), "models/rnn_512_decoder_epoch_{}".format(epoch + 3))
 
     epoch_loss = running_loss / len(trainset)
     print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch, num_epochs, epoch_loss,
