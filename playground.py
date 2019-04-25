@@ -10,6 +10,22 @@ from ConvEncoder import ConvEncoder
 import time
 from ConvAE import ConvAE
 
+# minmin = 1000
+# maxmax = 0
+#
+# paths = os.listdir('/home/agajan/data/')
+# for path in paths:
+#     x = nib.load('/home/agajan/data/' + path)
+#     sh = x.shape[3]
+#     print(sh)
+#     if sh < minmin:
+#         minmin = sh
+#
+#     if sh > maxmax:
+#         maxmax = sh
+#
+# print(minmin, maxmax)
+
 
 # ----------------------------------------make 4d dataset----------------------------------------
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -51,6 +67,32 @@ from ConvAE import ConvAE
 #             pickle.dump(out_4d, f)
 #         # break
 
+# split train and valid
+# data_path = '/home/agajan/feature_tensors_4d/'
+# train_path = '/home/agajan/feature_tensors_4d/train/'
+# valid_path = '/home/agajan/feature_tensors_4d/valid/'
+#
+# all_files = []
+# for f in os.listdir(data_path):
+#     if f.endswith('.4dtensor'):
+#         all_files.append(f)
+#
+# print(all_files[:2])
+# random.shuffle(all_files)
+#
+# cutoff = int(len(all_files) * 0.9)
+# train = all_files[:cutoff]
+# valid = all_files[cutoff:]
+#
+# for f in train:
+#     src = os.path.join(data_path, f)
+#     dst = os.path.join(train_path, f)
+#     shutil.move(src, dst)
+#
+# for f in valid:
+#     src = os.path.join(data_path, f)
+#     dst = os.path.join(valid_path, f)
+#     shutil.move(src, dst)
 
 # ----------------------------------------make 3d dataset----------------------------------------
 # # slice saver

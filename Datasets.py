@@ -10,7 +10,7 @@ class ADHDFeatureDataset(Dataset):
     """ADHD features dataset."""
 
     def __init__(self, root_dir, csv_file, seq_len=None, binary=True, sep=','):
-        self.file_paths = []
+        self.file_names = []
         self.root_dir = root_dir
         self.csv_file = csv_file
         self.seq_len = seq_len
@@ -20,21 +20,21 @@ class ADHDFeatureDataset(Dataset):
 
         for file_name in os.listdir(root_dir):
             if file_name.endswith('.4dtensor'):
-                self.file_paths.append(os.path.join(root_dir, file_name))
+                self.file_names.append(file_name)
 
     def __len__(self):
-        return len(self.file_paths)
+        return len(self.file_names)
 
     def __getitem__(self, idx):
-        with open(self.file_paths[idx], "rb") as f:
+        with open(os.path.join(self.root_dir, self.file_names[idx]), "rb") as f:
             x = pickle.load(f)  # time x channel x w x h x d
 
         if self.seq_len:
             x = x[:self.seq_len]
 
-        fk = self.file_paths[idx][:-9] + ".nii.gz"
+        fk = self.file_names[idx][:-9] + ".nii.gz"
 
-        y = int(self.df[self.df['fmri'] == fk]['dx'].item())
+        y = self.df[self.df['fmri'] == fk]['dx'].item()
 
         if self.binary and (y > 1):
             y = 1
