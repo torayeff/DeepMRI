@@ -19,7 +19,7 @@ class ADHDFeatureDataset(Dataset):
         self.df = pd.read_csv(csv_file, sep=sep)
 
         for file_name in os.listdir(root_dir):
-            if file_name.endswith('.4dtensor'):
+            if file_name.endswith('.4dtensor') and ((file_name[:-9] + '.nii.gz') in self.df['fmri'].values):
                 self.file_names.append(file_name)
 
     def __len__(self):
