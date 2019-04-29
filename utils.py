@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import time
+import itertools
 
 
 def calc_conv_dim(w, k, s, p):
@@ -47,6 +48,9 @@ def count_model_parameters(model):
 
 def evaluate_adhd_classifier(classifier, rnn_encoder, criterion, dataloader, device):
     """Evaluate ADHD Classifier."""
+
+    all_labels, all_preds = [], []
+
     with torch.no_grad():
         running_loss = 0.0
         running_corrects = 0
@@ -63,6 +67,9 @@ def evaluate_adhd_classifier(classifier, rnn_encoder, criterion, dataloader, dev
             _, preds = torch.max(outputs, 1)
             loss = criterion(outputs, y)
 
+            all_labels.append(y.cpu().numpy())
+            all_preds.append(preds.cpu().numpy())
+
             running_loss += loss.item() * y.size(0)
             running_corrects += torch.sum(preds == y)
 
@@ -72,6 +79,11 @@ def evaluate_adhd_classifier(classifier, rnn_encoder, criterion, dataloader, dev
         acc = running_corrects.double() / total
 
         print("Total examples: {}, Loss: {:.5f}, Accuracy: {:.5f}".format(total, avg_loss, acc))
+
+        all_labels = np.hstack(all_labels)
+        all_preds = np.hstack(all_preds)
+
+        return all_labels, all_preds
 
 
 def evaluate_rnn_encoder_decoder(encoder, decoder, criterion, dataloader, device):
@@ -133,3 +145,39 @@ def get_np_dataset(rnn_encoder, dataloader, device):
             count += 1
 
         return np.array(features_array), np.array(y_array)
+
+
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+
+    Credits: https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+    """
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    plt.figure(figsize=(6, 6))
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
