@@ -112,3 +112,24 @@ def evaluate_rnn_encoder_decoder(encoder, decoder, criterion, dataloader, device
             total += data.size(0)
 
         print("Average loss: {}".format(running_loss / total))
+
+
+def get_np_dataset(rnn_encoder, dataloader, device):
+    rnn_encoder.eval()
+    features_array = []
+    y_array = []
+
+    count = 1
+    with torch.no_grad():
+        for x, y in dataloader:
+            x = x.to(device)
+            y = y.to(device)
+
+            features = rnn_encoder(x).detach().cpu().view(-1).numpy()
+            features_array.append(list(features))
+            y_array.append(y.item())
+
+            print(count)
+            count += 1
+
+        return np.array(features_array), np.array(y_array)

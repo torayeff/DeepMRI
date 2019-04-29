@@ -9,13 +9,18 @@ from shutil import copyfile
 from ConvEncoder import ConvEncoder
 import time
 from ConvAE import ConvAE
+import pandas as pd
+
+# df = pd.read_csv("adhd_testset.csv")
+# print(len(df))
+# print(len(df[df['dx'] == 0]))
 
 # minmin = 1000
 # maxmax = 0
-#
-# paths = os.listdir('/home/agajan/data/')
+
+# paths = os.listdir('/home/agajan/test_data/')
 # for path in paths:
-#     x = nib.load('/home/agajan/data/' + path)
+#     x = nib.load('/home/agajan/test_data/' + path)
 #     sh = x.shape[3]
 #     print(sh)
 #     if sh < minmin:
@@ -28,44 +33,44 @@ from ConvAE import ConvAE
 
 
 # ----------------------------------------make 4d dataset----------------------------------------
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print("Device: ", device)
-
-data_path = '/home/agajan/test_data/'
-save_path = '/home/agajan/test_feature_tensors_4d/'
-image_names = list(filter(lambda x: x.endswith('.nii.gz'), os.listdir(data_path)))
-image_paths = [os.path.join(data_path, img_name) for img_name in image_names]
-print('Total 4D images: ', len(image_paths))
-
-model = ConvEncoder(1)
-model.to(device)
-model.load_state_dict(torch.load('/home/agajan/DeepMRI/models/final_conv_encoder'))
-model.eval()
-
-count = 1
-total = len(image_paths)
-with torch.no_grad():
-
-    for image_name in image_names:
-        st = time.time()
-
-        img_4d = nib.load(os.path.join(data_path, image_name)).get_fdata()
-
-        out_4d = torch.zeros(img_4d.shape[3], 64, 7, 8, 6)
-
-        for i in range(img_4d.shape[3]):
-            slice_3d = torch.tensor(img_4d[:, :, :, i]).unsqueeze(0).unsqueeze(0).float()# batch x channel x w x h x d
-            feature = model(slice_3d.to(device)).cpu().squeeze()
-            out_4d[i, :, :, :, :] = feature
-
-        print("{}/{} time: {:.5f}".format(count, total, time.time() - st))
-        count += 1
-        new_path = os.path.join(save_path, image_name[:-7] + '.4dtensor')
-        # print(new_path)
-        # print(out_4d.shape)
-        with open(new_path, "wb") as f:
-            pickle.dump(out_4d, f)
-        # break
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# print("Device: ", device)
+#
+# data_path = '/home/agajan/test_data/'
+# save_path = '/home/agajan/test_feature_tensors_4d/'
+# image_names = list(filter(lambda x: x.endswith('.nii.gz'), os.listdir(data_path)))
+# image_paths = [os.path.join(data_path, img_name) for img_name in image_names]
+# print('Total 4D images: ', len(image_paths))
+#
+# model = ConvEncoder(1)
+# model.to(device)
+# model.load_state_dict(torch.load('/home/agajan/DeepMRI/models/final_conv_encoder'))
+# model.eval()
+#
+# count = 1
+# total = len(image_paths)
+# with torch.no_grad():
+#
+#     for image_name in image_names:
+#         st = time.time()
+#
+#         img_4d = nib.load(os.path.join(data_path, image_name)).get_fdata()
+#
+#         out_4d = torch.zeros(img_4d.shape[3], 64, 7, 8, 6)
+#
+#         for i in range(img_4d.shape[3]):
+#             slice_3d = torch.tensor(img_4d[:, :, :, i]).unsqueeze(0).unsqueeze(0).float()# batch x channel x w x h x d
+#             feature = model(slice_3d.to(device)).cpu().squeeze()
+#             out_4d[i, :, :, :, :] = feature
+#
+#         print("{}/{} time: {:.5f}".format(count, total, time.time() - st))
+#         count += 1
+#         new_path = os.path.join(save_path, image_name[:-7] + '.4dtensor')
+#         # print(new_path)
+#         # print(out_4d.shape)
+#         with open(new_path, "wb") as f:
+#             pickle.dump(out_4d, f)
+#         # break
 
 # split train and valid
 # data_path = '/home/agajan/feature_tensors_4d/'

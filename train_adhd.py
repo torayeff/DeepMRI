@@ -22,11 +22,18 @@ validset = Datasets.ADHDFeatureDataset('/home/agajan/feature_tensors_4d/valid/',
                                        seq_len=50,
                                        binary=True)
 
+testset = Datasets.ADHDFeatureDataset('/home/agajan/test_feature_tensors_4d/',
+                                      csv_file='/home/agajan/DeepMRI/adhd_testset.csv',
+                                      seq_len=50,
+                                      binary=True)
+
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=6)
 validloader = torch.utils.data.DataLoader(validset, batch_size=batch_size, shuffle=False, num_workers=6)
+testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=1)
 
 print("Total training examples: ", len(trainset))
 print("Total validation examples: ", len(validset))
+print("Total test examples: ", len(testset))
 
 rnn_encoder = RNNEncoder(
     Conv3DGRUCell,
@@ -38,28 +45,32 @@ rnn_encoder = RNNEncoder(
     hidden_kernel_size=3
 )
 rnn_encoder.to(device)
-rnn_encoder.train()
-rnn_encoder.load_state_dict(torch.load('models/final_adam_rnn_encoder_199'))
+rnn_encoder.load_state_dict(torch.load('models/final_adam_rnn_encoder_401'))
 
-classifier = ADHDClassifier(128, 7, 8, 6)
+classifier = ADHDClassifier(128, 7, 8, 6, num_labels=2, p=0.0)
 classifier.to(device)
-classifier.train()
+# classifier.load_state_dict(torch.load('models/final_adhd_classifier'))
 
 for param in rnn_encoder.parameters():
     param.requires_grad = False
     rnn_encoder.eval()
 
-parameters = list(classifier.parameters()) #+ list(rnn_encoder.parameters())
+parameters = list(classifier.parameters())  # + list(rnn_encoder.parameters())
 
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(parameters, lr=0.0001)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True, factor=0.5)
-num_epochs = 100
-iters = 100
+optimizer = torch.optim.Adam(parameters)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=1, verbose=True, factor=0.5)
+num_epochs = 60
+iters = 1
+
+classifier.load_state_dict(torch.load('models/final_adhd_classifier'))
 
 print("Training started for {} epochs".format(num_epochs))
 
 for epoch in range(1, num_epochs + 1):
+    classifier.train()
+    # rnn_encoder.train()
+
     running_loss = 0.0
     epoch_start = time.time()
 
@@ -83,19 +94,20 @@ for epoch in range(1, num_epochs + 1):
 
     scheduler.step(running_loss)
 
-    # if epoch % 1 == 0:
-    #     torch.save(rnn_encoder.state_dict(), "models/adhd_classifier_encoder_epoch_{}".format(epoch))
-    #     torch.save(classifier.state_dict(), "models/adhd_classifier_epoch_{}".format(epoch))
+    if epoch % 1 == 0:
+        # torch.save(rnn_encoder.state_dict(), "models/adhd_classifier_encoder_epoch_{}".format(epoch))
+        torch.save(classifier.state_dict(), "models/adhd_classifier_epoch_{}".format(epoch))
 
     epoch_loss = running_loss / len(trainset)
     print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch, num_epochs, epoch_loss,
                                                                              time.time() - epoch_start))
 
     # evaluate after each epoch
-    if epoch % 10 == 0:
-        print("Statistics on test set: ")
-        utils.evaluate_adhd_classifier(classifier, rnn_encoder, criterion, trainloader, device)
-
-        print("Statistics on validation set: ")
-        utils.evaluate_adhd_classifier(classifier, rnn_encoder, criterion, validloader, device)
+    if epoch % 1 == 0:
+        pass
+        # print("Statistics on train set: ")
+        # utils.evaluate_adhd_classifier(classifier, rnn_encoder, criterion, trainloader, device)
+        #
+        # print("Statistics on validation set: ")
+        # utils.evaluate_adhd_classifier(classifier, rnn_encoder, criterion, validloader, device)
 
