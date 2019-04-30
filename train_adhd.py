@@ -63,8 +63,6 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=1, ve
 num_epochs = 60
 iters = 1
 
-classifier.load_state_dict(torch.load('models/final_adhd_classifier'))
-
 print("Training started for {} epochs".format(num_epochs))
 
 for epoch in range(1, num_epochs + 1):
