@@ -28,15 +28,20 @@ def pad_3d(img_to_pad, target_dims=(256, 256, 256)):
     return np.pad(img_to_pad, pads, 'constant')
 
 
-def show_slices(slices, suptitle="Visualization", titles=('Saggital', 'Coronal', 'Axial'), figsize=(10, 5)):
+def show_slices(slices,
+                suptitle="Visualization",
+                titles=('Saggital', 'Coronal', 'Axial'),
+                figsize=(10, 5),
+                fontsize=24):
     """ Function to display row of image slices """
 
     plt.rcParams["figure.figsize"] = figsize
     fig, axes = plt.subplots(1, len(slices))
-    fig.suptitle(suptitle)
+    fig.suptitle(suptitle, fontsize=fontsize)
     for i, slc in enumerate(slices):
         axes[i].set_title(titles[i])
         axes[i].imshow(slc.T, cmap="gray", origin="lower")
+    plt.tight_layout()
 
 
 def count_model_parameters(model):
