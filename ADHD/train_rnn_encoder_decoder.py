@@ -1,11 +1,9 @@
 import torch
 import torch.nn as nn
-import Datasets
-from RNNEncoder import RNNEncoder
-from RNNDecoder import RNNDecoder
-from Conv3DRNNCell import Conv3DGRUCell
-import utils
-import time
+from deepmri import Datasets, utils
+from deepmri.RNNEncoder import RNNEncoder
+from deepmri.RNNDecoder import RNNDecoder
+from deepmri.Conv3DRNNCell import Conv3DGRUCell
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("Device: ", device)
@@ -109,12 +107,12 @@ criterion = nn.MSELoss()
 #     print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch + 401, num_epochs, epoch_loss,
 #                                                                              time.time() - epoch_start))
 
-print("----------------Evaluation----------------")
-print("Statistics on train set:")
-utils.evaluate_rnn_encoder_decoder(encoder, decoder, criterion, trainloader, device)
-
-print("Statistics on validation set:")
-utils.evaluate_rnn_encoder_decoder(encoder, decoder, criterion, validloader, device)
-
-print("Statistics on test set:")
-utils.evaluate_rnn_encoder_decoder(encoder, decoder, criterion, testloader, device)
+# print("----------------Evaluation----------------")
+# print("Statistics on train set:")
+# utils.evaluate_rnn_encoder_decoder(encoder, decoder, criterion, trainloader, device)
+#
+# print("Statistics on validation set:")
+# utils.evaluate_rnn_encoder_decoder(encoder, decoder, criterion, validloader, device)
+#
+# print("Statistics on test set:")
+# utils.evaluate_rnn_encoder_decoder(encoder, decoder, criterion, testloader, device)

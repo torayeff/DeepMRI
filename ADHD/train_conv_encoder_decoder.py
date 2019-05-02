@@ -1,9 +1,8 @@
 import torch
 import torch.nn as nn
-import Datasets
-from ConvEncoder import ConvEncoder
-from ConvDecoder import ConvDecoder
-import time
+from deepmri import Datasets
+from ADHD.ConvEncoder import ConvEncoder
+from ADHD.ConvDecoder import ConvDecoder
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("Device: ", device)

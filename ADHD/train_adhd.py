@@ -1,10 +1,9 @@
 import torch
 import torch.nn as nn
-import Datasets
-from RNNEncoder import RNNEncoder
-from Conv3DRNNCell import Conv3DGRUCell
-from ADHDClassifier import ADHDClassifier
-import utils
+from deepmri import Datasets
+from deepmri.RNNEncoder import RNNEncoder
+from deepmri.Conv3DRNNCell import Conv3DGRUCell
+from ADHD.ADHDClassifier import ADHDClassifier
 import time
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

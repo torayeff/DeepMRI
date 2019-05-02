@@ -1,14 +1,14 @@
 import nibabel as nib
-import utils
+import deepmri.utils
 import os
 import pickle
 import torch
 import random
 import shutil
 from shutil import copyfile
-from ConvEncoder import ConvEncoder
+from ADHD.ConvEncoder import ConvEncoder
 import time
-from ConvAE import ConvAE
+from ADHD.ConvAE import ConvAE
 import pandas as pd
 
 # df = pd.read_csv("adhd_testset.csv")
@@ -90,14 +90,14 @@ import pandas as pd
 # valid = all_files[cutoff:]
 #
 # for f in train:
-#     src = os.path.join(data_path, f)
+#     deepmri = os.path.join(data_path, f)
 #     dst = os.path.join(train_path, f)
-#     shutil.move(src, dst)
+#     shutil.move(deepmri, dst)
 #
 # for f in valid:
-#     src = os.path.join(data_path, f)
+#     deepmri = os.path.join(data_path, f)
 #     dst = os.path.join(valid_path, f)
-#     shutil.move(src, dst)
+#     shutil.move(deepmri, dst)
 
 # ----------------------------------------make 3d dataset----------------------------------------
 # slice saver
@@ -140,14 +140,14 @@ import pandas as pd
 # valid = all_files[cutoff:]
 #
 # for f in train:
-#     src = os.path.join(data_path, f)
+#     deepmri = os.path.join(data_path, f)
 #     dst = os.path.join(train_path, f)
-#     shutil.move(src, dst)
+#     shutil.move(deepmri, dst)
 #
 # for f in valid:
-#     src = os.path.join(data_path, f)
+#     deepmri = os.path.join(data_path, f)
 #     dst = os.path.join(valid_path, f)
-#     shutil.move(src, dst)
+#     shutil.move(deepmri, dst)
 
 # ----------------------------------------make test dataset----------------------------------------
 # path = "/home/agajan/Pittsburgh/"

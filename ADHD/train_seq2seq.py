@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
-import Datasets
+from deepmri import Datasets
 import time
-from RNNEncoder import RNNEncoder
-from RNNDecoder import RNNDecoder
-from Seq2Seq import Seq2Seq
-from Conv3DRNNCell import Conv3DGRUCell
+from deepmri.RNNEncoder import RNNEncoder
+from deepmri.RNNDecoder import RNNDecoder
+from deepmri.Seq2Seq import Seq2Seq
+from deepmri.Conv3DRNNCell import Conv3DGRUCell
 import torch.optim as optim
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
