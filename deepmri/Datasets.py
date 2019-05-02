@@ -80,7 +80,7 @@ class Slice3dDataset(Dataset):
         """
         self.file_paths = []
         for file_name in os.listdir(root_dir):
-            if file_name.endswith('.tensor'):
+            if file_name.endswith('.3dtensor'):
                 self.file_paths.append(os.path.join(root_dir, file_name))
 
     def __len__(self):
