@@ -42,30 +42,48 @@ class ADHDFeatureDataset(Dataset):
         return x, y
 
 
-class FMRIChannelDataset(Dataset):
-    """Functional MRI dataset."""
+class MRIDataset(Dataset):
+    """MRI dataset."""
 
-    def __init__(self, root_dir, channels):
+    def __init__(self, root_dir, mu=None, std=None, normalize=True, seq_idxs=(None, None)):
         """
-        Cast time as channel.
         Args:
-            root_dir: Directory with all fMRI images.
+            root_dir: Directory with all MRI images.
+            mu: mean for the normalization.
+            std: standard deviation for the normalization.
+            normalize: whether to normalize data or not.
+            seq_idxs: begin and start indexes to select for time index.
         """
         self.file_paths = []
         for file_name in os.listdir(root_dir):
             if file_name.endswith('.nii.gz'):
                 self.file_paths.append(os.path.join(root_dir, file_name))
 
-        self.channels = channels
+        self.mu = mu
+        self.std = std
+        self.normalize = normalize
+        self.seq_idxs = seq_idxs
 
     def __len__(self):
         return len(self.file_paths)
 
     def __getitem__(self, idx):
-        """Fetches fMRI images."""
+        """Fetches MRI images."""
 
-        x = nib.load(self.file_paths[idx]).get_fdata().transpose((3, 0, 1, 2))  # time=channel, x, y, z
-        x = torch.tensor(x).float()[:self.channels]  # time=channel, x, y, z
+        x = nib.load(self.file_paths[idx]).get_fdata()
+
+        if len(x.shape) == 4:
+            x = x.transpose(3, 0, 1, 2)  # time x width x height x depth
+            x = torch.tensor(x).float()[self.seq_idxs[0]:self.seq_idxs[1]]
+            x = x.unsqueeze(1)  # Sequence of 3D Volumes: time x channel x width x height x depth
+        else:
+            x = x.unsqueeze(0)  # 3D Volume: channel x width x height x depth
+
+        if self.normalize:
+            if self.mu is None:
+                x = (x - x.mean()) / x.std()
+            else:
+                x = (x - self.mu) / self.std
 
         return x
 
@@ -73,12 +91,13 @@ class FMRIChannelDataset(Dataset):
 class Slice3dDataset(Dataset):
     """3D slice dataset"""
 
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, normalize=True):
         """
         Args:
             root_dir: Directory with all 3d slices.
         """
         self.file_paths = []
+        self.normalize = normalize
         for file_name in os.listdir(root_dir):
             if file_name.endswith('.3dtensor'):
                 self.file_paths.append(os.path.join(root_dir, file_name))
@@ -92,6 +111,8 @@ class Slice3dDataset(Dataset):
         with open(self.file_paths[idx], "rb") as f:
             x = pickle.load(f)  # channel=1 x w x h x
 
+        if self.normalize:
+            x = (x - x.mean()) / x.std()
         return x
 
 
