@@ -1,40 +1,34 @@
 import nibabel as nib
-import deepmri.utils
 import os
 import pickle
 import torch
 import random
 import shutil
 from shutil import copyfile
-from ADHD.ConvEncoder import ConvEncoder
+# import deepmri.utils
+# from ADHD.ConvEncoder import ConvEncoder
+# from ADHD.ConvAE import ConvAE
 import time
-from ADHD.ConvAE import ConvAE
-import pandas as pd
+# import pandas as pd
 
-# df = pd.read_csv("adhd_testset.csv")
-# print(len(df))
-# print(len(df[df['dx'] == 0]))
-
-# minmin = 1000
-# maxmax = 0
-
-# paths = os.listdir('/home/agajan/test_data/')
-# for path in paths:
-#     x = nib.load('/home/agajan/test_data/' + path)
-#     sh = x.shape[3]
-#     print(sh)
-#     if sh < minmin:
-#         minmin = sh
-#
-#     if sh > maxmax:
-#         maxmax = sh
-#
-# print(minmin, maxmax)
-
-
-# ----------------------------------------make 4d dataset----------------------------------------
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # print("Device: ", device)
+
+# ----------------------------------------copy data----------------------------------------------
+# path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/regina/'
+# c = 1
+# folders = os.listdir(path)
+# for file in folders:
+#     if len(file) == 6:
+#         subj_id = file
+#         src = os.path.join(path, subj_id, 'Diffusion/data.nii.gz')
+#         dst = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/data/data_{}.nii.gz'.format(subj_id)
+#         print(c)
+#         c += 1
+#         shutil.copyfile(src, dst)
+
+# ----------------------------------------make 4d dataset----------------------------------------
+
 #
 # data_path = '/home/agajan/test_data/'
 # save_path = '/home/agajan/test_feature_tensors_4d/'
@@ -100,28 +94,27 @@ import pandas as pd
 #     shutil.move(deepmri, dst)
 
 # ----------------------------------------make 3d dataset----------------------------------------
-# slice saver
-# data_path = '/home/agajan/test_data/'
-# save_path = '/home/agajan/test_feature_tensors_3d/'
-# image_names = list(filter(lambda x: x.endswith('.nii.gz'), os.listdir(data_path)))
-# image_paths = [os.path.join(data_path, img_name) for img_name in image_names]
-# print('Total 4D images: ', len(image_paths))
-#
-# count = 1
-# for img_name in image_names:
-#     print("{}/{}".format(count, len(image_paths)))
-#     count += 1
-#
-#     img = nib.load(os.path.join(data_path, img_name)).get_fdata()
-#
-#     for i in range(img.shape[3]):
-#         new_name = img_name[:-7] + '_slice_' + str(i) + '.tensor'
-#         with open(os.path.join(save_path, new_name), "wb") as f:
-#
-#             x = img[:, :, :, i]
-#             x = torch.tensor(x).unsqueeze(0).float()
-#             pickle.dump(x, f)
-#
+data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/regina/'
+save_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/tensors_3d/'
+subj_ids = list(filter(lambda x: len(x) == 6, os.listdir(data_path)))
+image_paths = [os.path.join(data_path, subj_id, 'Diffusion') for subj_id in subj_ids]
+print('Total 4D images: ', len(image_paths))
+
+count = 1
+for subj_id in subj_ids:
+    print("{}/{}".format(count, len(subj_ids)))
+    count += 1
+
+    img = nib.load(os.path.join(data_path, subj_id, 'Diffusion/data.nii.gz')).get_fdata()
+
+    for i in range(img.shape[3]):
+        new_name = 'data_' + subj_id + '_volume_' + str(i) + '.3dtensor'
+        with open(os.path.join(save_path, new_name), "wb") as f:
+
+            x = img[:, :, :, i]
+            x = torch.tensor(x).unsqueeze(0).float()  # add channel
+            pickle.dump(x, f)
+
 # # split train and valid
 # data_path = '/home/agajan/tensors_3d/'
 # train_path = '/home/agajan/tensors_3d/train/'
@@ -148,14 +141,3 @@ import pandas as pd
 #     deepmri = os.path.join(data_path, f)
 #     dst = os.path.join(valid_path, f)
 #     shutil.move(deepmri, dst)
-
-# ----------------------------------------make test dataset----------------------------------------
-# path = "/home/agajan/Pittsburgh/"
-# folders = os.listdir(path)
-#
-# for folder in folders:
-#     if os.path.isdir(path + folder):
-#         for file in os.listdir(path + folder):
-#             if file.startswith("sfnwmrda") and file.endswith(".nii.gz"):
-#                 print(file)
-#                 copyfile(path + folder + "/" + file, "/home/agajan/test_data/" + file)
