@@ -6,6 +6,39 @@ import pickle
 import pandas as pd
 
 
+class Volume3dDataset(Dataset):
+    """3D Volume dataset with .3dtensor extension."""
+
+    def __init__(self, root_dir, mu=None, std=None):
+        """
+        Args:
+            root_dir: Directory with all 3d volumes.
+            mu: Mean for normalization.
+            std: Standard deviation for normalization.
+        """
+        self.file_paths = []
+        self.mu = mu
+        self.std = std
+        for file_name in os.listdir(root_dir):
+            if file_name.endswith('.3dtensor'):
+                self.file_paths.append(os.path.join(root_dir, file_name))
+
+    def __len__(self):
+        return len(self.file_paths)
+
+    def __getitem__(self, idx):
+        """Fetches 3d volumes."""
+
+        with open(self.file_paths[idx], "rb") as f:
+            x = pickle.load(f)  # channel=1 x w x h x
+
+        # zero center and scale
+        if (self.mu is not None) and (self.std is not None):
+            x = (x - self.mu) / self.std
+
+        return x
+
+
 class ADHDFeatureDataset(Dataset):
     """ADHD features dataset."""
 
@@ -75,7 +108,7 @@ class MRIDataset(Dataset):
         if len(x.shape) == 4:
             x = x.transpose(3, 0, 1, 2)  # time x width x height x depth
             x = torch.tensor(x).float()[self.seq_idxs[0]:self.seq_idxs[1]]
-            x = x.unsqueeze(1)  # Sequence of 3D Volumes: time x channel x width x height x depth
+            # x = x.unsqueeze(1)  # Sequence of 3D Volumes: time x channel x width x height x depth
         else:
             x = x.unsqueeze(0)  # 3D Volume: channel x width x height x depth
 
@@ -85,34 +118,6 @@ class MRIDataset(Dataset):
             else:
                 x = (x - self.mu) / self.std
 
-        return x
-
-
-class Slice3dDataset(Dataset):
-    """3D slice dataset"""
-
-    def __init__(self, root_dir, normalize=True):
-        """
-        Args:
-            root_dir: Directory with all 3d slices.
-        """
-        self.file_paths = []
-        self.normalize = normalize
-        for file_name in os.listdir(root_dir):
-            if file_name.endswith('.3dtensor'):
-                self.file_paths.append(os.path.join(root_dir, file_name))
-
-    def __len__(self):
-        return len(self.file_paths)
-
-    def __getitem__(self, idx):
-        """Fetches 3d slices."""
-
-        with open(self.file_paths[idx], "rb") as f:
-            x = pickle.load(f)  # channel=1 x w x h x
-
-        if self.normalize:
-            x = (x - x.mean()) / x.std()
         return x
 
 
