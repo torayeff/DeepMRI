@@ -51,7 +51,7 @@ def count_model_parameters(model):
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    print("Total: {}, Trainable: {}".format(total, trainable))
+    return total, trainable
 
 
 def evaluate_adhd_classifier(classifier, rnn_encoder, criterion, dataloader, device):
