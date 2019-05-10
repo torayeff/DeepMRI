@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 
-class ConvDecoder(nn.Module):
+class ConvTransposeDecoder(nn.Module):
     def __init__(self, out_channels):
         super().__init__()
         self.decode = nn.Sequential(

@@ -10,9 +10,9 @@ print("Device: ", device)
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
 batch_size = 256
-trainset = Datasets.Slice3dDataset('/home/agajan/tensors_3d/train/')
-validset = Datasets.Slice3dDataset('/home/agajan/tensors_3d/valid/')
-# trainset = Datasets.Slice3dDataset('/home/agajan/smallset/')
+trainset = Datasets.Volume3dDataset('/home/agajan/tensors_3d/train/')
+validset = Datasets.Volume3dDataset('/home/agajan/tensors_3d/valid/')
+# trainset = Datasets.Volume3dDataset('/home/agajan/smallset/')
 
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=6)
 validloader = torch.utils.data.DataLoader(validset, batch_size=batch_size, shuffle=False, num_workers=6)
