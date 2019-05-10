@@ -188,3 +188,22 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.tight_layout()
+
+
+def pooled_mean(mu_x, n_x, mu_y, n_y):
+    """Calculates pooled mean.
+    Args:
+        mu_x: mean of group x.
+        n_x: number of elements in group x.
+        mu_y: mean of group y.
+        n_y: number of elements in group y.
+    Returns:
+        Pooled mean and total number of elements.
+    """
+    n = n_y + n_x
+    s_x = n_x / n
+    s_y = n_y / n
+    mu = s_x * mu_x + s_y * mu_y
+
+    return mu, n
+
