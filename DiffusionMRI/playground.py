@@ -10,6 +10,8 @@ import shutil
 from shutil import copyfile
 import time
 import pandas as pd
+import h5py
+import numpy as np
 
 from deepmri import Datasets, utils
 from ADHD.ConvEncoder import ConvEncoder
@@ -18,7 +20,38 @@ from ADHD.ConvAE import ConvAE
 
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # print("Device: ", device)
+# --------------------------------HDF5 vs Pickle---------------------------------------
+# data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/'
+#
+# # copy files
+# files = [f for f in sorted(os.listdir(os.path.join(data_path, 'tensors_3d/')))[:100] if f.endswith('.3dtensor')]
 
+# for i, f in enumerate(files, 1):
+#     src = os.path.join(data_path, 'tensors_3d', f)
+#     dst = os.path.join(data_path, 'hdf5_vs_pickle/tensors_3d', f)
+#     shutil.copyfile(src, dst)
+#     print(i)
+
+# create hdf5 dataset with 100 files
+# h5_path = os.path.join(data_path, 'hdf5_vs_pickle/volumes_hdf5/volumes3d.hdf5')
+#
+# with h5py.File(h5_path, 'w') as f:
+#     group = f.create_group('data')
+#     for idx, img_name in enumerate(files):
+#         print(idx)
+#
+#         with open(os.path.join(data_path, 'tensors_3d', img_name), "rb") as img:
+#             x = pickle.load(img).numpy()  # channel=1 x w x h x
+#
+#         group.create_dataset(str(idx), data=x)
+#
+#     group.attrs['total_data'] = len(files)
+
+# with h5py.File(h5_path, 'r') as f:
+#     data = f.get('data')
+#     x = data['78']
+#     x = np.array(x)
+#     print(type(x))
 # -------------------------------Calculate Mean and Std of Trainset--------------------
 # data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/tensors_3d/'
 # trainset = Datasets.Volume3dDataset(data_path)

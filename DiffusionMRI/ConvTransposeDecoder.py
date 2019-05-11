@@ -39,17 +39,17 @@ class ConvTransposeDecoder(nn.Module):
                 output_padding=(0, 1, 0)
             ),
             nn.BatchNorm3d(1),
-            nn.ReLU(),
+            # nn.ReLU(),
 
-            # layer to remove checkerboard artifacts
-            # N x 1 x 145 x 174 x 145 -->  N x 1 x 145 x 174 x 145
-            nn.Conv3d(
-                in_channels=1,
-                out_channels=1,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-            )
+            # # layer to remove checkerboard artifacts
+            # # N x 1 x 145 x 174 x 145 -->  N x 1 x 145 x 174 x 145
+            # nn.Conv3d(
+            #     in_channels=1,
+            #     out_channels=1,
+            #     kernel_size=3,
+            #     stride=1,
+            #     padding=1,
+            # )
         )
 
     def forward(self, x):
