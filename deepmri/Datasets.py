@@ -4,6 +4,39 @@ import os
 import nibabel as nib
 import pickle
 import pandas as pd
+import h5py
+import numpy as np
+
+
+class HDF5Dataset(Dataset):
+    """HDF5 Dataset with MRI volumes."""
+
+    def __init__(self, file_path, mu=None, std=None):
+        super().__init__()
+
+        self.mu = mu
+        self.std = std
+
+        self.archive = h5py.File(file_path, 'r')
+        self.data = self.archive['data']
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+
+        x = self.data[str(idx)]
+
+        x = np.array(x)
+        x = torch.from_numpy(x).float()
+
+        if (self.mu is not None) and (self.std is not None):
+            x = (x - self.mu) / self.std
+
+        return x
+
+    def close(self):
+        self.archive.close()
 
 
 class Volume3dDataset(Dataset):
