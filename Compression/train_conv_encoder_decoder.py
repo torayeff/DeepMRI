@@ -39,11 +39,11 @@ decoder.to(device)
 decoder.train()
 
 # load pretrained weights
-prev_epoch = 0
-# encoder_path = '/home/agajan/DeepMRI/Compression/models/encoder_epoch_' + str(prev_epoch)
-# decoder_path = '/home/agajan/DeepMRI/Compression/models/decoder_epoch_' + str(prev_epoch)
-# encoder.load_state_dict(torch.load(encoder_path))
-# decoder.load_state_dict(torch.load(decoder_path))
+prev_epoch = 1000
+encoder_path = '/home/agajan/DeepMRI/Compression/models/new_encoder_epoch_' + str(prev_epoch)
+decoder_path = '/home/agajan/DeepMRI/Compression/models/new_decoder_epoch_' + str(prev_epoch)
+encoder.load_state_dict(torch.load(encoder_path))
+decoder.load_state_dict(torch.load(decoder_path))
 
 p1 = utils.count_model_parameters(encoder)
 p2 = utils.count_model_parameters(decoder)
@@ -52,7 +52,7 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters)
+optimizer = torch.optim.Adam(parameters, lr=0.00005)
 # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, verbose=True, factor=0.5)
 
 # training
@@ -87,8 +87,8 @@ for epoch in range(1, num_epochs + 1):
         iters += 1
 
     if epoch % 1000 == 0:
-        torch.save(encoder.state_dict(), "models/encoder_epoch_{}".format(epoch + prev_epoch))
-        torch.save(decoder.state_dict(), "models/decoder_epoch_{}".format(epoch + prev_epoch))
+        torch.save(encoder.state_dict(), "models/new_encoder_epoch_{}".format(epoch + prev_epoch))
+        torch.save(decoder.state_dict(), "models/new_decoder_epoch_{}".format(epoch + prev_epoch))
 
     # epoch_loss = running_loss / len(trainset)
     epoch_loss = running_loss
