@@ -17,6 +17,17 @@ from deepmri import Datasets, utils
 from ADHD.ConvEncoder import ConvEncoder
 from ADHD.ConvAE import ConvAE
 
+# f1 = [f for f in os.listdir('/home/agajan/Downloads/HCP105_Zenodo_NewTrkFormat/') if len(f) == 6]
+# f2 = [f for f in os.listdir('/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/regina/') if len(f) == 6]
+#
+# match = 0
+# for f in f1:
+#     if f in f2:
+#         match += 1
+#         print(f)
+# print(match)
+# print(len(f1), len(f2))
+
 
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # print("Device: ", device)

@@ -141,8 +141,9 @@ class MRIDataset(Dataset):
         if len(x.shape) == 4:
             x = x.transpose(3, 0, 1, 2)  # time x width x height x depth
             x = torch.tensor(x).float()[self.seq_idxs[0]:self.seq_idxs[1]]
-            # x = x.unsqueeze(1)  # Sequence of 3D Volumes: time x channel x width x height x depth
+            x = x.unsqueeze(1)  # Sequence of 3D Volumes: time x channel x width x height x depth
         else:
+            x = torch.tensor(x).float()
             x = x.unsqueeze(0)  # 3D Volume: channel x width x height x depth
 
         if self.normalize:

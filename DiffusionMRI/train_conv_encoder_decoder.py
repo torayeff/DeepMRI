@@ -33,6 +33,13 @@ decoder = ConvTransposeDecoder(out_channels=1)
 decoder.to(device)
 decoder.train()
 
+# load pretrained weights
+prev_epoch = 12
+encoder_path = '/home/agajan/DeepMRI/DiffusionMRI/models/adj_transpose_conv_encoder_epoch_' + str(prev_epoch)
+decoder_path = '/home/agajan/DeepMRI/DiffusionMRI/models/adj_transpose_conv_decoder_epoch_' + str(prev_epoch)
+encoder.load_state_dict(torch.load(encoder_path))
+decoder.load_state_dict(torch.load(decoder_path))
+
 p1 = utils.count_model_parameters(encoder)
 p2 = utils.count_model_parameters(decoder)
 print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[1] + p2[1]))
@@ -41,9 +48,10 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 criterion = nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
 optimizer = torch.optim.Adam(parameters)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, verbose=True, factor=0.5)
 
 # training
-num_epochs = 20
+num_epochs = 100
 iters = 1
 print("Training started for {} epochs".format(num_epochs))
 for epoch in range(1, num_epochs + 1):
@@ -63,16 +71,23 @@ for epoch in range(1, num_epochs + 1):
         optimizer.step()
 
         running_loss += loss.item() * data.size(0)
-        if iters % 1000 == 0:
+        if iters % 100 == 0:
             print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
+
+            torch.save(encoder.state_dict(), "models/adj_transpose_conv_encoder_epoch_{}_iter_{}"
+                       .format(epoch + prev_epoch, iters))
+            torch.save(decoder.state_dict(), "models/adj_transpose_conv_decoder_epoch_{}_iter_{}"
+                       .format(epoch + prev_epoch, iters))
         iters += 1
 
     if epoch % 1 == 0:
-        torch.save(encoder.state_dict(), "models/adj_transpose_conv_encoder_epoch_{}".format(epoch))
-        torch.save(decoder.state_dict(), "models/adj_transpose_conv_decoder_epoch_{}".format(epoch))
+        torch.save(encoder.state_dict(), "models/adj_transpose_conv_encoder_epoch_{}".format(epoch + prev_epoch))
+        torch.save(decoder.state_dict(), "models/adj_transpose_conv_decoder_epoch_{}".format(epoch + prev_epoch))
 
     epoch_loss = running_loss / len(trainset)
-    print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch, num_epochs, epoch_loss,
+
+    scheduler.step(epoch_loss)
+    print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch + prev_epoch, num_epochs, epoch_loss,
                                                                              time.time() - epoch_start))
 
 print("Total running time: {}".format(time.time() - script_start))
