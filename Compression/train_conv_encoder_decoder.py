@@ -2,11 +2,13 @@ import sys
 import time
 import torch
 import torch.nn as nn
+import nibabel as nib
+import os
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
 from Compression.ConvEncoder import ConvEncoder  # noqa: E402
-from Compression.ConvDecoder import ConvTransposeDecoder  # noqa: E402
+from Compression.ConvDecoder import ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
@@ -18,16 +20,21 @@ print("Device: ", device)
 # training data settings
 batch_size = 1
 data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_Compression/data/'
-trainset = Datasets.MRIDataset(data_path, normalize=True)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
-print("Total training examples: ", len(trainset))
+# trainset = Datasets.MRIDataset(data_path, normalize=True)
+# trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
+# print("Total training examples: ", len(trainset))
+data = nib.load(os.path.join(data_path, 'sub_01_data.nii.gz')).get_fdata()
+data = torch.tensor(data).unsqueeze(0).unsqueeze(0).float()
+data = (data - data.mean()) / data.std()
+data = data.to(device)
+trainloader = [data]
 
 # model settings
 encoder = ConvEncoder(input_channels=1)
 encoder.to(device)
 encoder.train()
 
-decoder = ConvTransposeDecoder(out_channels=1)
+decoder = ConvDecoder(out_channels=1)
 decoder.to(device)
 decoder.train()
 
@@ -49,7 +56,7 @@ optimizer = torch.optim.Adam(parameters)
 # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, verbose=True, factor=0.5)
 
 # training
-num_epochs = 20
+num_epochs = 10000
 iters = 1
 print("Training started for {} epochs".format(num_epochs))
 for epoch in range(1, num_epochs + 1):
@@ -60,7 +67,8 @@ for epoch in range(1, num_epochs + 1):
         iter_time = time.time()
 
         optimizer.zero_grad()
-        x = data.to(device)
+        # x = data.to(device)
+        x = data
 
         out = decoder(encoder(x))
 
@@ -69,8 +77,8 @@ for epoch in range(1, num_epochs + 1):
         optimizer.step()
 
         running_loss += loss.item() * data.size(0)
-        if iters % 100 == 0:
-            print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
+        # if iters % 100 == 0:
+        #     print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
 
             # torch.save(encoder.state_dict(), "models/encoder_epoch_{}_iter_{}"
             #            .format(epoch + prev_epoch, iters))
@@ -78,11 +86,12 @@ for epoch in range(1, num_epochs + 1):
             #            .format(epoch + prev_epoch, iters))
         iters += 1
 
-    # if epoch % 1 == 0:
-    #     torch.save(encoder.state_dict(), "models/encoder_epoch_{}".format(epoch + prev_epoch))
-    #     torch.save(decoder.state_dict(), "models/decoder_epoch_{}".format(epoch + prev_epoch))
+    if epoch % 1000 == 0:
+        torch.save(encoder.state_dict(), "models/encoder_epoch_{}".format(epoch + prev_epoch))
+        torch.save(decoder.state_dict(), "models/decoder_epoch_{}".format(epoch + prev_epoch))
 
-    epoch_loss = running_loss / len(trainset)
+    # epoch_loss = running_loss / len(trainset)
+    epoch_loss = running_loss
 
     # scheduler.step(epoch_loss)
     print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch + prev_epoch, num_epochs, epoch_loss,
