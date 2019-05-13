@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from deepmri import Datasets, utils
 from DiffusionMRI.ConvEncoder import ConvEncoder
-from DiffusionMRI.ConvTransposeDecoder import ConvTransposeDecoder
+from DiffusionMRI.ConvDecoder import ConvDecoder
 import time
 import nibabel as nib
 import os
@@ -22,7 +22,7 @@ encoder = ConvEncoder(input_channels=288)
 encoder.to(device)
 encoder.train()
 
-decoder = ConvTransposeDecoder(out_channels=288)
+decoder = ConvDecoder(out_channels=288)
 decoder.to(device)
 decoder.train()
 # utils.count_model_parameters(encoder)

@@ -12,10 +12,11 @@ class ConvEncoder(nn.Module):
                 out_channels=16,
                 kernel_size=3,
                 stride=2,
-                padding=1
+                padding=1,
+                bias=False
             ),
-            nn.BatchNorm3d(16),
             nn.ReLU(),
+            nn.BatchNorm3d(16),
 
             # N x 16 x 73 x 87 x 73 --> N x 32 x 37 x 44 x 37
             nn.Conv3d(
@@ -23,10 +24,11 @@ class ConvEncoder(nn.Module):
                 out_channels=32,
                 kernel_size=3,
                 stride=2,
-                padding=1
+                padding=1,
+                bias=False
             ),
-            nn.BatchNorm3d(32),
             nn.ReLU(),
+            nn.BatchNorm3d(32),
 
             # N x 32 x 37 x 44 x 37 --> N x 64 x 19 x 22 x 19
             nn.Conv3d(
@@ -34,10 +36,11 @@ class ConvEncoder(nn.Module):
                 out_channels=64,
                 kernel_size=3,
                 stride=2,
-                padding=1
+                padding=1,
+                bias=False
             ),
-            nn.BatchNorm3d(64),
             nn.ReLU(),
+            nn.BatchNorm3d(64),
         )
 
     def forward(self, x):

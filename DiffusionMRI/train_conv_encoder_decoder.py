@@ -6,7 +6,7 @@ import torch.nn as nn
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
 from DiffusionMRI.ConvEncoder import ConvEncoder  # noqa: E402
-from DiffusionMRI.ConvTransposeDecoder import ConvTransposeDecoder  # noqa: E402
+from DiffusionMRI.ConvDecoder import ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
@@ -34,7 +34,7 @@ print("Total training examples: ", len(trainset))
 encoder = ConvEncoder(input_channels=1)
 encoder.to(device)
 
-decoder = ConvTransposeDecoder(out_channels=1)
+decoder = ConvDecoder(out_channels=1)
 decoder.to(device)
 
 

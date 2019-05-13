@@ -14,8 +14,8 @@ from deepmri.Conv3DRNNCell import Conv3DGRUCell  # noqa: E402
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("Device: ", device)
 torch.manual_seed(0)
-torch.backends.cudnn.benchmark = False  # set False whenever input size varies
-torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = True  # set False whenever input size varies
+# torch.backends.cudnn.deterministic = True
 
 # data settings
 batch_size = 1
@@ -55,8 +55,8 @@ p2 = utils.count_model_parameters(decoder)
 print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[1] + p2[1]))
 
 prev_epoch = 0
-# encoder.load_state_dict(torch.load('models/final_adam_rnn_encoder_401'))
-# decoder.load_state_dict(torch.load('models/final_adam_rnn_decoder_401'))
+# encoder.load_state_dict(torch.load('models/rnn_encoder_{}.format(prev_epoch)'))
+# decoder.load_state_dict(torch.load('models/rnn_decoder_{}'.format(prev_epoch)))
 
 # criterion and optimizer settings
 criterion = nn.MSELoss()
@@ -68,7 +68,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, ve
 decoder.train()
 encoder.train()
 
-num_epochs = 10
+num_epochs = 10000
 iters = 1
 
 print("Training started for {} epochs".format(num_epochs))
