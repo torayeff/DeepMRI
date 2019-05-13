@@ -17,6 +17,10 @@ from deepmri import Datasets, utils
 from ADHD.ConvEncoder import ConvEncoder
 from ADHD.ConvAE import ConvAE
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+torch.backends.cudnn.benchmark = True  # set False whenever input size varies
+print("Device: ", device)
+
 # f1 = [f for f in os.listdir('/home/agajan/Downloads/HCP105_Zenodo_NewTrkFormat/') if len(f) == 6]
 # f2 = [f for f in os.listdir('/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/regina/') if len(f) == 6]
 #
@@ -28,9 +32,6 @@ from ADHD.ConvAE import ConvAE
 # print(match)
 # print(len(f1), len(f2))
 
-
-# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# print("Device: ", device)
 # --------------------------------HDF5 vs Pickle---------------------------------------
 # data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/'
 #
@@ -129,43 +130,53 @@ from ADHD.ConvAE import ConvAE
 #             break
 
 # ----------------------------------------make 4d dataset----------------------------------------
+mu = 307.3646240234375
+std = 763.4876098632812
 
-#
-# data_path = '/home/agajan/test_data/'
-# save_path = '/home/agajan/test_feature_tensors_4d/'
-# image_names = list(filter(lambda x: x.endswith('.nii.gz'), os.listdir(data_path)))
-# image_paths = [os.path.join(data_path, img_name) for img_name in image_names]
-# print('Total 4D images: ', len(image_paths))
-#
-# model = ConvEncoder(1)
-# model.to(device)
-# model.load_state_dict(torch.load('/home/agajan/DeepMRI/models/final_conv_encoder'))
-# model.eval()
-#
-# count = 1
-# total = len(image_paths)
-# with torch.no_grad():
-#
-#     for image_name in image_names:
-#         st = time.time()
-#
-#         img_4d = nib.load(os.path.join(data_path, image_name)).get_fdata()
-#
-#         out_4d = torch.zeros(img_4d.shape[3], 64, 7, 8, 6)
-#
-#         for i in range(img_4d.shape[3]):
-#             slice_3d = torch.tensor(img_4d[:, :, :, i]).unsqueeze(0).unsqueeze(0).float()# batch x channel x w x h x d
-#             feature = model(slice_3d.to(device)).cpu().squeeze()
-#             out_4d[i, :, :, :, :] = feature
-#
-#         print("{}/{} time: {:.5f}".format(count, total, time.time() - st))
-#         count += 1
-#         new_path = os.path.join(save_path, image_name[:-7] + '.4dtensor')
-#         # print(new_path)
-#         # print(out_4d.shape)
-#         with open(new_path, "wb") as f:
-#             pickle.dump(out_4d, f)
-#         # break
+data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/data/'
+save_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/tensors_4d/'
+image_names = list(filter(lambda x: x.endswith('.nii.gz'), os.listdir(data_path)))
+image_paths = [os.path.join(data_path, img_name) for img_name in image_names]
+print('Total 4D images: ', len(image_paths))
+
+encoder = ConvEncoder(1)
+encoder.to(device)
+encoder.load_state_dict(torch.load('/home/agajan/DeepMRI/DiffusionMRI/models/conv_encoder_epoch_21'))
+encoder.eval()
+
+count = 1
+total = len(image_paths)
+with torch.no_grad():
+
+    for image_name in image_names:
+        print(image_name)
+        st = time.time()
+
+        img_4d = nib.load(os.path.join(data_path, image_name))
+        print(img_4d.shape)
+        img_4d = img_4d.get_fdata()
+
+        out_4d = torch.zeros(img_4d.shape[3], 64, 19, 22, 19)
+
+        for i in range(img_4d.shape[3]):
+            tensor_3d = torch.tensor(img_4d[:, :, :, i]).unsqueeze(0).unsqueeze(0).float()
+            tensor_3d = tensor_3d.to(device)
+
+            # !!!!!!!!!!!!!!! IMPORTANT
+            tensor_3d = (tensor_3d - mu) / std
+
+            # print(tensor_3d.min(), tensor_3d.max(), tensor_3d.mean(), tensor_3d.std())
+            feature = encoder(tensor_3d).cpu().squeeze()
+            # print(feature.min(), feature.max(), feature.mean(), feature.std())
+            out_4d[i, :, :, :, :] = feature
+
+        print("{}/{} time: {:.5f}".format(count, total, time.time() - st))
+        count += 1
+        new_path = os.path.join(save_path, image_name[:-7] + '.4dtensor')
+        # print(new_path)
+        # print(out_4d.shape)
+        with open(new_path, "wb") as f:
+            pickle.dump(out_4d, f)
 
 # split train and valid
 # data_path = '/home/agajan/feature_tensors_4d/'

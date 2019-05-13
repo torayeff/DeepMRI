@@ -39,7 +39,7 @@ decoder.to(device)
 
 
 # load pretrained weights
-prev_epoch = 21
+prev_epoch = 23
 encoder_path = '/home/agajan/DeepMRI/DiffusionMRI/models/conv_encoder_epoch_' + str(prev_epoch)
 decoder_path = '/home/agajan/DeepMRI/DiffusionMRI/models/conv_decoder_epoch_' + str(prev_epoch)
 encoder.load_state_dict(torch.load(encoder_path))
@@ -80,11 +80,11 @@ for epoch in range(1, num_epochs + 1):
         optimizer.step()
 
         running_loss = running_loss + loss.item() * data.size(0)
-        if iters % 1 == 0:
-            print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
+        # if iters % 1 == 0:
+        #     print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
         iters += 1
 
-    if epoch % 1000 == 0:
+    if epoch % 1 == 0:
         torch.save(encoder.state_dict(), "models/conv_encoder_epoch_{}".format(epoch + prev_epoch))
         torch.save(decoder.state_dict(), "models/conv_decoder_epoch_{}".format(epoch + prev_epoch))
 
