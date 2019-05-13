@@ -42,16 +42,21 @@ class HDF5Dataset(Dataset):
 class Volume3dDataset(Dataset):
     """3D Volume dataset with .3dtensor extension."""
 
-    def __init__(self, root_dir, mu=None, std=None):
+    def __init__(self, root_dir, normalize=True, mu=None, std=None, scale_range=None):
         """
         Args:
             root_dir: Directory with all 3d volumes.
+            normalize: If true, the data will be normalized.
             mu: Mean for normalization.
             std: Standard deviation for normalization.
+            scale_range: tuple, If not None will be scaled in range (a, b), else standardize.
         """
         self.file_paths = []
         self.mu = mu
         self.std = std
+        self.normalize = normalize
+        self.scale_range = scale_range
+
         for file_name in os.listdir(root_dir):
             if file_name.endswith('.3dtensor'):
                 self.file_paths.append(os.path.join(root_dir, file_name))
@@ -65,9 +70,24 @@ class Volume3dDataset(Dataset):
         with open(self.file_paths[idx], "rb") as f:
             x = pickle.load(f)  # channel=1 x w x h x
 
-        # zero center and scale
-        if (self.mu is not None) and (self.std is not None):
-            x = (x - self.mu) / self.std
+        # mean subtraction and normalization
+        if self.normalize:
+            if self.mu is None:
+                self.mu = x.mean()
+
+            if self.std is None:
+                self.std = x.std()
+
+            # mean subtraction
+            x = x - self.mu
+
+            # normalization
+            if self.scale_range is None:
+                x /= self.std
+            else:
+                a = self.scale_range[0]
+                b = self.scale_range[1]
+                x = a + ((x - x.min()) * (b - a)) / (x.max() - x.min())
 
         return x
 
