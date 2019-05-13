@@ -83,26 +83,27 @@ for epoch in range(1, num_epochs + 1):
         optimizer.zero_grad()
 
         src_batch = data.to(device)
-        trg_batch = data.to(device)
-
-        seq_len = trg_batch.shape[1]
+        seq_len = src_batch.shape[1]
 
         context_batch = encoder(src_batch)
 
         hidden_batch = context_batch
 
         # first input is <sos> in learning phrase representation
-        # in this case it is tensor of ones
-        input_batch = trg_batch.new_zeros(trg_batch[:, 0, :, :, :, :].shape)
+        # in this case it is tensor of zeros
+        input_batch = src_batch.new_zeros(src_batch[:, 0, :, :, :, :].shape)
 
-        outputs = trg_batch.new_zeros(trg_batch.shape)
-
+        loss = src_batch.new_zeros(1)
         for t in range(seq_len):
             input_batch, hidden_batch = decoder(input_batch, hidden_batch, context_batch)
-            outputs[:, t, :, :, :, :] = input_batch
+            loss = loss + criterion(src_batch[:, t, :, :, :, :], input_batch)
 
-        loss = criterion(trg_batch, outputs)
+            # torch.cuda.empty_cache()
+
+        loss = loss / seq_len
+
         loss.backward()
+
         optimizer.step()
         # -------------------Seq2Seq End------------------- #
 
@@ -110,11 +111,13 @@ for epoch in range(1, num_epochs + 1):
         # print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
         iters += 1
 
+        # torch.cuda.empty_cache()
+    scheduler.step(running_loss)
+
     if epoch % 100 == 0:
         torch.save(encoder.state_dict(), "models/overfit_rnn_encoder_epoch_{}".format(epoch + prev_epoch))
         torch.save(decoder.state_dict(), "models/overfit_rnn_decoder_epoch_{}".format(epoch + prev_epoch))
 
     epoch_loss = running_loss / len(trainset)
-    scheduler.step(epoch_loss)
-    print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch + prev_epoch, num_epochs, epoch_loss,
+    print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch, num_epochs, epoch_loss,
                                                                              time.time() - epoch_start))
