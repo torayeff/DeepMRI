@@ -54,9 +54,9 @@ p1 = utils.count_model_parameters(encoder)
 p2 = utils.count_model_parameters(decoder)
 print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[1] + p2[1]))
 
-prev_epoch = 0
-# encoder.load_state_dict(torch.load('models/rnn_encoder_{}.format(prev_epoch)'))
-# decoder.load_state_dict(torch.load('models/rnn_decoder_{}'.format(prev_epoch)))
+prev_epoch = 1400
+encoder.load_state_dict(torch.load('models/overfit_rnn_encoder_{}.format(prev_epoch)'))
+decoder.load_state_dict(torch.load('models/overfit_rnn_decoder_{}'.format(prev_epoch)))
 
 # criterion and optimizer settings
 criterion = nn.MSELoss()
