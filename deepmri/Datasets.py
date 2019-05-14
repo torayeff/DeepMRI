@@ -42,7 +42,7 @@ class HDF5Dataset(Dataset):
 class Volume3dDataset(Dataset):
     """3D Volume dataset with .3dtensor extension."""
 
-    def __init__(self, root_dir, normalize=True, mu=None, std=None, scale_range=None):
+    def __init__(self, root_dir, normalize=True, mu=None, std=None, scale_range=None, sort=False):
         """
         Args:
             root_dir: Directory with all 3d volumes.
@@ -50,6 +50,7 @@ class Volume3dDataset(Dataset):
             mu: Mean for normalization.
             std: Standard deviation for normalization.
             scale_range: tuple, If not None will be scaled in range (a, b), else standardize.
+            sort: If True sorts file_paths, useful for debugging.
         """
         self.file_paths = []
         self.mu = mu
@@ -60,6 +61,9 @@ class Volume3dDataset(Dataset):
         for file_name in os.listdir(root_dir):
             if file_name.endswith('.3dtensor'):
                 self.file_paths.append(os.path.join(root_dir, file_name))
+
+        if sort:
+            self.file_paths = sorted(self.file_paths)
 
     def __len__(self):
         return len(self.file_paths)
