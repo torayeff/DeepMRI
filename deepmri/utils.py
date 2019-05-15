@@ -209,18 +209,6 @@ def pooled_mean(mu_x, n_x, mu_y, n_y):
     return mu, n
 
 
-def pooled_std(n, sqr_sum, mu):
-    """Calculates pooled standard deviation.
-    Args:
-        n: total number of variables.
-        sqr_sum: squared sum of all variables
-        mu: mean of all variables.
-    Returns:
-        Standard deviation.
-    """
-    return np.sqrt((sqr_sum/n) - mu**2)
-
-
 def pooled_mean_std(dataset, total_n):
     """Calculates mean and standard deviation for the training set.
     Args:
@@ -231,21 +219,22 @@ def pooled_mean_std(dataset, total_n):
     """
     start = time.time()
 
-    print("Total training examples: {}".format(len(dataset)))
+    print("Total examples in dataset: {}".format(len(dataset)))
 
     mu, n = 0, 0
     sqr_sum = 0.0
     temp_sqr_sum = 0.0  # temporary squared sum
-
-    c = 1  # counter
 
     for c, data in enumerate(dataset, 1):
         print("Processing #{}: ".format(c), end="")
 
         # calculate pooled mean
         mu_y = data.mean()
-        n_y = data.shape[0] * data.shape[1] * data.shape[2] * data.shape[3]
+        n_y = 1
+        for sh in data.shape:
+            n_y *= sh
         mu, n = pooled_mean(mu, n, mu_y, n_y)
+        print("Pooled mu={}, n={}".format(mu, n))
 
         # keep track of running squared sums
         temp_sqr_sum += (data ** 2).sum()
@@ -253,11 +242,10 @@ def pooled_mean_std(dataset, total_n):
             sqr_sum += temp_sqr_sum / total_n
             temp_sqr_sum = 0.0  # reset
 
-        print("mu={}, n={}".format(mu, n))
-
+    sqr_sum += temp_sqr_sum / total_n
     std = np.sqrt(sqr_sum - (mu**2))
-    print("mu={}, std={}, n={}".format(mu, std, n))
 
     end = time.time()
+    print("Dataset mu={}, std={}, n={}".format(mu, std, n))
     print("Total calculation time: {:.5f}.".format(end - start))
     return mu, std, n
