@@ -8,35 +8,49 @@ import h5py
 import numpy as np
 
 
-class HDF5Dataset(Dataset):
-    """HDF5 Dataset with MRI volumes."""
+class OrientationDataset(Dataset):
+    """Orientation dataset for dMRI."""
 
-    def __init__(self, file_path, mu=None, std=None):
-        super().__init__()
-
+    def __init__(self, data_dir, channel_first=True, normalize=True, mu=None, std=None, scale_range=None, sort=False):
+        self.data_dir = data_dir
+        self.channel_first = channel_first
+        self.normalize = normalize
         self.mu = mu
         self.std = std
-
-        self.archive = h5py.File(file_path, 'r')
-        self.data = self.archive['data']
+        self.scale_range = scale_range
+        self.sort = sort
+        self.file_names = os.listdir(data_dir)
+        if sort:
+            self.file_names = sorted(self.file_names)
 
     def __len__(self):
-        return len(self.data)
+        return len(self.file_names)
 
     def __getitem__(self, idx):
+        file_path = os.path.join(self.data_dir, self.file_names[idx])
+        x = np.load(file_path)['data']
+        if self.channel_first:
+            x = x.transpose(2, 0, 1)  # channel x width x height
 
-        x = self.data[str(idx)]
+        if self.normalize:
+            if self.mu is None:
+                self.mu = x.mean()
 
-        x = np.array(x)
-        x = torch.from_numpy(x).float()
+            if self.std is None:
+                self.std = x.std()
 
-        if (self.mu is not None) and (self.std is not None):
-            x = (x - self.mu) / self.std
+            # mean subtraction
+            x = x - self.mu
 
-        return x
+            # normalization
+            if self.scale_range is None:
+                x /= self.std
+            else:
+                a = self.scale_range[0]
+                b = self.scale_range[1]
+                x = a + ((x - x.min()) * (b - a)) / (x.max() - x.min())
 
-    def close(self):
-        self.archive.close()
+        return torch.tensor(x).float()
 
 
 class Volume3dDataset(Dataset):
@@ -126,42 +140,6 @@ class Feature4dDataset(Dataset):
         return x
 
 
-class ADHDFeatureDataset(Dataset):
-    """ADHD features dataset."""
-
-    def __init__(self, root_dir, csv_file, seq_len=None, binary=True, sep=','):
-        self.file_names = []
-        self.root_dir = root_dir
-        self.csv_file = csv_file
-        self.seq_len = seq_len
-        self.binary = binary
-
-        self.df = pd.read_csv(csv_file, sep=sep)
-
-        for file_name in os.listdir(root_dir):
-            if file_name.endswith('.4dtensor') and ((file_name[:-9] + '.nii.gz') in self.df['fmri'].values):
-                self.file_names.append(file_name)
-
-    def __len__(self):
-        return len(self.file_names)
-
-    def __getitem__(self, idx):
-        with open(os.path.join(self.root_dir, self.file_names[idx]), "rb") as f:
-            x = pickle.load(f)  # time x channel x w x h x d
-
-        if self.seq_len:
-            x = x[:self.seq_len]
-
-        fk = self.file_names[idx][:-9] + ".nii.gz"
-
-        y = int(self.df[self.df['fmri'] == fk]['dx'].item())
-
-        if self.binary and (y > 1):
-            y = 1
-
-        return x, y
-
-
 class MRIDataset(Dataset):
     """MRI dataset."""
 
@@ -207,3 +185,70 @@ class MRIDataset(Dataset):
                 x = (x - self.mu) / self.std
 
         return x
+
+
+class HDF5Dataset(Dataset):
+    """HDF5 Dataset with MRI volumes."""
+
+    def __init__(self, file_path, mu=None, std=None):
+        super().__init__()
+
+        self.mu = mu
+        self.std = std
+
+        self.archive = h5py.File(file_path, 'r')
+        self.data = self.archive['data']
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+
+        x = self.data[str(idx)]
+
+        x = np.array(x)
+        x = torch.from_numpy(x).float()
+
+        if (self.mu is not None) and (self.std is not None):
+            x = (x - self.mu) / self.std
+
+        return x
+
+    def close(self):
+        self.archive.close()
+
+
+class ADHDFeatureDataset(Dataset):
+    """ADHD features dataset."""
+
+    def __init__(self, root_dir, csv_file, seq_len=None, binary=True, sep=','):
+        self.file_names = []
+        self.root_dir = root_dir
+        self.csv_file = csv_file
+        self.seq_len = seq_len
+        self.binary = binary
+
+        self.df = pd.read_csv(csv_file, sep=sep)
+
+        for file_name in os.listdir(root_dir):
+            if file_name.endswith('.4dtensor') and ((file_name[:-9] + '.nii.gz') in self.df['fmri'].values):
+                self.file_names.append(file_name)
+
+    def __len__(self):
+        return len(self.file_names)
+
+    def __getitem__(self, idx):
+        with open(os.path.join(self.root_dir, self.file_names[idx]), "rb") as f:
+            x = pickle.load(f)  # time x channel x w x h x d
+
+        if self.seq_len:
+            x = x[:self.seq_len]
+
+        fk = self.file_names[idx][:-9] + ".nii.gz"
+
+        y = int(self.df[self.df['fmri'] == fk]['dx'].item())
+
+        if self.binary and (y > 1):
+            y = 1
+
+        return x, y

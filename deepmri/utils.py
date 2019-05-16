@@ -4,20 +4,23 @@ import matplotlib.pyplot as plt
 import torch
 import time
 import itertools
+import pandas as pd
+import os
+import nibabel as nib
 import deepmri.Datasets as Datasets
 
 
 def calc_conv_dim(w, k, s, p):
     """Calculates output dimensions of convolution operator."""
 
-    dim = ((w + 2*p - k) / s) + 1
+    dim = ((w + 2 * p - k) / s) + 1
     print("Conv dim: ", dim, math.floor(dim))
 
 
 def calc_transpose_conv_dim(w, k, s, p, out_p):
     """Calculates output dimensions of transpose convolution operator."""
 
-    dim = (w - 1) * s - 2*p + k + out_p
+    dim = (w - 1) * s - 2 * p + k + out_p
     print("Deconv dim: ", dim, math.floor(dim))
 
 
@@ -43,6 +46,18 @@ def show_slices(slices,
         axes[i].set_title(titles[i])
         axes[i].imshow(slc.T, cmap="gray", origin="lower")
     plt.tight_layout()
+
+
+def show_one_slice(slc,
+                   title="One Slice",
+                   figsize=(10, 5),
+                   fontsize=12):
+
+    plt.rcParams["figure.figsize"] = figsize
+    plt.imshow(slc.T, cmap="gray", origin="lower")
+    plt.title(title, fontsize=fontsize)
+    plt.tight_layout()
+    plt.show()
 
 
 def count_model_parameters(model):
@@ -243,9 +258,83 @@ def pooled_mean_std(dataset, total_n):
             temp_sqr_sum = 0.0  # reset
 
     sqr_sum += temp_sqr_sum / total_n
-    std = np.sqrt(sqr_sum - (mu**2))
+    std = np.sqrt(sqr_sum - (mu ** 2))
 
     end = time.time()
     print("Dataset mu={}, std={}, n={}".format(mu, std, n))
     print("Total calculation time: {:.5f}.".format(end - start))
     return mu, std, n
+
+
+def create_orientation_dataset(csv_file, save_dir):
+    """Creates axial, coronal, sagittal volumes.
+
+    Args:
+        csv_file: csv file with dMRI paths.
+        save_dir: Directory to save the data.
+    """
+    df = pd.read_csv(csv_file)
+    for _, row in df.iterrows():
+        print("Loading file: {}".format(row['dmri_path']))
+        data = nib.load(row['dmri_path']).get_fdata()
+
+        # sagittal orientation
+        print("Processing sagittal orientation...")
+        for idx in range(data.shape[0]):
+            sagittal = data[idx, :, :, :]
+            check_sum = np.sum(sagittal)
+            if check_sum == 0:
+                print("Sagittal idx={} is empty. Skipping.".format(idx))
+            else:
+                save_path = "sagittal/data_{}_sagittal_idx_{}".format(row['subj_id'], idx)
+                save_path = os.path.join(save_dir, save_path)
+                np.savez(save_path, data=sagittal)
+
+        # coronal orientation
+        print("Processing coronal orientation...")
+        for idx in range(data.shape[1]):
+            coronal = data[:, idx, :, :]
+            check_sum = np.sum(coronal)
+            if check_sum == 0:
+                print("Coronal idx={} is empty. Skipping.".format(idx))
+            else:
+                save_path = "coronal/data_{}_coronal_idx_{}".format(row['subj_id'], idx)
+                save_path = os.path.join(save_dir, save_path)
+                np.savez(save_path, data=coronal)
+
+        # axial orientation
+        print("Processing axial orientation...")
+        for idx in range(data.shape[2]):
+            axial = data[:, :, idx, :]
+            check_sum = np.sum(axial)
+            if check_sum == 0:
+                print("Axial idx={} is empty. Skipping.".format(idx))
+            else:
+                save_path = "axial/data_{}_axial_idx_{}".format(row['subj_id'], idx)
+                save_path = os.path.join(save_dir, save_path)
+                np.savez(save_path, data=axial)
+    print("Done!")
+
+
+def batch_loss(dataloader, encoder, decoder, criterion, device):
+    """Calculates average loss on whole dataset."""
+    encoder.eval()
+    decoder.eval()
+
+    with torch.no_grad():
+        total = 0
+        running_loss = 0
+        for data in dataloader:
+
+            x = data.to(device)
+
+            out = decoder(encoder(x))
+
+            loss = criterion(x, out)
+
+            running_loss = running_loss + loss.item() * data.size(0)
+            total += data.size(0)
+
+        avg_loss = running_loss / total
+
+    return avg_loss, total
