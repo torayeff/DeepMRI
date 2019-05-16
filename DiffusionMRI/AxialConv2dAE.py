@@ -89,7 +89,7 @@ class ConvDecoder(nn.Module):
                 bias=False
             ),
             nn.ReLU(),
-            nn.BatchNorm2d(288),
+            nn.BatchNorm2d(out_channels),
         )
 
     def forward(self, x):
