@@ -17,8 +17,8 @@ print("Device: ", device)
 
 # deterministic
 torch.manual_seed(0)
-torch.backends.cudnn.benchmark = False  # set False whenever input size varies
-torch.backends.cudnn.deterministic = True
+# torch.backends.cudnn.benchmark = False  # set False whenever input size varies
+# torch.backends.cudnn.deterministic = True
 
 # training data settings
 mu = 383
@@ -38,11 +38,11 @@ decoder = ConvDecoder(out_channels=288)
 decoder.to(device)
 
 # load pretrained weights
-prev_epoch = 0
-# encoder_path = '/home/agajan/DeepMRI/DiffusionMRI/models/axial_conv2d_encoder_epoch_' + str(prev_epoch)
-# decoder_path = '/home/agajan/DeepMRI/DiffusionMRI/models/axial_conv2d_decoder_epoch_' + str(prev_epoch)
-# encoder.load_state_dict(torch.load(encoder_path))
-# decoder.load_state_dict(torch.load(decoder_path))
+prev_epoch = 800
+encoder_path = '/home/agajan/DeepMRI/DiffusionMRI/models/axial_conv2d_encoder_epoch_' + str(prev_epoch)
+decoder_path = '/home/agajan/DeepMRI/DiffusionMRI/models/axial_conv2d_decoder_epoch_' + str(prev_epoch)
+encoder.load_state_dict(torch.load(encoder_path))
+decoder.load_state_dict(torch.load(decoder_path))
 
 p1 = utils.count_model_parameters(encoder)
 p2 = utils.count_model_parameters(decoder)
@@ -58,18 +58,17 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, ve
 encoder.train()
 decoder.train()
 
-num_epochs = 100
+num_epochs = 10000
 iters = 1
 
-print("Before training: ")
-avg_loss, total = utils.batch_loss(trainloader, encoder, decoder, criterion, device)
-ev_st = time.time()
-avg_loss, total = utils.batch_loss(trainloader, encoder, decoder, criterion, device)
-ev_time = time.time() - ev_st
-print("Iteration: {}, Total examples: {}, Avg. loss: {}, Evaluation time: {:.5f} seconds.".format(iters,
-                                                                                                  total,
-                                                                                                  avg_loss,
-                                                                                                  ev_time))
+# print("Before training: ")
+# ev_st = time.time()
+# avg_loss, total = utils.batch_loss(trainloader, encoder, decoder, criterion, device)
+# ev_time = time.time() - ev_st
+# print("Iteration: {}, Total examples: {}, Avg. loss: {}, Evaluation time: {:.5f} seconds.".format(iters,
+#                                                                                                   total,
+#                                                                                                   avg_loss,
+#                                                                                                   ev_time))
 
 print("Training started for {} epochs".format(num_epochs))
 for epoch in range(1, num_epochs + 1):
@@ -92,27 +91,28 @@ for epoch in range(1, num_epochs + 1):
         optimizer.step()
 
         running_loss = running_loss + loss.item() * data.size(0)
-        if iters % 100 == 0:
-            print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
+        if iters % 1000 == 0:
+            # print("Iter #{}, iter time: {:.5f}, batch loss: {}".format(iters, time.time() - iter_time, loss.item()))
 
             # report statistics for the whole set
             ev_st = time.time()
             avg_loss, total = utils.batch_loss(trainloader, encoder, decoder, criterion, device)
             ev_time = time.time() - ev_st
+            encoder.train()
+            decoder.train()
             print("Iteration: {}, Total examples: {}, Avg. loss: {}, Evaluation time: {:.5f}".format(iters,
                                                                                                      total,
                                                                                                      avg_loss,
                                                                                                      ev_time))
         iters += 1
 
-    # if epoch % 1 == 0:
-    #     torch.save(encoder.state_dict(), "models/axial_conv2d_encoder_epoch_{}".format(epoch + prev_epoch))
-    #     torch.save(decoder.state_dict(), "models/axial_conv2d_decoder_epoch_{}".format(epoch + prev_epoch))
+    if epoch % 100 == 0:
+        torch.save(encoder.state_dict(), "models/axial_conv2d_encoder_epoch_{}".format(epoch + prev_epoch))
+        torch.save(decoder.state_dict(), "models/axial_conv2d_decoder_epoch_{}".format(epoch + prev_epoch))
 
     epoch_loss = running_loss / len(trainset)
-
-    # scheduler.step(epoch_loss)
     print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch + prev_epoch, num_epochs, epoch_loss,
                                                                              time.time() - epoch_start))
+    scheduler.step(epoch_loss)
 
 print("Total running time: {}".format(time.time() - script_start))

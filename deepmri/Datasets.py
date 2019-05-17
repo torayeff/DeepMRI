@@ -11,16 +11,16 @@ import numpy as np
 class OrientationDataset(Dataset):
     """Orientation dataset for dMRI."""
 
-    def __init__(self, data_dir, channel_first=True, normalize=True, mu=None, std=None, scale_range=None, sort=False):
+    def __init__(self, data_dir, channel_first=True, normalize=True, mu=None, std=None, scale_range=None, debug=False):
         self.data_dir = data_dir
         self.channel_first = channel_first
         self.normalize = normalize
         self.mu = mu
         self.std = std
         self.scale_range = scale_range
-        self.sort = sort
+        self.debug = debug
         self.file_names = os.listdir(data_dir)
-        if sort:
+        if debug:
             self.file_names = sorted(self.file_names)
 
     def __len__(self):
@@ -28,6 +28,8 @@ class OrientationDataset(Dataset):
 
     def __getitem__(self, idx):
         file_path = os.path.join(self.data_dir, self.file_names[idx])
+        if self.debug:
+            print(file_path)
         x = np.load(file_path)['data']
         if self.channel_first:
             x = x.transpose(2, 0, 1)  # channel x width x height

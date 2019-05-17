@@ -45,7 +45,8 @@ def show_slices(slices,
     for i, slc in enumerate(slices):
         axes[i].set_title(titles[i])
         axes[i].imshow(slc.T, cmap="gray", origin="lower")
-    plt.tight_layout()
+    fig.tight_layout(rect=[0, 0.1, 1, 0.95])
+    plt.show()
 
 
 def show_one_slice(slc,
@@ -338,3 +339,39 @@ def batch_loss(dataloader, encoder, decoder, criterion, device):
         avg_loss = running_loss / total
 
     return avg_loss, total
+
+
+def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t):
+    """Evaluates AE."""
+    encoder.eval()
+    decoder.eval()
+
+    # x is numpy array with dim: W x H x C
+    x = x.transpose(2, 0, 1)
+    x = (x - mu) / std
+    x = torch.tensor(x).float().unsqueeze(0)
+
+    with torch.no_grad():
+        x = x.to(device)
+        y = decoder(encoder(x))
+
+    x = x * std + mu
+    # unnormalize
+    y = y * std + mu
+    y = y.clamp(min=0)
+
+    loss = criterion(x, y)
+
+    x = x.squeeze().cpu().numpy()
+    y = y.squeeze().cpu().numpy()
+
+    print("Loss: {}".format(loss))
+    suptitle = "Loss: {}".format(loss)
+    original_title = "Original\n Minval: {}, Maxval: {}".format(x.min(), x.max())
+    recons_title = "Reconstruction\n Minval: {}, Maxval: {}".format(y.min(), y.max())
+    show_slices([
+        x[t, :, :],
+        y[t, :, :]
+    ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16)
+
+    return y, loss
