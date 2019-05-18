@@ -20,26 +20,30 @@ from ADHD.ConvAE import ConvAE
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 print("Device: ", device)
+# -------------------------------Create dataset----------------------------------------------
+csv_file = "test.csv"
+save_dir = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/data/test/'
+utils.create_orientation_dataset(csv_file, save_dir)
 # ------------------------------Maks csv file------------------------------------------------
-path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/regina/'
-dmris = []
-with open("test.csv", "w") as f:
-    f.write("subj_id,dmri_path\n")
-    c = 0
-    for file in os.listdir(path):
-        if len(file) == 6:
-            subj_id = file
-            dmri_path = os.path.join(path, subj_id, 'Diffusion/data.nii.gz')
-            dmri = nib.load(dmri_path)
-            if c <= 5:
-                c += 1
-                continue
-            if dmri.shape[3] == 288:
-                line = "{},{}\n".format(subj_id, dmri_path)
-                f.write(line)
-                c += 1
-            if c == 7:
-                break
+# path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/regina/'
+# dmris = []
+# with open("test.csv", "w") as f:
+#     f.write("subj_id,dmri_path\n")
+#     c = 0
+#     for file in os.listdir(path):
+#         if len(file) == 6:
+#             subj_id = file
+#             dmri_path = os.path.join(path, subj_id, 'Diffusion/data.nii.gz')
+#             dmri = nib.load(dmri_path)
+#             if c <= 5:
+#                 c += 1
+#                 continue
+#             if dmri.shape[3] == 288:
+#                 line = "{},{}\n".format(subj_id, dmri_path)
+#                 f.write(line)
+#                 c += 1
+#             if c == 7:
+#                 break
 
 # f1 = [f for f in os.listdir('/home/agajan/Downloads/HCP105_Zenodo_NewTrkFormat/') if len(f) == 6]
 # f2 = [f for f in os.listdir('/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/regina/') if len(f) == 6]
