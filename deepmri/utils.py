@@ -375,3 +375,55 @@ def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t, plot=True):
         ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16)
 
     return y, loss.item()
+
+
+def train_ae(encoder,
+             decoder,
+             criterion,
+             optimizer,
+             device,
+             trainloader,
+             num_epochs,
+             model_name,
+             experiment_dir,
+             checkpoint=1
+             ):
+    """Trains AutoEncoder."""
+
+    for epoch in range(1, num_epochs + 1):
+        epoch_start = time.time()
+        total_examples = 0
+        running_loss = 0.0
+
+        for data in trainloader:
+
+            # zero gradients
+            optimizer.zero_grad()
+
+            # forward
+            x = data.to(device)
+            out = decoder(encoder(x))
+
+            # calculate loss
+            loss = criterion(x, out)
+
+            # backward
+            loss.backward()
+
+            # update params
+            optimizer.step()
+
+            # track loss
+            running_loss = running_loss + loss.item() * data.size(0)
+            total_examples += data.size(0)
+
+        if epoch % checkpoint == 0:
+            torch.save(encoder.state_dict(), "{}models/{}_encoder_epoch_{}".format(experiment_dir, model_name, epoch))
+            torch.save(decoder.state_dict(), "{}models/{}_decoder_epoch_{}".format(experiment_dir, model_name, epoch))
+
+        epoch_loss = running_loss / total_examples
+        print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch,
+                                                                                 num_epochs,
+                                                                                 epoch_loss,
+                                                                                 time.time() - epoch_start))
+
