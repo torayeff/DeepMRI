@@ -341,13 +341,15 @@ def batch_loss(dataloader, encoder, decoder, criterion, device):
     return avg_loss, total
 
 
-def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t, plot=True):
+def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t, plot=True, add_channel=False):
     """Evaluates AE."""
     encoder.eval()
     decoder.eval()
 
-    # x is numpy array with dim: W x H x C
-    x = x.transpose(2, 0, 1)
+    # x is numpy array with dim: C x W x H
+    if add_channel:
+        x = x.transpose(1, 2, 0)[np.newaxis, ...]  # 1 x W x H x C
+
     x = (x - mu) / std
     x = torch.tensor(x).float().unsqueeze(0)
 
@@ -364,6 +366,10 @@ def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t, plot=True):
 
     x = x.squeeze().cpu().numpy()
     y = y.squeeze().cpu().numpy()
+
+    if add_channel:
+        x = x.transpose(2, 0, 1)
+        y = y.transpose(2, 0, 1)
 
     if plot:
         suptitle = "Loss: {}".format(loss)
@@ -391,6 +397,8 @@ def train_ae(encoder,
     """Trains AutoEncoder."""
 
     for epoch in range(1, num_epochs + 1):
+        encoder.train()
+        decoder.train()
         epoch_start = time.time()
         total_examples = 0
         running_loss = 0.0
