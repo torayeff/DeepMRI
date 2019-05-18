@@ -341,7 +341,7 @@ def batch_loss(dataloader, encoder, decoder, criterion, device):
     return avg_loss, total
 
 
-def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t):
+def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t, plot=True):
     """Evaluates AE."""
     encoder.eval()
     decoder.eval()
@@ -365,13 +365,13 @@ def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t):
     x = x.squeeze().cpu().numpy()
     y = y.squeeze().cpu().numpy()
 
-    print("Loss: {}".format(loss))
-    suptitle = "Loss: {}".format(loss)
-    original_title = "Original\n Minval: {}, Maxval: {}".format(x.min(), x.max())
-    recons_title = "Reconstruction\n Minval: {}, Maxval: {}".format(y.min(), y.max())
-    show_slices([
-        x[t, :, :],
-        y[t, :, :]
-    ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16)
+    if plot:
+        suptitle = "Loss: {}".format(loss)
+        original_title = "Original\n Minval: {}, Maxval: {}".format(x.min(), x.max())
+        recons_title = "Reconstruction\n Minval: {}, Maxval: {}".format(y.min(), y.max())
+        show_slices([
+            x[t, :, :],
+            y[t, :, :]
+        ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16)
 
-    return y, loss
+    return y, loss.item()
