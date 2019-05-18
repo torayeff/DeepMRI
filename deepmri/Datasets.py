@@ -11,9 +11,9 @@ import numpy as np
 class OrientationDataset(Dataset):
     """Orientation dataset for dMRI."""
 
-    def __init__(self, data_dir, channel_first=True, normalize=True, mu=None, std=None, scale_range=None, debug=False):
+    def __init__(self, data_dir, add_channel=False, normalize=True, mu=None, std=None, scale_range=None, debug=False):
         self.data_dir = data_dir
-        self.channel_first = channel_first
+        self.add_channel = add_channel
         self.normalize = normalize
         self.mu = mu
         self.std = std
@@ -31,7 +31,11 @@ class OrientationDataset(Dataset):
         if self.debug:
             print(file_path)
         x = np.load(file_path)['data']
-        if self.channel_first:
+        if self.add_channel:
+            # 3D convolutions
+            x = x[np.newaxis, ...]  # channel x width x height x depth
+        else:
+            # 2D convolutions
             x = x.transpose(2, 0, 1)  # channel x width x height
 
         if self.normalize:
