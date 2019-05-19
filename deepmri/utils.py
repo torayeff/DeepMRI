@@ -267,53 +267,63 @@ def pooled_mean_std(dataset, total_n):
     return mu, std, n
 
 
-def create_orientation_dataset(csv_file, save_dir):
+def create_orientation_dataset(csv_file,
+                               save_dir,
+                               orients=(True, True, True)):
     """Creates axial, coronal, sagittal volumes.
 
     Args:
         csv_file: csv file with dMRI paths.
         save_dir: Directory to save the data.
+        orients: Orients to create.
     """
     df = pd.read_csv(csv_file)
     for _, row in df.iterrows():
+        if np.sum(orients) == 0:
+            print("None of the orientation has been selected.")
+            break
+
         print("Loading file: {}".format(row['dmri_path']))
         data = nib.load(row['dmri_path']).get_fdata()
 
         # sagittal orientation
-        print("Processing sagittal orientation...")
-        for idx in range(data.shape[0]):
-            sagittal = data[idx, :, :, :]
-            check_sum = np.sum(sagittal)
-            if check_sum == 0:
-                print("Sagittal idx={} is empty. Skipping.".format(idx))
-            else:
-                save_path = "sagittal/data_{}_sagittal_idx_{}".format(row['subj_id'], idx)
-                save_path = os.path.join(save_dir, save_path)
-                np.savez(save_path, data=sagittal)
+        if orients[0]:
+            print("Processing sagittal orientation...")
+            for idx in range(data.shape[0]):
+                sagittal = data[idx, :, :, :]
+                check_sum = np.sum(sagittal)
+                if check_sum == 0:
+                    print("Sagittal idx={} is empty. Skipping.".format(idx))
+                else:
+                    save_path = "sagittal/data_{}_sagittal_idx_{}".format(row['subj_id'], idx)
+                    save_path = os.path.join(save_dir, save_path)
+                    np.savez(save_path, data=sagittal)
 
         # coronal orientation
-        print("Processing coronal orientation...")
-        for idx in range(data.shape[1]):
-            coronal = data[:, idx, :, :]
-            check_sum = np.sum(coronal)
-            if check_sum == 0:
-                print("Coronal idx={} is empty. Skipping.".format(idx))
-            else:
-                save_path = "coronal/data_{}_coronal_idx_{}".format(row['subj_id'], idx)
-                save_path = os.path.join(save_dir, save_path)
-                np.savez(save_path, data=coronal)
+        if orients[1]:
+            print("Processing coronal orientation...")
+            for idx in range(data.shape[1]):
+                coronal = data[:, idx, :, :]
+                check_sum = np.sum(coronal)
+                if check_sum == 0:
+                    print("Coronal idx={} is empty. Skipping.".format(idx))
+                else:
+                    save_path = "coronal/data_{}_coronal_idx_{}".format(row['subj_id'], idx)
+                    save_path = os.path.join(save_dir, save_path)
+                    np.savez(save_path, data=coronal)
 
         # axial orientation
-        print("Processing axial orientation...")
-        for idx in range(data.shape[2]):
-            axial = data[:, :, idx, :]
-            check_sum = np.sum(axial)
-            if check_sum == 0:
-                print("Axial idx={} is empty. Skipping.".format(idx))
-            else:
-                save_path = "axial/data_{}_axial_idx_{}".format(row['subj_id'], idx)
-                save_path = os.path.join(save_dir, save_path)
-                np.savez(save_path, data=axial)
+        if orients[2]:
+            print("Processing axial orientation...")
+            for idx in range(data.shape[2]):
+                axial = data[:, :, idx, :]
+                check_sum = np.sum(axial)
+                if check_sum == 0:
+                    print("Axial idx={} is empty. Skipping.".format(idx))
+                else:
+                    save_path = "axial/data_{}_axial_idx_{}".format(row['subj_id'], idx)
+                    save_path = os.path.join(save_dir, save_path)
+                    np.savez(save_path, data=axial)
     print("Done!")
 
 
@@ -404,6 +414,7 @@ def train_ae(encoder,
         running_loss = 0.0
 
         for data in trainloader:
+            iter_time = time.time()
 
             # zero gradients
             optimizer.zero_grad()
@@ -424,6 +435,7 @@ def train_ae(encoder,
             # track loss
             running_loss = running_loss + loss.item() * data.size(0)
             total_examples += data.size(0)
+            # print("Iter time: {}".format(time.time() - iter_time))
 
         if epoch % checkpoint == 0:
             torch.save(encoder.state_dict(), "{}models/{}_encoder_epoch_{}".format(experiment_dir, model_name, epoch))

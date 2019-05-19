@@ -21,9 +21,9 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 print("Device: ", device)
 # -------------------------------Create dataset----------------------------------------------
-csv_file = "test.csv"
-save_dir = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/data/test/'
-utils.create_orientation_dataset(csv_file, save_dir)
+# csv_file = "train.csv"
+# save_dir = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/data/train/'
+# utils.create_orientation_dataset(csv_file, save_dir, orients=(False, False, True))
 # ------------------------------Maks csv file------------------------------------------------
 # path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/regina/'
 # dmris = []
@@ -44,17 +44,6 @@ utils.create_orientation_dataset(csv_file, save_dir)
 #                 c += 1
 #             if c == 7:
 #                 break
-
-# f1 = [f for f in os.listdir('/home/agajan/Downloads/HCP105_Zenodo_NewTrkFormat/') if len(f) == 6]
-# f2 = [f for f in os.listdir('/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/regina/') if len(f) == 6]
-#
-# match = 0
-# for f in f1:
-#     if f in f2:
-#         match += 1
-#         print(f)
-# print(match)
-# print(len(f1), len(f2))
 
 # --------------------------------HDF5 vs Pickle---------------------------------------
 # data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/'
@@ -89,13 +78,13 @@ utils.create_orientation_dataset(csv_file, save_dir)
 #     x = np.array(x)
 #     print(type(x))
 # -------------------------------Calculate Mean and Std of Trainset--------------------
-# data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/tensors_3d/'
-# trainset = Datasets.Volume3dDataset(data_path)
-#
-# total_n = 148781436150  # known in advance
-# # total_n = 73167000
-# mu, std, n = utils.pooled_mean_std(trainset, total_n)
-# print(mu, std, n)
+data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/' \
+            'data/train/axial/'
+trainset = Datasets.OrientationDataset(data_path, normalize=False)
+
+total_n = 14298 * 288 * 145 * 174  # known in advance
+mu, std, n = utils.pooled_mean_std(trainset, total_n)
+print(mu, std, n)
 
 # verify
 # print("Verification")
