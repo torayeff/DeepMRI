@@ -402,16 +402,19 @@ def train_ae(encoder,
              num_epochs,
              model_name,
              experiment_dir,
-             checkpoint=1
+             checkpoint=1,
+             print_iter=False
              ):
     """Trains AutoEncoder."""
-
+    print("Training started for {} epochs.".format(num_epochs))
     for epoch in range(1, num_epochs + 1):
         encoder.train()
         decoder.train()
         epoch_start = time.time()
         total_examples = 0
         running_loss = 0.0
+
+        iters = 1
 
         for data in trainloader:
             iter_time = time.time()
@@ -435,7 +438,9 @@ def train_ae(encoder,
             # track loss
             running_loss = running_loss + loss.item() * data.size(0)
             total_examples += data.size(0)
-            # print("Iter time: {}".format(time.time() - iter_time))
+            if print_iter:
+                print("Iteration #{}, iter time: {}, loss: {}".format(iters, time.time() - iter_time, loss.item()))
+            iters += 1
 
         if epoch % checkpoint == 0:
             torch.save(encoder.state_dict(), "{}models/{}_encoder_epoch_{}".format(experiment_dir, model_name, epoch))
