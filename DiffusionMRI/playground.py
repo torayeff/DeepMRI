@@ -21,9 +21,18 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 print("Device: ", device)
 # -------------------------------Create dataset----------------------------------------------
-# csv_file = "train.csv"
-# save_dir = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/data/train/'
-# utils.create_orientation_dataset(csv_file, save_dir, orients=(False, False, True))
+csv_file = "overfit.csv"
+save_dir = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/data/overfit/'
+utils.create_orientation_dataset(csv_file, save_dir, orients=(0, 1, 2))
+
+x = np.load(save_dir + 'axial/data_162733_axial_idx_64.npz')['data']
+print("Axial shape: ", x.shape)
+
+x = np.load(save_dir + 'coronal/data_162733_coronal_idx_64.npz')['data']
+print("Coronal shape: ", x.shape)
+
+x = np.load(save_dir + 'sagittal/data_162733_sagittal_idx_64.npz')['data']
+print("Sagittal shape: ", x.shape)
 # ------------------------------Maks csv file------------------------------------------------
 # path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/regina/'
 # dmris = []
@@ -78,13 +87,13 @@ print("Device: ", device)
 #     x = np.array(x)
 #     print(type(x))
 # -------------------------------Calculate Mean and Std of Trainset--------------------
-data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/' \
-            'data/train/axial/'
-trainset = Datasets.OrientationDataset(data_path, normalize=False)
-
-total_n = 14298 * 288 * 145 * 174  # known in advance
-mu, std, n = utils.pooled_mean_std(trainset, total_n)
-print(mu, std, n)
+# data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/' \
+#             'data/train/axial/'
+# trainset = Datasets.OrientationDataset(data_path, normalize=False)
+#
+# total_n = 14298 * 288 * 145 * 174  # known in advance
+# mu, std, n = utils.pooled_mean_std(trainset, total_n)
+# print(mu, std, n)
 
 # verify
 # print("Verification")

@@ -9,9 +9,12 @@ from DiffusionMRI.AxialConv2dAE import ConvEncoder  # noqa: E402
 from DiffusionMRI.AxialConv2dAE import ConvDecoder  # noqa: E402
 
 script_start = time.time()
-experiment_dir = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/'
 
 # ------------------------------------------Settings--------------------------------------------------------------------
+experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
+data_path = experiment_dir + 'data/train/axial_part1/'
+model_name = "AxialConv2dAE"
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
 seed = 0  # random seed for reproducibility
@@ -20,20 +23,16 @@ if deterministic:
 torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input size varies
 torch.backends.cudnn.deterministic = deterministic
 
-# normalization
+# data
 mu = 382
 std = 836
-
-# data
 batch_size = 16
-data_path = experiment_dir + 'data/train/axial/'
-# data_path = experiment_dir + 'data/overfit/'
 
-start_epoch = 0  # for loading pretrained weights
+start_epoch = 66  # for loading pretrained weights
 num_epochs = 100  # number of epochs to trains
 checkpoint = 1  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
-trainset = Datasets.OrientationDataset(data_path, mu=mu, std=std, normalize=True, add_channel=False, debug=False)
+trainset = Datasets.OrientationDataset(data_path, mu=mu, std=std, normalize=True)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
 total_examples = len(trainset)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
@@ -41,7 +40,6 @@ print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(
                                                                                 total_examples // batch_size + 1))
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-model_name = "Conv2dAE"
 encoder = ConvEncoder(input_channels=288)
 decoder = ConvDecoder(out_channels=288)
 encoder.to(device)
@@ -61,7 +59,7 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=3e-4)
+optimizer = torch.optim.Adam(parameters, lr=3e-5)
 # ------------------------------------------Training--------------------------------------------------------------------
 
 
@@ -74,6 +72,8 @@ utils.train_ae(encoder,
                num_epochs,
                model_name,
                experiment_dir,
-               checkpoint=checkpoint)
+               start_epoch=start_epoch,
+               checkpoint=checkpoint,
+               print_iter=False)
 
 print("Total running time: {}".format(time.time() - script_start))

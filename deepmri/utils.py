@@ -7,7 +7,6 @@ import itertools
 import pandas as pd
 import os
 import nibabel as nib
-import deepmri.Datasets as Datasets
 
 
 def calc_conv_dim(w, k, s, p):
@@ -36,7 +35,8 @@ def show_slices(slices,
                 suptitle="Visualization",
                 titles=('Saggital', 'Coronal', 'Axial'),
                 figsize=(10, 5),
-                fontsize=24):
+                fontsize=24,
+                cmap=None):
     """ Function to display row of image slices """
 
     plt.rcParams["figure.figsize"] = figsize
@@ -44,7 +44,7 @@ def show_slices(slices,
     fig.suptitle(suptitle, fontsize=fontsize)
     for i, slc in enumerate(slices):
         axes[i].set_title(titles[i])
-        axes[i].imshow(slc.T, cmap="gray", origin="lower")
+        axes[i].imshow(slc.T, cmap=cmap, origin="lower")
     fig.tight_layout(rect=[0, 0.1, 1, 0.95])
     plt.show()
 
@@ -52,10 +52,11 @@ def show_slices(slices,
 def show_one_slice(slc,
                    title="One Slice",
                    figsize=(10, 5),
-                   fontsize=12):
+                   fontsize=12,
+                   cmap=None):
 
     plt.rcParams["figure.figsize"] = figsize
-    plt.imshow(slc.T, cmap="gray", origin="lower")
+    plt.imshow(slc.T, cmap=cmap, origin="lower")
     plt.title(title, fontsize=fontsize)
     plt.tight_layout()
     plt.show()
@@ -269,97 +270,89 @@ def pooled_mean_std(dataset, total_n):
 
 def create_orientation_dataset(csv_file,
                                save_dir,
-                               orients=(True, True, True)):
+                               orients=(0, 1, 2)):
     """Creates axial, coronal, sagittal volumes.
 
     Args:
         csv_file: csv file with dMRI paths.
         save_dir: Directory to save the data.
-        orients: Orients to create.
+        orients: 0 - Sagittal, 1 - Coronal, 2 - Axial
     """
+    orient_names = ['sagittal', 'coronal', 'axial']
+
     df = pd.read_csv(csv_file)
     for _, row in df.iterrows():
-        if np.sum(orients) == 0:
-            print("None of the orientation has been selected.")
-            break
 
         print("Loading file: {}".format(row['dmri_path']))
-        data = nib.load(row['dmri_path']).get_fdata()
+        data = nib.load(row['dmri_path']).get_fdata()  # 4D data: W x H x D x T
 
-        # sagittal orientation
-        if orients[0]:
-            print("Processing sagittal orientation...")
-            for idx in range(data.shape[0]):
-                sagittal = data[idx, :, :, :]
-                check_sum = np.sum(sagittal)
-                if check_sum == 0:
-                    print("Sagittal idx={} is empty. Skipping.".format(idx))
-                else:
-                    save_path = "sagittal/data_{}_sagittal_idx_{}".format(row['subj_id'], idx)
-                    save_path = os.path.join(save_dir, save_path)
-                    np.savez(save_path, data=sagittal)
+        for orient in orients:
 
-        # coronal orientation
-        if orients[1]:
-            print("Processing coronal orientation...")
-            for idx in range(data.shape[1]):
-                coronal = data[:, idx, :, :]
-                check_sum = np.sum(coronal)
-                if check_sum == 0:
-                    print("Coronal idx={} is empty. Skipping.".format(idx))
-                else:
-                    save_path = "coronal/data_{}_coronal_idx_{}".format(row['subj_id'], idx)
-                    save_path = os.path.join(save_dir, save_path)
-                    np.savez(save_path, data=coronal)
+            orient_name = orient_names[orient]
+            print("Processing {} orientation...".format(orient_name))
+            st = time.time()
 
-        # axial orientation
-        if orients[2]:
-            print("Processing axial orientation...")
-            for idx in range(data.shape[2]):
-                axial = data[:, :, idx, :]
-                check_sum = np.sum(axial)
+            for idx in range(data.shape[orient]):
+                volume = None
+                if orient == 0:
+                    volume = data[idx, :, :, :]
+                elif orient == 1:
+                    volume = data[:, idx, :, :]
+                elif orient == 2:
+                    volume = data[:, :, idx, :]
+
+                check_sum = np.sum(volume)
                 if check_sum == 0:
-                    print("Axial idx={} is empty. Skipping.".format(idx))
+                    print("{} idx={} is empty. Skipping.".format(orient_name, idx))
                 else:
-                    save_path = "axial/data_{}_axial_idx_{}".format(row['subj_id'], idx)
+                    save_path = "{}/data_{}_{}_idx_{}".format(orient_name, row['subj_id'], orient_name, idx)
                     save_path = os.path.join(save_dir, save_path)
-                    np.savez(save_path, data=axial)
+                    volume = volume.transpose(2, 0, 1)  # channel x width x height)
+
+                    np.savez(save_path, data=volume)
+
+            print("Processed in {:.5f} seconds.".format(time.time() - st))
     print("Done!")
 
 
-def batch_loss(dataloader, encoder, decoder, criterion, device):
+def dataset_loss(dataset, encoder, decoder, criterion, device):
     """Calculates average loss on whole dataset."""
     encoder.eval()
     decoder.eval()
 
-    with torch.no_grad():
-        total = 0
-        running_loss = 0
-        for data in dataloader:
+    total_examples = len(dataset)
 
-            x = data.to(device)
+    min_loss = 10**9
+    max_loss = 0
+
+    print("Total examples: {}".format(total_examples))
+
+    with torch.no_grad():
+        running_loss = 0
+        for i, data in enumerate(dataset):
+
+            x = data.unsqueez(0).to(device)
 
             out = decoder(encoder(x))
 
             loss = criterion(x, out)
 
-            running_loss = running_loss + loss.item() * data.size(0)
-            total += data.size(0)
+            min_loss = min(loss.item(), min_loss)
+            max_loss = max(loss.item(), max_loss)
 
-        avg_loss = running_loss / total
+            running_loss = running_loss + loss.item()
 
-    return avg_loss, total
+        avg_loss = running_loss / total_examples
+
+    return min_loss, max_loss, avg_loss
 
 
-def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t, plot=True, add_channel=False):
+def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t, plot=True, cmap=None):
     """Evaluates AE."""
     encoder.eval()
     decoder.eval()
 
     # x is numpy array with dim: C x W x H
-    if add_channel:
-        x = x.transpose(1, 2, 0)[np.newaxis, ...]  # 1 x W x H x C
-
     x = (x - mu) / std
     x = torch.tensor(x).float().unsqueeze(0)
 
@@ -377,10 +370,6 @@ def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t, plot=True, a
     x = x.squeeze().cpu().numpy()
     y = y.squeeze().cpu().numpy()
 
-    if add_channel:
-        x = x.transpose(2, 0, 1)
-        y = y.transpose(2, 0, 1)
-
     if plot:
         suptitle = "Loss: {}".format(loss)
         original_title = "Original\n Minval: {}, Maxval: {}".format(x.min(), x.max())
@@ -388,7 +377,7 @@ def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t, plot=True, a
         show_slices([
             x[t, :, :],
             y[t, :, :]
-        ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16)
+        ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16, cmap=cmap)
 
     return y, loss.item()
 
@@ -402,8 +391,9 @@ def train_ae(encoder,
              num_epochs,
              model_name,
              experiment_dir,
+             start_epoch=0,
              checkpoint=1,
-             print_iter=False
+             print_iter=False,
              ):
     """Trains AutoEncoder."""
     print("Training started for {} epochs.".format(num_epochs))
@@ -443,11 +433,15 @@ def train_ae(encoder,
             iters += 1
 
         if epoch % checkpoint == 0:
-            torch.save(encoder.state_dict(), "{}models/{}_encoder_epoch_{}".format(experiment_dir, model_name, epoch))
-            torch.save(decoder.state_dict(), "{}models/{}_decoder_epoch_{}".format(experiment_dir, model_name, epoch))
+            torch.save(encoder.state_dict(), "{}models/{}_encoder_epoch_{}".format(experiment_dir,
+                                                                                   model_name,
+                                                                                   epoch + start_epoch))
+            torch.save(decoder.state_dict(), "{}models/{}_decoder_epoch_{}".format(experiment_dir,
+                                                                                   model_name,
+                                                                                   epoch + start_epoch))
 
         epoch_loss = running_loss / total_examples
-        print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch,
+        print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch + start_epoch,
                                                                                  num_epochs,
                                                                                  epoch_loss,
                                                                                  time.time() - epoch_start))

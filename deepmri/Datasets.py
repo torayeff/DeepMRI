@@ -11,32 +11,34 @@ import numpy as np
 class OrientationDataset(Dataset):
     """Orientation dataset for dMRI."""
 
-    def __init__(self, data_dir, add_channel=False, normalize=True, mu=None, std=None, scale_range=None, debug=False):
+    def __init__(self, data_dir, normalize=True, mu=None, std=None, scale_range=None, to_tensor=True):
+        """
+        Args:
+            data_dir: Directory with .npz volumes.
+            normalize: If True, the data will be normalized
+            mu: Mean of the dataset.
+            std: Standard deviation of the dataset.
+            scale_range: If not None, data will be scaled into the given range.
+            to_tensor: If True, numpy array will be converted to tensor.
+        """
+
         self.data_dir = data_dir
-        self.add_channel = add_channel
         self.normalize = normalize
         self.mu = mu
         self.std = std
         self.scale_range = scale_range
-        self.debug = debug
+        self.to_tensor = to_tensor
+
         self.file_names = os.listdir(data_dir)
-        if debug:
-            self.file_names = sorted(self.file_names)
 
     def __len__(self):
         return len(self.file_names)
 
     def __getitem__(self, idx):
-        file_path = os.path.join(self.data_dir, self.file_names[idx])
-        if self.debug:
-            print(file_path)
+        file_name = self.file_names[idx]
+        file_path = os.path.join(self.data_dir, file_name)
+
         x = np.load(file_path)['data']
-        if self.add_channel:
-            # 3D convolutions
-            x = x[np.newaxis, ...]  # channel x width x height x depth
-        else:
-            # 2D convolutions
-            x = x.transpose(2, 0, 1)  # channel x width x height
 
         if self.normalize:
             if self.mu is None:
@@ -48,7 +50,7 @@ class OrientationDataset(Dataset):
             # mean subtraction
             x = x - self.mu
 
-            # normalization
+            # scaling
             if self.scale_range is None:
                 x /= self.std
             else:
@@ -56,7 +58,12 @@ class OrientationDataset(Dataset):
                 b = self.scale_range[1]
                 x = a + ((x - x.min()) * (b - a)) / (x.max() - x.min())
 
-        return torch.tensor(x).float()
+        if self.to_tensor:
+            x = torch.tensor(x).float()
+
+        sample = {'data': x, 'file_name': file_name}
+
+        return sample
 
 
 class Volume3dDataset(Dataset):
