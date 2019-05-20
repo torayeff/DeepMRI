@@ -5,18 +5,18 @@ import torch.nn as nn
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
-from DiffusionMRI.AxialConv2dAE import ConvEncoder  # noqa: E402
-from DiffusionMRI.AxialConv2dAE import ConvDecoder  # noqa: E402
+from DiffusionMRI.SagittalConv2dAE import ConvEncoder  # noqa: E402
+from DiffusionMRI.SagittalConv2dAE import ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'data/overfit/axial/'
-model_name = "OverfitAxialConv2dAE"
+data_path = experiment_dir + 'data/train/sagittal_part1/'
+model_name = "SagittalConv2dAE"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
-deterministic = True  # reproducibility
+deterministic = False  # reproducibility
 seed = 0  # random seed for reproducibility
 if deterministic:
     torch.manual_seed(seed)
@@ -24,13 +24,13 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-mu = 374.6587
-std = 799.9907
+mu = 800
+std = 300
 batch_size = 16
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 100  # number of epochs to trains
-checkpoint = 10  # save model every checkpoint epoch
+checkpoint = 1  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 trainset = Datasets.OrientationDataset(data_path, mu=mu, std=std, normalize=True)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)

@@ -246,15 +246,15 @@ def pooled_mean_std(dataset, total_n):
         print("Processing #{}: ".format(c), end="")
 
         # calculate pooled mean
-        mu_y = data.mean()
+        mu_y = data['data'].mean()
         n_y = 1
-        for sh in data.shape:
+        for sh in data['data'].shape:
             n_y *= sh
         mu, n = pooled_mean(mu, n, mu_y, n_y)
         print("Pooled mu={}, n={}".format(mu, n))
 
         # keep track of running squared sums
-        temp_sqr_sum += (data ** 2).sum()
+        temp_sqr_sum += (data['data'] ** 2).sum()
         if c % 10 == 0:
             sqr_sum += temp_sqr_sum / total_n
             temp_sqr_sum = 0.0  # reset
@@ -406,14 +406,14 @@ def train_ae(encoder,
 
         iters = 1
 
-        for data in trainloader:
+        for batch in trainloader:
             iter_time = time.time()
 
             # zero gradients
             optimizer.zero_grad()
 
             # forward
-            x = data.to(device)
+            x = batch['data'].to(device)
             out = decoder(encoder(x))
 
             # calculate loss
@@ -426,8 +426,8 @@ def train_ae(encoder,
             optimizer.step()
 
             # track loss
-            running_loss = running_loss + loss.item() * data.size(0)
-            total_examples += data.size(0)
+            running_loss = running_loss + loss.item() * batch['data'].size(0)
+            total_examples += batch['data'].size(0)
             if print_iter:
                 print("Iteration #{}, iter time: {}, loss: {}".format(iters, time.time() - iter_time, loss.item()))
             iters += 1
