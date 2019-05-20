@@ -247,9 +247,7 @@ def pooled_mean_std(dataset, total_n):
 
         # calculate pooled mean
         mu_y = data['data'].mean()
-        n_y = 1
-        for sh in data['data'].shape:
-            n_y *= sh
+        n_y = np.prod(data['data'].shape)
         mu, n = pooled_mean(mu, n, mu_y, n_y)
         print("Pooled mu={}, n={}".format(mu, n))
 
