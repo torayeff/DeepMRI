@@ -15,8 +15,8 @@ class ConvEncoder(nn.Module):
                 padding=1,
                 bias=False
             ),
+            nn.GroupNorm(16, 288),
             nn.ReLU(),
-            nn.BatchNorm2d(288),
 
             # N x 288 x 87 x 73 --> N x 144 x 44 x 37
             nn.Conv2d(
@@ -27,8 +27,8 @@ class ConvEncoder(nn.Module):
                 padding=1,
                 bias=False
             ),
+            nn.GroupNorm(12, 144),
             nn.ReLU(),
-            nn.BatchNorm2d(144),
 
             # N x 144 x 44 x 37 --> N x 128 x 22 x 19
             nn.Conv2d(
@@ -39,8 +39,8 @@ class ConvEncoder(nn.Module):
                 padding=1,
                 bias=False
             ),
-            nn.ReLU(),
-            nn.BatchNorm2d(128),
+            nn.GroupNorm(8, 128),
+            nn.ReLU()
         )
 
     def forward(self, x):
@@ -62,8 +62,8 @@ class ConvDecoder(nn.Module):
                 output_padding=(1, 0),
                 bias=False
             ),
+            nn.GroupNorm(12, 144),
             nn.ReLU(),
-            nn.BatchNorm2d(144),
 
             # N x 144 x 44 x 37 --> N x 288 x 87 x 73
             nn.ConvTranspose2d(
@@ -75,8 +75,8 @@ class ConvDecoder(nn.Module):
                 output_padding=(0, 0),
                 bias=False
             ),
+            nn.GroupNorm(16, 288),
             nn.ReLU(),
-            nn.BatchNorm2d(288),
 
             # N x 288 x 87 x 73 --> N x 288 x 174 x 145
             nn.ConvTranspose2d(
@@ -86,10 +86,8 @@ class ConvDecoder(nn.Module):
                 stride=2,
                 padding=1,
                 output_padding=(1, 0),
-                bias=False
-            ),
-            nn.ReLU(),
-            nn.BatchNorm2d(out_channels),
+                bias=True
+            )
         )
 
     def forward(self, x):

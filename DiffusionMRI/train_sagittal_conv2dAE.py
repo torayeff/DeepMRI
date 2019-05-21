@@ -24,8 +24,8 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-mu = 800
-std = 300
+mu = 368.62549
+std = 823.93335
 batch_size = 16
 
 start_epoch = 0  # for loading pretrained weights
@@ -59,10 +59,13 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=3e-5)
+optimizer = torch.optim.Adam(parameters, lr=0.001)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
+                                                       verbose=True,
+                                                       min_lr=1e-6,
+                                                       threshold_mode='abs',
+                                                       patience=5)
 # ------------------------------------------Training--------------------------------------------------------------------
-
-
 utils.train_ae(encoder,
                decoder,
                criterion,
@@ -73,7 +76,9 @@ utils.train_ae(encoder,
                model_name,
                experiment_dir,
                start_epoch=start_epoch,
+               scheduler=scheduler,
                checkpoint=checkpoint,
-               print_iter=False)
+               print_iter=False,
+               eval_epoch=5)
 
 print("Total running time: {}".format(time.time() - script_start))

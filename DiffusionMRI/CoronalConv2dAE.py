@@ -6,7 +6,7 @@ class ConvEncoder(nn.Module):
         super().__init__()
 
         self.encode = nn.Sequential(
-            # N x 288 x 145 x 174 --> N x 288 x 73 x 87
+            # N x 288 x 145 x 145 --> N x 288 x 73 x 73
             nn.Conv2d(
                 in_channels=input_channels,
                 out_channels=288,
@@ -18,7 +18,7 @@ class ConvEncoder(nn.Module):
             nn.ReLU(),
             nn.BatchNorm2d(288),
 
-            # N x 288 x 73 x 87 --> N x 144 x 37 x 44
+            # N x 288 x 73 x 73 --> N x 144 x 37 x 37
             nn.Conv2d(
                 in_channels=288,
                 out_channels=144,
@@ -30,7 +30,7 @@ class ConvEncoder(nn.Module):
             nn.ReLU(),
             nn.BatchNorm2d(144),
 
-            # N x 144 x 37 x 44 --> N x 128 x 19 x 22
+            # N x 144 x 37 x 37 --> N x 128 x 19 x 19
             nn.Conv2d(
                 in_channels=144,
                 out_channels=128,
@@ -52,20 +52,20 @@ class ConvDecoder(nn.Module):
     def __init__(self, out_channels):
         super().__init__()
         self.decode = nn.Sequential(
-            #  N x 128 x 19 x 22--> N x 144 x 37 x 44
+            #  N x 128 x 19 x 19--> N x 144 x 37 x 37
             nn.ConvTranspose2d(
                 in_channels=128,
                 out_channels=144,
                 kernel_size=3,
                 stride=2,
                 padding=1,
-                output_padding=(0, 1),
+                output_padding=(0, 0),
                 bias=False
             ),
             nn.ReLU(),
             nn.BatchNorm2d(144),
 
-            # N x 144 x 37 x 44 --> N x 288 x 73 x 87
+            # N x 144 x 37 x 37 --> N x 288 x 73 x 73
             nn.ConvTranspose2d(
                 in_channels=144,
                 out_channels=288,
@@ -78,14 +78,14 @@ class ConvDecoder(nn.Module):
             nn.ReLU(),
             nn.BatchNorm2d(288),
 
-            # N x 288 x 73 x 87 --> N x 288 x 145 x 174
+            # N x 288 x 73 x 73 --> N x 288 x 145 x 145
             nn.ConvTranspose2d(
                 in_channels=288,
                 out_channels=out_channels,
                 kernel_size=3,
                 stride=2,
                 padding=1,
-                output_padding=(0, 1),
+                output_padding=(0, 0),
                 bias=False
             ),
             nn.ReLU(),

@@ -5,15 +5,15 @@ import torch.nn as nn
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
-from DiffusionMRI.SagittalConv2dAE import ConvEncoder  # noqa: E402
-from DiffusionMRI.SagittalConv2dAE import ConvDecoder  # noqa: E402
+from DiffusionMRI.CoronalConv2dAE import ConvEncoder  # noqa: E402
+from DiffusionMRI.CoronalConv2dAE import ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'data/train/sagittal_part1/'
-model_name = "SagittalConv2dAE"
+data_path = experiment_dir + 'data/train/coronal_part1/'
+model_name = "CoronalConv2dAE"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -59,7 +59,7 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=3e-5)
+optimizer = torch.optim.Adam(parameters, lr=3e-4)
 # ------------------------------------------Training--------------------------------------------------------------------
 
 

@@ -45,7 +45,7 @@ def show_slices(slices,
     for i, slc in enumerate(slices):
         axes[i].set_title(titles[i])
         axes[i].imshow(slc.T, cmap=cmap, origin="lower")
-    fig.tight_layout(rect=[0, 0.1, 1, 0.95])
+    fig.tight_layout(rect=[0, 0, 1, 0.9])
     plt.show()
 
 
@@ -54,7 +54,6 @@ def show_one_slice(slc,
                    figsize=(10, 5),
                    fontsize=12,
                    cmap=None):
-
     plt.rcParams["figure.figsize"] = figsize
     plt.imshow(slc.T, cmap=cmap, origin="lower")
     plt.title(title, fontsize=fontsize)
@@ -313,71 +312,127 @@ def create_orientation_dataset(csv_file,
     print("Done!")
 
 
-def dataset_loss(dataset, encoder, decoder, criterion, device):
+def dataset_performance(dataset, encoder, decoder, criterion, device, every_iter=10 ** 10, eval_mode=True):
     """Calculates average loss on whole dataset."""
-    encoder.eval()
-    decoder.eval()
+
+    if eval_mode:
+        encoder.eval()
+        decoder.eval()
+
+    print("Encoder training mode: {}".format(encoder.training))
+    print("Decoder training mode: {}".format(encoder.training))
+
+    start = time.time()
 
     total_examples = len(dataset)
 
-    min_loss = 10**9
+    min_loss = 10 ** 9
     max_loss = 0
+
+    best_img = None
+    worst_img = None
 
     print("Total examples: {}".format(total_examples))
 
     with torch.no_grad():
         running_loss = 0
-        for i, data in enumerate(dataset):
-
-            x = data.unsqueez(0).to(device)
+        for i, data in enumerate(dataset, 1):
+            if i % every_iter == 0:
+                print("Iters: {}".format(i))
+            x = data['data'].unsqueeze(0).to(device)
 
             out = decoder(encoder(x))
 
             loss = criterion(x, out)
 
-            min_loss = min(loss.item(), min_loss)
-            max_loss = max(loss.item(), max_loss)
+            if loss.item() < min_loss:
+                min_loss = loss.item()
+                best_img = data
+
+            if loss.item() > max_loss:
+                max_loss = loss.item()
+                worst_img = data
 
             running_loss = running_loss + loss.item()
 
         avg_loss = running_loss / total_examples
 
-    return min_loss, max_loss, avg_loss
+    print("Execution time: {:.5f}".format(time.time() - start))
+    return min_loss, max_loss, avg_loss, best_img, worst_img
 
 
-def evaluate_ae(x, encoder, decoder, criterion, device, mu, std, t, plot=True, cmap=None):
-    """Evaluates AE."""
+def visualize_ae_results(x, encoder, decoder, criterion, device, mu, std, t,
+                         scale_back=True,
+                         suptitle="Visualization",
+                         cmap=None):
+    """Visualizes AE results."""
     encoder.eval()
     decoder.eval()
 
-    # x is numpy array with dim: C x W x H
-    x = (x - mu) / std
-    x = torch.tensor(x).float().unsqueeze(0)
+    # x is tensor with dim C x W x H
+    x = x.unsqueeze(0)  # add batch dim
 
     with torch.no_grad():
         x = x.to(device)
         y = decoder(encoder(x))
+        loss = criterion(x, y)
+        print("Loss: {}".format(loss))
 
-    x = x * std + mu
-    # unnormalize
-    y = y * std + mu
-    y = y.clamp(min=0)
+    if scale_back:
+        x = x * std + mu
+        y = y * std + mu
+        y = y.clamp(min=x.min())
+        y = y.clamp(max=x.max())
 
-    loss = criterion(x, y)
+        loss = criterion(x, y)
+        print("Loss after scaling back: {}".format(loss))
 
     x = x.squeeze().cpu().numpy()
     y = y.squeeze().cpu().numpy()
 
-    if plot:
-        suptitle = "Loss: {}".format(loss)
-        original_title = "Original\n Minval: {}, Maxval: {}".format(x.min(), x.max())
-        recons_title = "Reconstruction\n Minval: {}, Maxval: {}".format(y.min(), y.max())
-        show_slices([
-            x[t, :, :],
-            y[t, :, :]
-        ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16, cmap=cmap)
+    original_title = "Original\n Minval: {:.5f}, Maxval: {:.5f}".format(x.min(), x.max())
+    recons_title = "Reconstruction\n Minval: {:.5f}, Maxval: {:.5f}".format(y.min(), y.max())
+    show_slices([
+        x[t, :, :],
+        y[t, :, :]
+    ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16, cmap=cmap)
 
-    return y, loss.item()
+
+def evaluate_ae(encoder,
+                decoder,
+                criterion,
+                device,
+                trainloader,
+                print_iter=False,
+                ):
+    """Evaluates AE."""
+
+    start = time.time()
+    encoder.eval()
+    decoder.eval()
+
+    with torch.no_grad():
+        total_examples = 0
+        running_loss = 0.0
+
+        for i, batch in enumerate(trainloader, 1):
+            x = batch['data'].to(device)
+            out = decoder(encoder(x))
+
+            # calculate loss
+            loss = criterion(x, out)
+
+            # track loss
+            running_loss = running_loss + loss.item() * batch['data'].size(0)
+            total_examples += batch['data'].size(0)
+
+            if print_iter:
+                print("Batch #{}, Batch loss: {}".format(i, loss.item()))
+
+        avg_loss = running_loss / total_examples
+
+    print("Evaluated {} examples, Avg. loss: {}, Time: {:.5f}".format(total_examples, avg_loss, time.time() - start))
+    return avg_loss
 
 
 def train_ae(encoder,
@@ -393,6 +448,7 @@ def train_ae(encoder,
              scheduler=None,
              checkpoint=1,
              print_iter=False,
+             eval_epoch=5
              ):
     """Trains AutoEncoder."""
     print("Training started for {} epochs.".format(num_epochs))
@@ -444,6 +500,9 @@ def train_ae(encoder,
                                                                                  num_epochs,
                                                                                  epoch_loss,
                                                                                  time.time() - epoch_start))
+        # evaluate on trainloader
+        if epoch % eval_epoch == 0:
+            evaluate_ae(encoder, decoder, criterion, device, trainloader, print_iter=print_iter)
+
         if scheduler is not None:
             scheduler.step(epoch_loss)
-

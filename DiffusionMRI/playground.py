@@ -80,10 +80,11 @@ print("Device: ", device)
 # -------------------------------Calculate Mean and Std of Trainset--------------------
 # data_path = '/media/schultz/345de007-c698-4c33-93c1-3964b99c5df6/agajan/experiment_DiffusionMRI/' \
 #             'data/train/axial/'
-data_path = '/home/agajan/experiment_DiffusionMRI/data/train/sagittal_1/'
+data_path = '/home/agajan/experiment_DiffusionMRI/data/train/sagittal_part1/'
 trainset = Datasets.OrientationDataset(data_path, normalize=False, to_tensor=False)
 
-total_n = 7360 * 288 * 174 * 145  # !!!!!!!!!known in advance
+total_n = len(trainset) * np.prod(trainset[0]['data'].shape)  # !!!!!!!!!known in advance
+print(len(trainset), trainset[0]['data'].shape, total_n)
 mu, std, n = utils.pooled_mean_std(trainset, total_n)
 print(mu, std, n)
 

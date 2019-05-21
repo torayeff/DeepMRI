@@ -11,10 +11,12 @@ import numpy as np
 class OrientationDataset(Dataset):
     """Orientation dataset for dMRI."""
 
-    def __init__(self, data_dir, normalize=True, mu=None, std=None, scale_range=None, to_tensor=True):
+    def __init__(self, data_dir, file_names=None, normalize=True,
+                 mu=None, std=None, scale_range=None, to_tensor=True):
         """
         Args:
             data_dir: Directory with .npz volumes.
+            file_names: File names in dat_dir.
             normalize: If True, the data will be normalized
             mu: Mean of the dataset.
             std: Standard deviation of the dataset.
@@ -23,13 +25,15 @@ class OrientationDataset(Dataset):
         """
 
         self.data_dir = data_dir
+        self.file_names = file_names
         self.normalize = normalize
         self.mu = mu
         self.std = std
         self.scale_range = scale_range
         self.to_tensor = to_tensor
 
-        self.file_names = os.listdir(data_dir)
+        if file_names is None:
+            self.file_names = os.listdir(data_dir)
 
     def __len__(self):
         return len(self.file_names)
