@@ -390,6 +390,7 @@ def train_ae(encoder,
              model_name,
              experiment_dir,
              start_epoch=0,
+             scheduler=None,
              checkpoint=1,
              print_iter=False,
              ):
@@ -443,4 +444,6 @@ def train_ae(encoder,
                                                                                  num_epochs,
                                                                                  epoch_loss,
                                                                                  time.time() - epoch_start))
+        if scheduler is not None:
+            scheduler.step(epoch_loss)
 
