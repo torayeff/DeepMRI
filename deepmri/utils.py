@@ -312,12 +312,24 @@ def create_orientation_dataset(csv_file,
     print("Done!")
 
 
-def dataset_performance(dataset, encoder, decoder, criterion, device, every_iter=10 ** 10, eval_mode=True):
+def dataset_performance(dataset,
+                        encoder,
+                        decoder,
+                        criterion,
+                        device,
+                        mu,
+                        std,
+                        every_iter=10 ** 10,
+                        eval_mode=True,
+                        plot=False):
     """Calculates average loss on whole dataset."""
 
     if eval_mode:
         encoder.eval()
         decoder.eval()
+    else:
+        encoder.train()
+        decoder.train()
 
     print("Encoder training mode: {}".format(encoder.training))
     print("Decoder training mode: {}".format(encoder.training))
@@ -336,9 +348,8 @@ def dataset_performance(dataset, encoder, decoder, criterion, device, every_iter
 
     with torch.no_grad():
         running_loss = 0
+        eval_start = time.time()
         for i, data in enumerate(dataset, 1):
-            if i % every_iter == 0:
-                print("Iters: {}".format(i))
             x = data['data'].unsqueeze(0).to(device)
 
             out = decoder(encoder(x))
@@ -355,10 +366,51 @@ def dataset_performance(dataset, encoder, decoder, criterion, device, every_iter
 
             running_loss = running_loss + loss.item()
 
+            if i % every_iter == 0:
+                print("Evaluated {}/{} examples. Evaluation time: {:.5f} secs.".format(i,
+                                                                                       total_examples,
+                                                                                       time.time() - eval_start))
+                eval_start = time.time()
+
         avg_loss = running_loss / total_examples
 
-    print("Execution time: {:.5f}".format(time.time() - start))
-    return min_loss, max_loss, avg_loss, best_img, worst_img
+    print("Evaluated {}/{}, Total evaluation time: {:.5f} secs.".format(total_examples,
+                                                                        total_examples,
+                                                                        time.time() - start))
+    print("Min loss: {:.5f}\nMax loss: {:.5f}\nAvg loss: {:.5f}\nBest Reconstruction: {}\nWorst Reconstruction: {}"
+          .format(min_loss,
+                  max_loss,
+                  avg_loss,
+                  best_img['file_name'],
+                  worst_img['file_name']))
+
+    if plot:
+        t = np.random.randint(low=0, high=288)
+        print("Showing slice at t={}".format(t))
+        # show best reconstruction
+        visualize_ae_results(best_img['data'],
+                             encoder,
+                             decoder,
+                             criterion,
+                             device,
+                             mu,
+                             std,
+                             t,
+                             suptitle='Best reconstruction.',
+                             scale_back=True,
+                             cmap='gray')
+        # show worst reconstruction
+        visualize_ae_results(worst_img['data'],
+                             encoder,
+                             decoder,
+                             criterion,
+                             device,
+                             mu,
+                             std,
+                             t,
+                             suptitle='Worst reconstruction',
+                             scale_back=True,
+                             cmap='gray')
 
 
 def visualize_ae_results(x, encoder, decoder, criterion, device, mu, std, t,
@@ -375,17 +427,14 @@ def visualize_ae_results(x, encoder, decoder, criterion, device, mu, std, t,
     with torch.no_grad():
         x = x.to(device)
         y = decoder(encoder(x))
-        loss = criterion(x, y)
-        print("Loss: {}".format(loss))
+        loss_before_scaling = criterion(x, y)
 
     if scale_back:
         x = x * std + mu
         y = y * std + mu
         y = y.clamp(min=x.min())
         y = y.clamp(max=x.max())
-
-        loss = criterion(x, y)
-        print("Loss after scaling back: {}".format(loss))
+        loss_after_scaling = criterion(x, y)
 
     x = x.squeeze().cpu().numpy()
     y = y.squeeze().cpu().numpy()
@@ -396,6 +445,9 @@ def visualize_ae_results(x, encoder, decoder, criterion, device, mu, std, t,
         x[t, :, :],
         y[t, :, :]
     ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16, cmap=cmap)
+    print("Loss: {}".format(loss_before_scaling))
+    print("Loss after scaling back: {}".format(loss_after_scaling))
+    print("-" * 100)
 
 
 def evaluate_ae(encoder,

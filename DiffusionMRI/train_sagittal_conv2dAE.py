@@ -28,7 +28,7 @@ mu = 368.62549
 std = 823.93335
 batch_size = 16
 
-start_epoch = 0  # for loading pretrained weights
+start_epoch = 50  # for loading pretrained weights
 num_epochs = 100  # number of epochs to trains
 checkpoint = 1  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
