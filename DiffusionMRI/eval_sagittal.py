@@ -41,7 +41,7 @@ sagittal_encoder.to(device)
 sagittal_decoder = SagittalDecoder(out_channels=288)
 sagittal_decoder.to(device)
 
-epoch = 50
+epoch = 100
 sagittal_encoder.load_state_dict(torch.load(experiment_dir +
                                             'models/SagittalConv2dAE_encoder_epoch_{}'.format(epoch)))
 sagittal_decoder.load_state_dict(torch.load(experiment_dir +

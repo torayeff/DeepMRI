@@ -28,7 +28,7 @@ mu = 368.62549
 std = 823.93335
 batch_size = 16
 
-start_epoch = 50  # for loading pretrained weights
+start_epoch = 70  # for loading pretrained weights
 num_epochs = 100  # number of epochs to trains
 checkpoint = 1  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
@@ -59,7 +59,7 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.001)
+optimizer = torch.optim.Adam(parameters, lr=0.00005)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,
