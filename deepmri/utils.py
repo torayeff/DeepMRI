@@ -7,6 +7,8 @@ import itertools
 import pandas as pd
 import os
 import nibabel as nib
+from dipy.tracking import utils as utils_trk
+from scipy import ndimage
 
 
 def calc_conv_dim(w, k, s, p):
@@ -558,3 +560,84 @@ def train_ae(encoder,
 
         if scheduler is not None:
             scheduler.step(epoch_loss)
+
+
+# functions below adapted from
+# https://github.com/MIC-DKFZ/TractSeg/issues/39#issuecomment-496181262
+def get_number_of_points(strmlines):
+    count = 0
+    for sl in strmlines:
+        count += len(sl)
+    return count
+
+
+def remove_small_blobs(img, threshold=1):
+    """
+    Find blobs/clusters of same label. Only keep blobs with more than threshold elements.
+    This can be used for postprocessing.
+    """
+    # mask, number_of_blobs = ndimage.label(img, structure=np.ones((3, 3, 3)))  #Also considers diagonal elements for
+    # determining if a element belongs to a blob -> not so good, because leaves hardly any small blobs we can remove
+    mask, number_of_blobs = ndimage.label(img)
+    print('Number of blobs before filtering: ' + str(number_of_blobs))
+    counts = np.bincount(mask.flatten())  # number of pixels in each blob
+    print(counts)
+
+    remove = counts <= threshold
+    remove_idx = np.nonzero(remove)[0]
+
+    for idx in remove_idx:
+        mask[mask == idx] = 0  # set blobs we remove to 0
+    mask[mask > 0] = 1  # set everything else to 1
+
+    mask_after, number_of_blobs_after = ndimage.label(mask)
+    print('Number of blobs after filtering: ' + str(number_of_blobs_after))
+
+    return mask
+
+
+def create_tract_mask(trk_file_path, mask_output_path, ref_img_path, hole_closing=0, blob_th=10):
+    """
+    Creates binary mask from streamlines in .trk file.
+    Args:
+        trk_file_path: Path for the .trk file
+        mask_output_path: Path to save the binary mask.
+        ref_img_path: Path to the reference image to get affine and shape
+        hole_closing: Integer for closing the holes.
+        blob_th: Threshold for removing small blobs.
+    """
+
+    ref_img = nib.load(ref_img_path)
+    ref_affine = ref_img.affine
+    ref_shape = ref_img.shape
+
+    streamlines = nib.streamlines.load(trk_file_path).streamlines
+
+    # Upsample Streamlines  (very important, especially when using DensityMap Threshold. Without upsampling eroded
+    # results)
+    print("Upsampling...")
+    print("Nr of points before upsampling " + str(get_number_of_points(streamlines)))
+    max_seq_len = abs(ref_affine[0, 0] / 4)
+    print("max_seq_len: {}".format(max_seq_len))
+    streamlines = list(utils_trk.subsegment(streamlines, max_seq_len))
+    print("Nr of points after upsampling " + str(get_number_of_points(streamlines)))
+
+    # Remember: Does not count if a fibers has no node inside of a voxel -> upsampling helps, but not perfect
+    # Counts the number of unique streamlines that pass through each voxel -> oversampling does not distort result
+    dm = utils_trk.density_map(streamlines, ref_shape, affine=ref_affine)
+
+    # Create Binary Map
+    dm_binary = dm > 1  # Using higher Threshold problematic, because often very sparse
+    dm_binary_c = dm_binary
+
+    # Filter Blobs
+    dm_binary_c = remove_small_blobs(dm_binary_c, threshold=blob_th)
+
+    # Closing of Holes (not ideal because tends to remove valid holes, e.g. in MCP)
+    if hole_closing > 0:
+        size = hole_closing
+        dm_binary_c = ndimage.binary_closing(dm_binary_c, structure=np.ones((size, size, size))).astype(dm_binary.dtype)
+
+    # Save Binary Mask
+    dm_binary_img = nib.Nifti1Image(dm_binary_c.astype("uint8"), ref_affine)
+    nib.save(dm_binary_img, mask_output_path)
