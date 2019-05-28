@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import torch
 import time
@@ -51,6 +52,30 @@ def show_slices(slices,
     plt.show()
 
 
+def show_masked_slices(slices,
+                       masks,
+                       suptitle="Visualization",
+                       titles=('Saggital', 'Coronal', 'Axial'),
+                       figsize=(10, 5),
+                       fontsize=24,
+                       cmap=matplotlib.cm.gray,
+                       mask_color='red',
+                       alpha=0.9):
+    """ Function to display row of image slices """
+
+    plt.rcParams["figure.figsize"] = figsize
+    fig, axes = plt.subplots(1, len(slices))
+    fig.suptitle(suptitle, fontsize=fontsize)
+    for i, slc in enumerate(slices):
+        masked_img = np.ma.array(slc.T, mask=masks[i].T)
+        cmap.set_bad(mask_color, alpha=alpha)
+
+        axes[i].set_title(titles[i])
+        axes[i].imshow(masked_img, cmap=cmap, origin="lower")
+    fig.tight_layout(rect=[0, 0, 1, 0.9])
+    plt.show()
+
+
 def show_one_slice(slc,
                    title="One Slice",
                    figsize=(10, 5),
@@ -58,6 +83,23 @@ def show_one_slice(slc,
                    cmap=None):
     plt.rcParams["figure.figsize"] = figsize
     plt.imshow(slc.T, cmap=cmap, origin="lower")
+    plt.title(title, fontsize=fontsize)
+    plt.tight_layout()
+    plt.show()
+
+
+def show_one_masked_slice(img,
+                          mask,
+                          cmap=matplotlib.cm.gray,
+                          title="Masked Image",
+                          figsize=(10, 5),
+                          fontsize=12,
+                          mask_color='red',
+                          alpha=0.9):
+    masked_img = np.ma.array(img, mask=mask)
+    cmap.set_bad(mask_color, alpha=alpha)
+    plt.rcParams["figure.figsize"] = figsize
+    plt.imshow(masked_img, origin='lower', cmap=cmap)
     plt.title(title, fontsize=fontsize)
     plt.tight_layout()
     plt.show()
@@ -655,14 +697,14 @@ def create_multilabel_mask(labels, masks_path, vol_size=(145, 174, 145)):
     """
 
     mask_ml = np.zeros((*vol_size, len(labels)))
-    background = np.ones(vol_size)   # everything that contains no bundle
+    background = np.ones(vol_size)  # everything that contains no bundle
 
     # first label must always be the 'background'
     for idx, label in enumerate(labels[1:], 1):
         mask = nib.load(os.path.join(masks_path, label + '_binary_mask.nii.gz'))
-        mask_data = mask.get_data()     # dtype: uint8
+        mask_data = mask.get_data()  # dtype: uint8
         mask_ml[:, :, :, idx] = mask_data
-        background[mask_data == 1] = 0    # remove this bundle from background
+        background[mask_data == 1] = 0  # remove this bundle from background
 
     mask_ml[:, :, :, 0] = background
     return mask_ml.astype('bool')
