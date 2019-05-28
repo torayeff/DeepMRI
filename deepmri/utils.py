@@ -641,3 +641,28 @@ def create_tract_mask(trk_file_path, mask_output_path, ref_img_path, hole_closin
     # Save Binary Mask
     dm_binary_img = nib.Nifti1Image(dm_binary_c.astype("uint8"), ref_affine)
     nib.save(dm_binary_img, mask_output_path)
+
+
+def create_multilabel_mask(labels, masks_path, vol_size=(145, 174, 145)):
+    """
+
+    Args:
+        labels: List of labels, first element is always 'background'
+        masks_path: Path to the binary masks.
+        vol_size: Spatial dimensions of 3D volume
+    Returns:
+        ndarray of shape
+    """
+
+    mask_ml = np.zeros((*vol_size, len(labels)))
+    background = np.ones(vol_size)   # everything that contains no bundle
+
+    # first label must always be the 'background'
+    for idx, label in enumerate(labels[1:], 1):
+        mask = nib.load(os.path.join(masks_path, label + '_binary_mask.nii.gz'))
+        mask_data = mask.get_data()     # dtype: uint8
+        mask_ml[:, :, :, idx] = mask_data
+        background[mask_data == 1] = 0    # remove this bundle from background
+
+    mask_ml[:, :, :, 0] = background
+    return mask_ml.astype('bool')
