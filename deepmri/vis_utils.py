@@ -11,7 +11,19 @@ def show_slices(slices,
                 figsize=(10, 5),
                 fontsize=24,
                 cmap=None):
-    """ Function to display row of image slices """
+    """Function to display row of image slices
+
+    Args:
+      slices: Slices to show
+      suptitle:  (Default value = "Visualization")
+      titles:  (Default value = ('Saggital', 'Coronal', 'Axial'):
+      figsize:  (Default value = (10, 5):
+      fontsize:  (Default value = 24)
+      cmap:  (Default value = None)
+
+    Returns:
+        None
+    """
 
     plt.rcParams["figure.figsize"] = figsize
     fig, axes = plt.subplots(1, len(slices))
@@ -32,7 +44,22 @@ def show_masked_slices(slices,
                        cmap=matplotlib.cm.gray,
                        mask_color='red',
                        alpha=0.9):
-    """ Function to display row of image slices """
+    """Function to display row of image slices
+
+    Args:
+      slices: Slices to show
+      masks: Masks.
+      suptitle:  Sup title. (Default value = "Visualization")
+      titles:  (Default value = ('Saggital', 'Coronal', 'Axial'):
+      figsize:  (Default value = (10, 5):
+      fontsize:  (Default value = 24)
+      cmap:  (Default value = matplotlib.cm.gray)
+      mask_color:  Color for mask. (Default value = 'red')
+      alpha:  Opacity. (Default value = 0.9)
+
+    Returns:
+        None
+    """
 
     plt.rcParams["figure.figsize"] = figsize
     fig, axes = plt.subplots(1, len(slices))
@@ -52,6 +79,19 @@ def show_one_slice(slc,
                    figsize=(10, 5),
                    fontsize=12,
                    cmap=None):
+    """
+
+    Args:
+      slc: 
+      title:  (Default value = "One Slice")
+      figsize:  (Default value = (10)
+      5): 
+      fontsize:  (Default value = 12)
+      cmap:  (Default value = None)
+
+    Returns:
+
+    """
     plt.rcParams["figure.figsize"] = figsize
     plt.imshow(slc.T, cmap=cmap, origin="lower")
     plt.title(title, fontsize=fontsize)
@@ -67,6 +107,22 @@ def show_one_masked_slice(img,
                           fontsize=12,
                           mask_color='red',
                           alpha=0.9):
+    """
+
+    Args:
+      img: 
+      mask: 
+      cmap:  (Default value = matplotlib.cm.gray)
+      title:  (Default value = "Masked Image")
+      figsize:  (Default value = (10)
+      5): 
+      fontsize:  (Default value = 12)
+      mask_color:  (Default value = 'red')
+      alpha:  (Default value = 0.9)
+
+    Returns:
+
+    """
     masked_img = np.ma.array(img, mask=mask)
     cmap.set_bad(mask_color, alpha=alpha)
     plt.rcParams["figure.figsize"] = figsize
@@ -80,11 +136,20 @@ def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
-    """
-    This function prints and plots the confusion matrix.
+    """This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
-
+    
     Credits: https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+
+    Args:
+      cm: 
+      classes: 
+      normalize:  (Default value = False)
+      title:  (Default value = 'Confusion matrix')
+      cmap:  (Default value = plt.cm.Blues)
+
+    Returns:
+
     """
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -116,7 +181,24 @@ def visualize_ae_results(x, encoder, decoder, criterion, device, mu, std, t,
                          scale_back=True,
                          suptitle="Visualization",
                          cmap=None):
-    """Visualizes AE results."""
+    """Visualizes AE results.
+
+    Args:
+      x: Data to to evaluate and visualize.
+      encoder: Encoder model.
+      decoder: Decoder model.
+      criterion: Criterion.
+      device: Device.
+      mu: Mean value.
+      std: Standard deviation.
+      t: Time point.
+      scale_back:  If True scales back to the original voxel values. (Default value = True)
+      suptitle:  Sup title.(Default value = "Visualization")
+      cmap:  Color map. (Default value = None)
+
+    Returns:
+        None
+    """
     encoder.eval()
     decoder.eval()
 

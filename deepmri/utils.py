@@ -7,21 +7,50 @@ from deepmri.vis_utils import visualize_ae_results
 
 
 def calc_conv_dim(w, k, s, p):
-    """Calculates output dimensions of convolution operator."""
+    """Calculates output dimensions of convolution operator.
+
+    Args:
+      w: width
+      k: kernel size
+      s: stride
+      p: padding
+
+    Returns:
+        None
+    """
 
     dim = ((w + 2 * p - k) / s) + 1
     print("Conv dim: ", dim, math.floor(dim))
 
 
 def calc_transpose_conv_dim(w, k, s, p, out_p):
-    """Calculates output dimensions of transpose convolution operator."""
+    """Calculates output dimensions of transpose convolution operator.
+
+    Args:
+      w: width
+      k: kernel
+      s: strid
+      p: padding
+      out_p: out padding
+
+    Returns:
+        None
+    """
 
     dim = (w - 1) * s - 2 * p + k + out_p
     print("Deconv dim: ", dim, math.floor(dim))
 
 
 def pad_3d(img_to_pad, target_dims=(256, 256, 256)):
-    """Pads given 3D image."""
+    """Pads given 3D image.
+
+    Args:
+      img_to_pad: Image to pad
+      target_dims:  Target dimensions. (Default value = (256, 256, 256):
+
+    Returns:
+        None
+    """
 
     diffs = np.array(target_dims) - np.array(img_to_pad.shape)
     pads = tuple([(d // 2 + (d % 2), d // 2) for d in diffs])
@@ -29,7 +58,14 @@ def pad_3d(img_to_pad, target_dims=(256, 256, 256)):
 
 
 def count_model_parameters(model):
-    """Counts total parameters of model."""
+    """Counts total parameters of model.
+
+    Args:
+      model: Pytorch model
+
+    Returns:
+        The number of total and trainable parameters.
+    """
 
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -38,7 +74,18 @@ def count_model_parameters(model):
 
 
 def evaluate_adhd_classifier(classifier, rnn_encoder, criterion, dataloader, device):
-    """Evaluate ADHD Classifier."""
+    """Evaluate ADHD Classifier.
+
+    Args:
+      classifier: Classifier model.
+      rnn_encoder: RNN Encoder model.
+      criterion: Loss function.
+      dataloader: Dataloader.
+      device: device.
+
+    Returns:
+        All labels and all predictions.
+    """
 
     all_labels, all_preds = [], []
 
@@ -78,7 +125,18 @@ def evaluate_adhd_classifier(classifier, rnn_encoder, criterion, dataloader, dev
 
 
 def evaluate_rnn_encoder_decoder(encoder, decoder, criterion, dataloader, device):
-    """Evaluates RNN AE."""
+    """Evaluates RNN AE.
+
+    Args:
+      encoder: Encoder model.
+      decoder: Decoder model.
+      criterion: Criterion.
+      dataloader: Data loader.
+      device: device.
+
+    Returns:
+        None
+    """
     with torch.no_grad():
         encoder.eval()
         decoder.eval()
@@ -127,7 +185,23 @@ def dataset_performance(dataset,
                         every_iter=10 ** 10,
                         eval_mode=True,
                         plot=False):
-    """Calculates average loss on whole dataset."""
+    """Calculates average loss on whole dataset.
+
+    Args:
+      dataset: Dataset
+      encoder: Encoder model.
+      decoder: Decoder model.
+      criterion: Criterion.
+      device: device.
+      mu: Mean value.
+      std: Standard deviation.
+      every_iter:  Print statistics every iteration. (Default value = 10 ** 10)
+      eval_mode:  Boolean for the model mode. (Default value = True)
+      plot:  Boolean to plot. (Default value = False)
+
+    Returns:
+        None
+    """
 
     if eval_mode:
         encoder.eval()
@@ -225,7 +299,19 @@ def evaluate_ae(encoder,
                 trainloader,
                 print_iter=False,
                 ):
-    """Evaluates AE."""
+    """Evaluates AE.
+
+    Args:
+      encoder: Encoder model.
+      decoder: Decoder model.
+      criterion: Criterion.
+      device: Device
+      trainloader: Train loader
+      print_iter:  Print every iteration. (Default value = False)
+
+    Returns:
+        Average loss.
+    """
 
     start = time.time()
     encoder.eval()
@@ -270,7 +356,27 @@ def train_ae(encoder,
              print_iter=False,
              eval_epoch=5
              ):
-    """Trains AutoEncoder."""
+    """Trains AutoEncoder.
+
+    Args:
+      encoder: Encoder model.
+      decoder: Decoder model.
+      criterion: Criterion.
+      optimizer: Optimizer.
+      device: Device
+      trainloader: Trainloader.
+      num_epochs: Number of epochs to train.
+      model_name: Model name for saving.
+      experiment_dir: Experiment directory with data.
+      start_epoch:  Starting epoch. Useful for resuming.(Default value = 0)
+      scheduler:  Learning rate scheduler.(Default value = None)
+      checkpoint:  Save every checkpoint epoch. (Default value = 1)
+      print_iter:  Print every iteration. (Default value = False)
+      eval_epoch:  Evaluate every eval_epoch epoch. (Default value = 5)
+
+    Returns:
+        None
+    """
     print("Training started for {} epochs.".format(num_epochs))
     for epoch in range(1, num_epochs + 1):
         encoder.train()

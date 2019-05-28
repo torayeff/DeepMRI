@@ -10,13 +10,15 @@ from scipy import ndimage
 
 def pooled_mean(mu_x, n_x, mu_y, n_y):
     """Calculates pooled mean.
+
     Args:
-        mu_x: mean of group x.
-        n_x: number of elements in group x.
-        mu_y: mean of group y.
-        n_y: number of elements in group y.
+      mu_x: mean of group x.
+      n_x: number of elements in group x.
+      mu_y: mean of group y.
+      n_y: 
+
     Returns:
-        Pooled mean and total number of elements.
+      Pooled mean and total number of elements.
     """
     n = n_y + n_x
     s_x = n_x / n
@@ -28,11 +30,13 @@ def pooled_mean(mu_x, n_x, mu_y, n_y):
 
 def pooled_mean_std(dataset, total_n):
     """Calculates mean and standard deviation for the training set.
+
     Args:
-        dataset: pytorch dataset.
-        total_n: Total number of voxels.
+      dataset: pytorch dataset.
+      total_n: 
+
     Returns:
-        Mean and standard deviation, total voxels for verification.
+      Mean and standard deviation, total voxels for verification.
     """
     start = time.time()
 
@@ -72,9 +76,12 @@ def create_orientation_dataset(csv_file,
     """Creates axial, coronal, sagittal volumes.
 
     Args:
-        csv_file: csv file with dMRI paths.
-        save_dir: Directory to save the data.
-        orients: 0 - Sagittal, 1 - Coronal, 2 - Axial
+      csv_file: csv file with dMRI paths.
+      save_dir: Directory to save the data.
+      orients: 0 - Sagittal, 1 - Coronal, 2 - Axial (Default value = (0, 1, 2)
+
+    Returns:
+        None
     """
     orient_names = ['sagittal', 'coronal', 'axial']
 
@@ -114,13 +121,12 @@ def create_orientation_dataset(csv_file,
 
 
 def get_number_of_points(strmlines):
-    """
-    Adapted from https://github.com/MIC-DKFZ/TractSeg/issues/39#issuecomment-496181262
+    """Adapted from https://github.com/MIC-DKFZ/TractSeg/issues/39#issuecomment-496181262
+
     Args:
-        strmlines:
-
+      strmlines: nibabel streamlines
     Returns:
-
+        Number of point in streamlines.
     """
     count = 0
     for sl in strmlines:
@@ -129,10 +135,16 @@ def get_number_of_points(strmlines):
 
 
 def remove_small_blobs(img, threshold=1):
-    """
-    Adapted from https://github.com/MIC-DKFZ/TractSeg/issues/39#issuecomment-496181262
+    """Adapted from https://github.com/MIC-DKFZ/TractSeg/issues/39#issuecomment-496181262
     Find blobs/clusters of same label. Only keep blobs with more than threshold elements.
     This can be used for postprocessing.
+
+    Args:
+      img: Threshold.
+      threshold:  (Default value = 1)
+
+    Returns:
+        Binary mask.
     """
     # mask, number_of_blobs = ndimage.label(img, structure=np.ones((3, 3, 3)))  #Also considers diagonal elements for
     # determining if a element belongs to a blob -> not so good, because leaves hardly any small blobs we can remove
@@ -155,15 +167,18 @@ def remove_small_blobs(img, threshold=1):
 
 
 def create_tract_mask(trk_file_path, mask_output_path, ref_img_path, hole_closing=0, blob_th=10):
-    """
-    Adapted from https://github.com/MIC-DKFZ/TractSeg/issues/39#issuecomment-496181262
+    """Adapted from https://github.com/MIC-DKFZ/TractSeg/issues/39#issuecomment-496181262
     Creates binary mask from streamlines in .trk file.
+
     Args:
-        trk_file_path: Path for the .trk file
-        mask_output_path: Path to save the binary mask.
-        ref_img_path: Path to the reference image to get affine and shape
-        hole_closing: Integer for closing the holes.
-        blob_th: Threshold for removing small blobs.
+      trk_file_path: Path for the .trk file
+      mask_output_path: Path to save the binary mask.
+      ref_img_path: Path to the reference image to get affine and shape
+      hole_closing: Integer for closing the holes. (Default value = 0)
+      blob_th: Threshold for removing small blobs. (Default value = 10)
+
+    Returns:
+        None
     """
 
     ref_img = nib.load(ref_img_path)
@@ -206,11 +221,12 @@ def create_multilabel_mask(labels, masks_path, vol_size=(145, 174, 145)):
     """Creates multilabel binary mask.
 
     Args:
-        labels: List of labels, first element is always 'background'
-        masks_path: Path to the binary masks.
-        vol_size: Spatial dimensions of 3D volume
+      labels: List of labels, first element is always 'background'
+      masks_path: Path to the binary masks.
+      vol_size:  Spatial dimensions of volume. (Default value = (145, 174, 145)
+
     Returns:
-        ndarray of shape
+        Multi label binary mask.
     """
 
     mask_ml = np.zeros((*vol_size, len(labels)))
@@ -229,12 +245,14 @@ def create_multilabel_mask(labels, masks_path, vol_size=(145, 174, 145)):
 
 def create_voxel_level_dataset(dmri_data, ml_masks, train_coords):
     """Creates voxel level dataset.
+
     Args:
-        dmri_data: numpy.ndarray of shape WxHxDxT: diffusion MRI data.
-        ml_masks: numpy.ndarray of shape WxHxDxC: multilabel binary mask volume.
-        train_coords: Lists of tuples: coordinates of voxels for training.
+      dmri_data: numpy.ndarray of shape WxHxDxT: diffusion MRI data.
+      ml_masks: numpy.ndarray of shape WxHxDxC: multilabel binary mask volume.
+      train_coords: 
+
     Returns:
-        X_train, y_train, X_test, y_test
+      X_train, y_train, X_test, y_test
     """
 
     # all coord triples
