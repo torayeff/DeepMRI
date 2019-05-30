@@ -217,12 +217,13 @@ def create_tract_mask(trk_file_path, mask_output_path, ref_img_path, hole_closin
     nib.save(dm_binary_img, mask_output_path)
 
 
-def create_multilabel_mask(labels, masks_path, vol_size=(145, 174, 145)):
+def create_multilabel_mask(labels, masks_path, nodif_brain_mask_path, vol_size=(145, 174, 145)):
     """Creates multilabel binary mask.
 
     Args:
-      labels: List of labels, first element is always 'background'
+      labels: List of labels, first element is always 'background', second element is always 'other'.
       masks_path: Path to the binary masks.
+      nodif_brain_mask_path: Path no diffusion brain mask.
       vol_size:  Spatial dimensions of volume. (Default value = (145, 174, 145)
 
     Returns:
@@ -231,46 +232,101 @@ def create_multilabel_mask(labels, masks_path, vol_size=(145, 174, 145)):
 
     mask_ml = np.zeros((*vol_size, len(labels)))
     background = np.ones(vol_size)  # everything that contains no bundle
+    other = nib.load(nodif_brain_mask_path).get_data().astype('uint8')
+    background[other == 1] = 0  # what is within brain is not background ?
+    mask_ml[:, :, :, 0] = background
 
     # first label must always be the 'background'
-    for idx, label in enumerate(labels[1:], 1):
+    for idx, label in enumerate(labels[2:], 2):
         mask = nib.load(os.path.join(masks_path, label + '_binary_mask.nii.gz'))
         mask_data = mask.get_data()  # dtype: uint8
         mask_ml[:, :, :, idx] = mask_data
-        background[mask_data == 1] = 0  # remove this bundle from background
+        other[mask_data == 1] = 0  # remove this from other class
 
-    mask_ml[:, :, :, 0] = background
+    mask_ml[:, :, :, 1] = other
+
     return mask_ml.astype('uint8')
 
 
-def create_voxel_level_dataset(dmri_data, ml_masks, train_coords):
-    """Creates voxel level dataset.
-
+def create_data_masks(ml_masks, slice_orients, labels, max_samples_per_label):
+    """Creates multilabel binary mask for training from full multilabel binary mask.
     Args:
-      dmri_data: numpy.ndarray of shape WxHxDxT: diffusion MRI data.
-      ml_masks: numpy.ndarray of shape WxHxDxC: multilabel binary mask volume.
-      train_coords: 
-
+        ml_masks: Full multilabel binary mask.
+        slice_orients: Slice orientations and their indices to take training voxels,
+                        e.g., slice_orients = [('sagittal', 72), ('sagittal', 89)]
+        labels: Labels.
+        max_samples_per_label: Maximum number of samples per label to take for training.
     Returns:
-      X_train, y_train, X_test, y_test
+        Multilabe binary mask for training.
     """
 
-    # all coord triples
-    vs = dmri_data.shape
-    all_coords = itertools.product(range(vs[0]),
-                                   range(vs[1]),
-                                   range(vs[2]))
+    data_masks = np.zeros(ml_masks.shape)
 
-    # create train set
-    train_data = [(dmri_data[crd[0], crd[1], crd[2], :],
-                   ml_masks[crd[0], crd[1], crd[2], :])
-                  for crd in train_coords]
-    x_train, y_train = zip(*train_data)
+    for orient in slice_orients:
+        if orient[0] == 'sagittal':
+            slc = ml_masks[orient[1], :, :]
+            data_slc = data_masks[orient[1], :, :]
+        elif orient[0] == 'coronal':
+            slc = ml_masks[:, orient[1], :]
+            data_slc = data_masks[:, orient[1], :]
+        elif orient[0] == 'axial':
+            slc = ml_masks[:, :, orient[1]]
+            data_slc = data_masks[:, :, orient[1]]
+        else:
+            print('Invalid orientation name was given.')
+            continue
 
-    # create test set from the remaining points
-    test_data = [(dmri_data[crd[0], crd[1], crd[2], :],
-                  ml_masks[crd[0], crd[1], crd[2], :])
-                 for crd in all_coords if crd not in train_coords]
-    x_test, y_test = zip(*test_data)
+        for ch, label in enumerate(labels):
+            max_samples = max_samples_per_label[ch]
+            label_mask = slc[:, :, ch]
 
-    return x_train, y_train, x_test, y_test
+            label_coords = np.nonzero(label_mask)
+            clen = len(label_coords[0])
+
+            # if the number of annotations is more than max_samples
+            # take max_sample annotations from the middle, and zero out others
+            # else take all the annotations
+            if clen > max_samples:
+                start = (clen // 2) - (max_samples // 2) - (max_samples % 2)
+                end = start + max_samples
+                annot_coords = (label_coords[0][start:end], label_coords[1][start:end])
+            else:
+                annot_coords = label_coords
+
+            # assign annotations
+            data_slc[:, :, ch][annot_coords] = 1
+
+    total = 0
+    for ch, label in enumerate(labels):
+        annots = len(np.nonzero(data_masks[:, :, :, ch])[0])
+        total += annots
+        print("\"{}\" has {} annotations.".format(labels[ch], annots))
+    print("Total annotations: {}".format(total))
+
+    return data_masks
+
+
+def create_dataset_from_data_mask(features, data_masks, labels=None):
+    """Creates voxel level dataset.
+
+        Args:
+          features: numpy.ndarray of shape WxHxDxT: diffusion MRI data.
+          data_masks: numpy.ndarray of shape WxHxDxC: multilabel binary mask volume.
+          labels: if not None, names for classes will be used instead of numbers.
+
+        Returns:
+          x_train, y_train
+        """
+
+    x_train, y_train = [], []
+    for pt in np.transpose(np.nonzero(data_masks)):
+        x = features[pt[0], pt[1], pt[2], :]
+        y = pt[3]
+        x_train.append(x)
+
+        if labels is None:
+            y_train.append(y)
+        else:
+            y_train.append(labels[y])
+
+    return x_train, y_train
