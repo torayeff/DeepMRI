@@ -11,6 +11,55 @@ import numpy as np
 class OrientationDataset(Dataset):
     """Orientation dataset for dMRI."""
 
+    def __init__(self, data_dir, file_names=None, normalize=True, to_tensor=True):
+        """
+        Args:
+            data_dir: Directory with .npz volumes.
+            file_names: File names in dat_dir.
+            normalize: If True, the data will be normalized
+            to_tensor: If True, numpy array will be converted to tensor.
+        """
+
+        self.data_dir = data_dir
+        self.file_names = file_names
+        self.normalize = normalize
+        self.to_tensor = to_tensor
+
+        if file_names is None:
+            self.file_names = os.listdir(data_dir)
+
+    def __len__(self):
+        return len(self.file_names)
+
+    def __getitem__(self, idx):
+        file_name = self.file_names[idx]
+        file_path = os.path.join(self.data_dir, file_name)
+
+        x = np.load(file_path)['data']
+
+        means, stds = None, None
+
+        if self.normalize:
+            means, stds = zip(*[(slc.mean(), slc.std()) for slc in x])
+            means = np.array(means)[..., np.newaxis, np.newaxis]
+            stds = np.array(stds)[..., np.newaxis, np.newaxis]
+            x = (x - means) / stds
+
+        if self.to_tensor:
+            x = torch.tensor(x).float()
+            if means is not None:
+                means = torch.tensor(means).float()
+            if stds is not None:
+                stds = torch.tensor(stds).float()
+
+        sample = {'data': x, 'file_name': file_name, 'means': means, 'stds': stds}
+
+        return sample
+
+
+class OrientationDatasetDeprecated(Dataset):
+    """Orientation dataset for dMRI."""
+
     def __init__(self, data_dir, file_names=None, normalize=True,
                  mu=None, std=None, scale_range=None, to_tensor=True):
         """
