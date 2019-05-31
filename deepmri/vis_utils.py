@@ -229,3 +229,49 @@ def visualize_ae_results(x, encoder, decoder, criterion, device, mu, std, t,
     print("Loss: {}".format(loss_before_scaling))
     print("Loss after scaling back: {}".format(loss_after_scaling))
     print("-" * 100)
+
+
+def visualize_masks(dmri_data,
+                    ml_masks_list,
+                    labels,
+                    x_coord,
+                    y_coord,
+                    z_coord,
+                    t,
+                    suptitles,
+                    mask_color='red'
+                    ):
+    """Visualize masks.
+    Args:
+        dmri_data: Diffusion MRI data
+        ml_masks_list: List of masks to visualize.
+        labels: Names of labels in masks.
+        x_coord: x coordinate.
+        y_coord: y coordinate.
+        z_coord: z coordinate.
+        t: time coordinate.
+        suptitles: Suptitles.
+        mask_color: Mask color.
+
+    Returns:
+        None
+    """
+    # show binary masks
+    slices = [
+        dmri_data[x_coord, :, :, t],
+        dmri_data[:, y_coord, :, t],
+        dmri_data[:, :, z_coord, t]
+    ]
+
+    for ch in range(len(labels)):
+        for idx, ml_masks in enumerate(ml_masks_list):
+            masks = [
+                ml_masks[x_coord, :, :, ch],
+                ml_masks[:, y_coord, :, ch],
+                ml_masks[:, :, z_coord, ch]
+            ]
+
+            show_masked_slices(slices,
+                               masks,
+                               suptitle=suptitles[idx] + labels[ch],
+                               mask_color=mask_color)

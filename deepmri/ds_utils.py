@@ -318,15 +318,37 @@ def create_dataset_from_data_mask(features, data_masks, labels=None):
           x_train, y_train
         """
 
-    x_train, y_train = [], []
+    x_set, y_set, voxel_coords = [], [], []
     for pt in np.transpose(np.nonzero(data_masks)):
+        voxel_coords.append((pt[0], pt[1], pt[2]))
         x = features[pt[0], pt[1], pt[2], :]
         y = pt[3]
-        x_train.append(x)
+        x_set.append(x)
 
         if labels is None:
-            y_train.append(y)
+            y_set.append(y)
         else:
-            y_train.append(labels[y])
+            y_set.append(labels[y])
 
-    return x_train, y_train
+    return x_set, y_set, voxel_coords
+
+
+def preds_to_data_mask(preds, voxel_coords, labels, vol_size=(145, 174, 145)):
+    """Creates data mask from predictions.
+
+    Args:
+        preds: Predictions.
+        voxel_coords: Coordinates for each prediction.
+        labels: Labels.
+        vol_size:  Spatial dimensions of volume. (Default value = (145, 174, 145)
+
+    Return:
+        Binary mask.
+    """
+    data_mask = np.zeros((*vol_size, len(labels)))
+
+    for pred, crd in zip(preds, voxel_coords):
+        ch = labels.index(str(pred))
+        data_mask[crd[0], crd[1], crd[2], ch] = 1
+
+    return data_mask
