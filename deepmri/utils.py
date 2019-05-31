@@ -180,8 +180,6 @@ def dataset_performance(dataset,
                         decoder,
                         criterion,
                         device,
-                        mu,
-                        std,
                         every_iter=10 ** 10,
                         eval_mode=True,
                         plot=False):
@@ -193,8 +191,6 @@ def dataset_performance(dataset,
       decoder: Decoder model.
       criterion: Criterion.
       device: device.
-      mu: Mean value.
-      std: Standard deviation.
       every_iter:  Print statistics every iteration. (Default value = 10 ** 10)
       eval_mode:  Boolean for the model mode. (Default value = True)
       plot:  Boolean to plot. (Default value = False)
@@ -265,8 +261,12 @@ def dataset_performance(dataset,
 
     if plot:
         t = np.random.randint(low=0, high=288)
+
         print("Showing slice at t={}".format(t))
+
         # show best reconstruction
+        mu = best_img['means'][t][0].item()
+        std = best_img['stds'][t][0].item()
         visualize_ae_results(best_img['data'],
                              encoder,
                              decoder,
@@ -278,7 +278,10 @@ def dataset_performance(dataset,
                              suptitle='Best reconstruction.',
                              scale_back=True,
                              cmap='gray')
+
         # show worst reconstruction
+        mu = worst_img['means'][t][0].item()
+        std = worst_img['stds'][t][0].item()
         visualize_ae_results(worst_img['data'],
                              encoder,
                              decoder,
