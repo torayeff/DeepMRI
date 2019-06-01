@@ -220,14 +220,15 @@ def visualize_ae_results(x, encoder, decoder, criterion, device, mu, std, t,
     x = x.squeeze().cpu().numpy()
     y = y.squeeze().cpu().numpy()
 
-    original_title = "Original\n Minval: {:.5f}, Maxval: {:.5f}".format(x.min(), x.max())
-    recons_title = "Reconstruction\n Minval: {:.5f}, Maxval: {:.5f}".format(y.min(), y.max())
+    original_title = "Original\n Minval: {:.5f}, Maxval: {:.5f}".format(x[t].min(), x[t].max())
+    recons_title = "Reconstruction\n Minval: {:.5f}, Maxval: {:.5f}".format(y[t].min(), y[t].max())
     show_slices([
-        x[t, :, :],
-        y[t, :, :]
+        x[t],
+        y[t]
     ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16, cmap=cmap)
     print("Loss: {}".format(loss_before_scaling))
-    print("Loss after scaling back: {}".format(loss_after_scaling))
+    if scale_back:
+        print("Loss after scaling back: {}".format(loss_after_scaling))
     print("-" * 100)
 
 

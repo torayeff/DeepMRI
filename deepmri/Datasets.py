@@ -8,7 +8,7 @@ import h5py
 import numpy as np
 
 
-class OrientationDataset(Dataset):
+class OrientationDatasetChannelNorm(Dataset):
     """Orientation dataset for dMRI."""
 
     def __init__(self, data_dir, file_names=None, normalize=True, to_tensor=True):
@@ -39,25 +39,27 @@ class OrientationDataset(Dataset):
 
         means, stds = None, None
 
-        if self.normalize:
-            means, stds = zip(*[(slc.mean(), slc.std()) for slc in x])
-            means = np.array(means)[..., np.newaxis, np.newaxis]
-            stds = np.array(stds)[..., np.newaxis, np.newaxis]
-            x = (x - means) / stds
-
         if self.to_tensor:
             x = torch.tensor(x).float()
-            if means is not None:
-                means = torch.tensor(means).float()
-            if stds is not None:
-                stds = torch.tensor(stds).float()
+
+        if self.normalize:
+            means, stds = zip(*[(slc.mean(), slc.std()) for slc in x])
+
+            if self.to_tensor:
+                means = torch.tensor(means).float()[..., None, None]
+                stds = torch.tensor(stds).float()[..., None, None]
+            else:
+                means = np.array(means)[..., None, None]
+                stds = np.array(stds)[..., None, None]
+
+            x = (x - means) / stds
 
         sample = {'data': x, 'file_name': file_name, 'means': means, 'stds': stds}
 
         return sample
 
 
-class OrientationDatasetDeprecated(Dataset):
+class OrientationDataset(Dataset):
     """Orientation dataset for dMRI."""
 
     def __init__(self, data_dir, file_names=None, normalize=True,

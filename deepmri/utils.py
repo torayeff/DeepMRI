@@ -182,7 +182,9 @@ def dataset_performance(dataset,
                         device,
                         every_iter=10 ** 10,
                         eval_mode=True,
-                        plot=False):
+                        plot=False,
+                        mu=None,
+                        std=None):
     """Calculates average loss on whole dataset.
 
     Args:
@@ -194,6 +196,8 @@ def dataset_performance(dataset,
       every_iter:  Print statistics every iteration. (Default value = 10 ** 10)
       eval_mode:  Boolean for the model mode. (Default value = True)
       plot:  Boolean to plot. (Default value = False)
+      mu: Mean value.
+      std: Standard deviation.
 
     Returns:
         None
@@ -265,8 +269,10 @@ def dataset_performance(dataset,
         print("Showing slice at t={}".format(t))
 
         # show best reconstruction
-        mu = best_img['means'][t][0].item()
-        std = best_img['stds'][t][0].item()
+        if mu is None:
+            mu = best_img['means'][t][0].item()
+        if std is None:
+            std = best_img['stds'][t][0].item()
         visualize_ae_results(best_img['data'],
                              encoder,
                              decoder,
@@ -280,8 +286,10 @@ def dataset_performance(dataset,
                              cmap='gray')
 
         # show worst reconstruction
-        mu = worst_img['means'][t][0].item()
-        std = worst_img['stds'][t][0].item()
+        if mu is None:
+            mu = worst_img['means'][t][0].item()
+        if std is None:
+            std = worst_img['stds'][t][0].item()
         visualize_ae_results(worst_img['data'],
                              encoder,
                              decoder,
