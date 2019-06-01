@@ -72,13 +72,15 @@ def pooled_mean_std(dataset, total_n):
 
 def create_orientation_dataset(csv_file,
                                save_dir,
-                               orients=(0, 1, 2)):
+                               orients=(0, 1, 2),
+                               th_sum=0):
     """Creates axial, coronal, sagittal volumes.
 
     Args:
       csv_file: csv file with dMRI paths.
       save_dir: Directory to save the data.
       orients: 0 - Sagittal, 1 - Coronal, 2 - Axial (Default value = (0, 1, 2)
+      th_sum: if volume sum is less than th_sum, do not save it.
 
     Returns:
         None
@@ -107,10 +109,10 @@ def create_orientation_dataset(csv_file,
                     volume = data[:, :, idx, :]
 
                 check_sum = np.sum(volume)
-                if check_sum == 0:
+                if check_sum <= th_sum:
                     print("{} idx={} is empty. Skipping.".format(orient_name, idx))
                 else:
-                    save_path = "{}/data_{}_{}_idx_{}".format(orient_name, row['subj_id'], orient_name, idx)
+                    save_path = "{}/data_{}_{}_idx_{:03d}".format(orient_name, row['subj_id'], orient_name, idx)
                     save_path = os.path.join(save_dir, save_path)
                     volume = volume.transpose(2, 0, 1)  # channel x width x height)
 
