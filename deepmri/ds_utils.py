@@ -332,7 +332,7 @@ def create_dataset_from_data_mask(features, data_masks, labels=None):
         else:
             y_set.append(labels[y])
 
-    return x_set, y_set, voxel_coords
+    return np.array(x_set), np.array(y_set), voxel_coords
 
 
 def preds_to_data_mask(preds, voxel_coords, labels, vol_size=(145, 174, 145)):
@@ -354,3 +354,10 @@ def preds_to_data_mask(preds, voxel_coords, labels, vol_size=(145, 174, 145)):
         data_mask[crd[0], crd[1], crd[2], ch] = 1
 
     return data_mask
+
+
+def make_sagittal_features(features, coords, scale=8):
+    orient_features = []
+    for crd in coords:
+        orient_features.append(features[crd[0], crd[1]//scale, crd[2]//scale, :])
+    return np.array(orient_features)
