@@ -5,14 +5,14 @@ import torch.nn as nn
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
-from DiffusionMRI.Conv2dAESagittalFullSpatial import ConvEncoder, ConvDecoder  # noqa: E402
+from DiffusionMRI.Conv2dAEFullSpatial import ConvEncoder, ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/train/sagittal/'
-model_name = "zSagittalConv2dAEFullSpatial"
+model_name = "SagittalConv2dAEFullSpatial"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
