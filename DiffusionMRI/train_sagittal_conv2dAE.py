@@ -12,7 +12,7 @@ script_start = time.time()
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/train/sagittal/'
-model_name = "SagittalConv2dAEFullSpatial_ChannelNorm"
+model_name = "zSagittalConv2dAEFullSpatial"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -23,15 +23,13 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-# mu = 453.9321075958082
-# std = 969.7367041395971
 batch_size = 16
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 200  # number of epochs to trains
 checkpoint = 50  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
-# trainset = Datasets.OrientationDataset(data_path, normalize=True, mu=mu, std=std)
+
 trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
 total_examples = len(trainset)
@@ -63,7 +61,6 @@ optimizer = torch.optim.Adam(parameters, lr=0.0003)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,
-                                                       threshold_mode='abs',
                                                        patience=5)
 # ------------------------------------------Training--------------------------------------------------------------------
 utils.train_ae(encoder,
@@ -76,7 +73,7 @@ utils.train_ae(encoder,
                model_name,
                experiment_dir,
                start_epoch=start_epoch,
-               scheduler=scheduler,
+               scheduler=None,
                checkpoint=checkpoint,
                print_iter=False,
                eval_epoch=50)

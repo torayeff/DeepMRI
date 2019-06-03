@@ -356,8 +356,16 @@ def preds_to_data_mask(preds, voxel_coords, labels, vol_size=(145, 174, 145)):
     return data_mask
 
 
-def make_sagittal_features(features, coords, scale=8):
+def make_orient_features(features, coords, orient):
     orient_features = []
     for crd in coords:
-        orient_features.append(features[crd[0], crd[1]//scale, crd[2]//scale, :])
+        if orient == 'sagittal':
+            orient_features.append(features[crd[0], crd[1], crd[2], :])
+        elif orient == 'coronal':
+            orient_features.append(features[crd[1], crd[0], crd[2], :])
+        elif orient == 'axial':
+            orient_features.append(features[crd[2], crd[0], crd[1]])
+        else:
+            raise ValueError('Unknown orientation.')
+
     return np.array(orient_features)

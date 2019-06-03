@@ -11,13 +11,14 @@ import numpy as np
 class OrientationDatasetChannelNorm(Dataset):
     """Orientation dataset for dMRI."""
 
-    def __init__(self, data_dir, file_names=None, normalize=True, to_tensor=True):
+    def __init__(self, data_dir, file_names=None, normalize=True, to_tensor=True, sort_fns=False):
         """
         Args:
             data_dir: Directory with .npz volumes.
             file_names: File names in dat_dir.
             normalize: If True, the data will be normalized
             to_tensor: If True, numpy array will be converted to tensor.
+            sort_fns: If True sorts file_names
         """
 
         self.data_dir = data_dir
@@ -28,6 +29,9 @@ class OrientationDatasetChannelNorm(Dataset):
         if file_names is None:
             self.file_names = os.listdir(data_dir)
 
+        if sort_fns:
+            self.file_names = sorted(self.file_names)
+
     def __len__(self):
         return len(self.file_names)
 
@@ -37,7 +41,7 @@ class OrientationDatasetChannelNorm(Dataset):
 
         x = np.load(file_path)['data']
 
-        means, stds = None, None
+        means, stds = [], []
 
         if self.to_tensor:
             x = torch.tensor(x).float()
@@ -52,7 +56,10 @@ class OrientationDatasetChannelNorm(Dataset):
                 means = np.array(means)[..., None, None]
                 stds = np.array(stds)[..., None, None]
 
-            x = (x - means) / stds
+            x = x - means
+            for i in range(x.shape[0]):
+                if stds[i] != 0:
+                    x[i] /= stds[i]
 
         sample = {'data': x, 'file_name': file_name, 'means': means, 'stds': stds}
 
@@ -63,7 +70,7 @@ class OrientationDataset(Dataset):
     """Orientation dataset for dMRI."""
 
     def __init__(self, data_dir, file_names=None, normalize=True,
-                 mu=None, std=None, scale_range=None, to_tensor=True):
+                 mu=None, std=None, scale_range=None, to_tensor=True, sort_fns=False):
         """
         Args:
             data_dir: Directory with .npz volumes.
@@ -73,6 +80,7 @@ class OrientationDataset(Dataset):
             std: Standard deviation of the dataset.
             scale_range: If not None, data will be scaled into the given range.
             to_tensor: If True, numpy array will be converted to tensor.
+            sort_fns: If True sorts file_names
         """
 
         self.data_dir = data_dir
@@ -85,6 +93,9 @@ class OrientationDataset(Dataset):
 
         if file_names is None:
             self.file_names = os.listdir(data_dir)
+
+        if sort_fns:
+            self.file_names = sorted(self.file_names)
 
     def __len__(self):
         return len(self.file_names)
