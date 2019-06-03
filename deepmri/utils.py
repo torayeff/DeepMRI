@@ -180,11 +180,13 @@ def dataset_performance(dataset,
                         decoder,
                         criterion,
                         device,
+                        t=0,
                         every_iter=10 ** 10,
                         eval_mode=True,
                         plot=False,
                         mu=None,
-                        std=None):
+                        std=None,
+                        scale_back=True):
     """Calculates average loss on whole dataset.
 
     Args:
@@ -193,11 +195,13 @@ def dataset_performance(dataset,
       decoder: Decoder model.
       criterion: Criterion.
       device: device.
+      t: time index for plotting.
       every_iter:  Print statistics every iteration. (Default value = 10 ** 10)
       eval_mode:  Boolean for the model mode. (Default value = True)
       plot:  Boolean to plot. (Default value = False)
       mu: Mean value.
       std: Standard deviation.
+      scale_back: If True loss will be calculated on original voxel values.
 
     Returns:
         None
@@ -233,6 +237,22 @@ def dataset_performance(dataset,
 
             out = decoder(encoder(x))
 
+            # scale back to original voxel values
+            if scale_back:
+                if (mu is None) and (std is None):
+                    x = x.detach().cpu().squeeze()
+                    out = out.detach().cpu().squeeze()
+                    x = x * data['stds'] + data['means']
+                    out = out * data['stds'] + data['means']
+
+                    x = x.unsqueeze(0).to(device)
+                    out = out.unsqueeze(0).to(device)
+                else:
+                    x = x * std + mu
+                    out = out * std + mu
+
+                out = out.clamp(min=x.min())
+
             loss = criterion(x, out)
 
             if loss.item() < min_loss:
@@ -264,39 +284,41 @@ def dataset_performance(dataset,
                   worst_img['file_name']))
 
     if plot:
-        t = np.random.randint(low=0, high=288)
 
         print("Showing slice at t={}".format(t))
 
         # show best reconstruction
-        if mu is None:
-            mu = best_img['means'][t][0].item()
-        if std is None:
-            std = best_img['stds'][t][0].item()
+        mu_best, mu_worst = mu, mu
+        std_best, std_worst = std, std
+
+        if mu_best is None:
+            mu_best = best_img['means'].to(device)
+            mu_worst = worst_img['means'].to(device)
+
+        if std_best is None:
+            std_best = best_img['stds'].to(device)
+            std_worst = worst_img['stds'].to(device)
+
         visualize_ae_results(best_img['data'],
                              encoder,
                              decoder,
                              criterion,
                              device,
-                             mu,
-                             std,
+                             mu_best,
+                             std_best,
                              t,
                              suptitle='Best reconstruction.',
                              scale_back=True,
                              cmap='gray')
 
         # show worst reconstruction
-        if mu is None:
-            mu = worst_img['means'][t][0].item()
-        if std is None:
-            std = worst_img['stds'][t][0].item()
         visualize_ae_results(worst_img['data'],
                              encoder,
                              decoder,
                              criterion,
                              device,
-                             mu,
-                             std,
+                             mu_worst,
+                             std_worst,
                              t,
                              suptitle='Worst reconstruction',
                              scale_back=True,

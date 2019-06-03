@@ -213,8 +213,7 @@ def visualize_ae_results(x, encoder, decoder, criterion, device, mu, std, t,
     if scale_back:
         x = x * std + mu
         y = y * std + mu
-        y = y.clamp(min=x.min())
-        y = y.clamp(max=x.max())
+        y = y.clamp(min=0)
         loss_after_scaling = criterion(x, y)
 
     x = x.squeeze().cpu().numpy()
