@@ -12,33 +12,38 @@ torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
 subj_id = '786569'
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'orients/sagittal')
-features_save_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'orient_features')
-model_name = "SagittalConv2dAEFullSpatial"
-
-# mu = 453.9321075958082
-# std = 969.7367041395971
-# dataset = Datasets.OrientationDataset(data_path, mu=mu, std=std, normalize=True, sort_fns=True)
-dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True)
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
-
+orients = ['sagittal', 'coronal', 'axial']
+model_names = ["SagittalConv2dAEFullSpatial", "CoronalConv2dAEFullSpatial", "AxialConv2dAEFullSpatial"]
+feature_shapes = [(145, 174, 145, 36),
+                  (174, 145, 145, 36),
+                  (145, 145, 174, 36)]
 encoder = ConvEncoder(input_channels=288)
 encoder.to(device)
 
-epoch = 200
-encoder_path = "{}/models/{}_encoder_epoch_{}".format(experiment_dir, model_name, epoch)
-encoder.load_state_dict(torch.load(encoder_path))
-print("Loaded pretrained weights starting from epoch {}".format(epoch))
+for i, orient in enumerate(orients):
+    print("Processing {} features".format(orient))
+    data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'orients', orient)
+    features_save_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'orient_features')
 
-orient_features = torch.zeros(145, 174, 145, 36)
+    # mu = 453.9321075958082
+    # std = 969.7367041395971
+    # dataset = Datasets.OrientationDataset(data_path, mu=mu, std=std, normalize=True, sort_fns=True)
+    dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
 
-with torch.no_grad():
-    for i, data in enumerate(dataloader):
-        x = data['data'].to(device)
-        feature = encoder(x).detach().cpu().squeeze().permute(1, 2, 0)
-        idx = int(data['file_name'][0][:-4][-3:])
-        orient_features[idx] = feature
-        print(idx)
+    epoch = 200
+    encoder_path = "{}/models/{}_encoder_epoch_{}".format(experiment_dir, model_names[i], epoch)
+    encoder.load_state_dict(torch.load(encoder_path))
+    print("Loaded pretrained weights starting from epoch {} for {}".format(epoch, model_names[i]))
 
-    orient_features = orient_features.numpy()
-    np.savez(os.path.join(features_save_path, 'sagittal_features_145x174x145x36_epoch_200.npz'), data=orient_features)
+    with torch.no_grad():
+        orient_features = torch.zeros(feature_shapes[i])
+        for j, data in enumerate(dataloader):
+            x = data['data'].to(device)
+            feature = encoder(x).detach().cpu().squeeze().permute(1, 2, 0)
+            idx = int(data['file_name'][0][:-4][-3:])
+            orient_features[idx] = feature
+            # print(idx)
+
+        orient_features = orient_features.numpy()
+        np.savez(os.path.join(features_save_path, '{}_features.npz'.format(orient)), data=orient_features)

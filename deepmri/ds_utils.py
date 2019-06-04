@@ -308,7 +308,7 @@ def create_data_masks(ml_masks, slice_orients, labels, max_samples_per_label):
     return data_masks
 
 
-def create_dataset_from_data_mask(features, data_masks, labels=None):
+def create_dataset_from_data_mask(features, data_masks, labels=None, multi_label=False):
     """Creates voxel level dataset.
 
         Args:
@@ -321,16 +321,27 @@ def create_dataset_from_data_mask(features, data_masks, labels=None):
         """
 
     x_set, y_set, voxel_coords = [], [], []
-    for pt in np.transpose(np.nonzero(data_masks)):
-        voxel_coords.append((pt[0], pt[1], pt[2]))
-        x = features[pt[0], pt[1], pt[2], :]
-        y = pt[3]
-        x_set.append(x)
-
-        if labels is None:
+    if multi_label:
+        voxel_coords = np.nonzero(data_masks)[:3] # take only spatial dims
+        voxel_coords = list(zip(*voxel_coords))  # make triples
+        voxel_coords = set(voxel_coords)  # remove duplicates
+        for pt in voxel_coords:
+            x = features[pt[0], pt[1], pt[2], :]
+            y = data_masks[pt[0], pt[1], pt[2], :]
+            x_set.append(x)
             y_set.append(y)
-        else:
-            y_set.append(labels[y])
+
+    else:
+        for pt in np.transpose(np.nonzero(data_masks)):
+            voxel_coords.append((pt[0], pt[1], pt[2]))
+            x = features[pt[0], pt[1], pt[2], :]
+            y = pt[3]
+            x_set.append(x)
+
+            if labels is None:
+                y_set.append(y)
+            else:
+                y_set.append(labels[y])
 
     return np.array(x_set), np.array(y_set), voxel_coords
 
