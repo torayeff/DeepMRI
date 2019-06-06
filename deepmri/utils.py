@@ -186,7 +186,8 @@ def dataset_performance(dataset,
                         plot=False,
                         mu=None,
                         std=None,
-                        scale_back=True):
+                        scale_back=True,
+                        masked_loss=False):
     """Calculates average loss on whole dataset.
 
     Args:
@@ -202,6 +203,7 @@ def dataset_performance(dataset,
       mu: Mean value.
       std: Standard deviation.
       scale_back: If True loss will be calculated on original voxel values.
+      masked_loss: If True loss will be calculated over masked region only.
 
     Returns:
         None
@@ -253,7 +255,13 @@ def dataset_performance(dataset,
 
                 out = out.clamp(min=x.min())
 
-            loss = criterion(x, out)
+            if masked_loss:
+                mask = data['mask'].unsqueeze(1).to(device)
+                x = torch.mul(x, mask)
+                out = torch.mul(out, mask)
+                loss = criterion(x, out) / torch.sum(mask)
+            else:
+                loss = criterion(x, out)
 
             if loss.item() < min_loss:
                 min_loss = loss.item()
@@ -331,6 +339,7 @@ def evaluate_ae(encoder,
                 device,
                 trainloader,
                 print_iter=False,
+                masked_loss=False
                 ):
     """Evaluates AE.
 
@@ -341,6 +350,7 @@ def evaluate_ae(encoder,
       device: Device
       trainloader: Train loader
       print_iter:  Print every iteration. (Default value = False)
+      masked_loss: If True loss will be calculated over masked region only.
 
     Returns:
         Average loss.
@@ -359,8 +369,13 @@ def evaluate_ae(encoder,
             out = decoder(encoder(x))
 
             # calculate loss
-            loss = criterion(x, out)
-
+            if masked_loss:
+                mask = batch['mask'].unsqueeze(1).to(device)
+                x = torch.mul(x, mask)
+                out = torch.mul(out, mask)
+                loss = criterion(x, out) / torch.sum(mask)
+            else:
+                loss = criterion(x, out)
             # track loss
             running_loss = running_loss + loss.item() * batch['data'].size(0)
             total_examples += batch['data'].size(0)
@@ -387,7 +402,8 @@ def train_ae(encoder,
              scheduler=None,
              checkpoint=1,
              print_iter=False,
-             eval_epoch=5
+             eval_epoch=5,
+             masked_loss=False
              ):
     """Trains AutoEncoder.
 
@@ -406,6 +422,7 @@ def train_ae(encoder,
       checkpoint:  Save every checkpoint epoch. (Default value = 1)
       print_iter:  Print every iteration. (Default value = False)
       eval_epoch:  Evaluate every eval_epoch epoch. (Default value = 5)
+      masked_loss: If True loss will be calculated over masked region only.
 
     Returns:
         None
@@ -431,7 +448,13 @@ def train_ae(encoder,
             out = decoder(encoder(x))
 
             # calculate loss
-            loss = criterion(x, out)
+            if masked_loss:
+                mask = batch['mask'].unsqueeze(1).to(device)
+                x = torch.mul(x, mask)
+                out = torch.mul(out, mask)
+                loss = criterion(x, out) / torch.sum(mask)
+            else:
+                loss = criterion(x, out)
 
             # backward
             loss.backward()
@@ -461,7 +484,8 @@ def train_ae(encoder,
                                                                                  time.time() - epoch_start))
         # evaluate on trainloader
         if epoch % eval_epoch == 0:
-            evaluate_ae(encoder, decoder, criterion, device, trainloader, print_iter=print_iter)
+            evaluate_ae(encoder, decoder, criterion, device, trainloader, print_iter=print_iter,
+                        masked_loss=masked_loss)
 
         if scheduler is not None:
             scheduler.step(epoch_loss)

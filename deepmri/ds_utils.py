@@ -1,4 +1,3 @@
-import itertools
 import os
 import time
 import nibabel as nib
@@ -73,7 +72,8 @@ def pooled_mean_std(dataset, total_n):
 def create_orientation_dataset(csv_file,
                                save_dir,
                                orients=(0, 1, 2),
-                               th_sum=0):
+                               th_sum=0,
+                               within_brain=True):
     """Creates axial, coronal, sagittal volumes.
 
     Args:
@@ -81,6 +81,7 @@ def create_orientation_dataset(csv_file,
       save_dir: Directory to save the data.
       orients: 0 - Sagittal, 1 - Coronal, 2 - Axial (Default value = (0, 1, 2)
       th_sum: if volume sum is less than th_sum, do not save it.
+      within_brain: If True only regions within brain mask will be considered.
 
     Returns:
         None
@@ -92,6 +93,13 @@ def create_orientation_dataset(csv_file,
 
         print("Loading file: {}".format(row['dmri_path']))
         data = nib.load(row['dmri_path']).get_fdata()  # 4D data: W x H x D x T
+        brain_mask = None
+
+        if within_brain:
+            print("Processing only within brain.")
+            last_slash = row['dmri_path'].rfind('/')
+            bm_path = os.path.join(row['dmri_path'][:last_slash], 'nodif_brain_mask.nii.gz')
+            brain_mask = nib.load(bm_path).get_data()
 
         for orient in orients:
 
@@ -100,23 +108,60 @@ def create_orientation_dataset(csv_file,
             st = time.time()
 
             for idx in range(data.shape[orient]):
-                volume = None
-                if orient == 0:
-                    volume = data[idx, :, :, :]
-                elif orient == 1:
-                    volume = data[:, idx, :, :]
-                elif orient == 2:
-                    volume = data[:, :, idx, :]
+                orient_img = None
+                slc_mask = None
+                roi_idxs = None
 
-                check_sum = np.sum(volume)
+                if orient == 0:
+                    orient_img = data[idx, :, :, :]
+                elif orient == 1:
+                    orient_img = data[:, idx, :, :]
+                elif orient == 2:
+                    orient_img = data[:, :, idx, :]
+
+                if within_brain:
+                    if orient == 0:
+                        slc_mask = brain_mask[idx, :, :]
+                    elif orient == 1:
+                        slc_mask = brain_mask[:, idx, :]
+                    elif orient == 2:
+                        slc_mask = brain_mask[:, :, idx]
+
+                    roi_idxs = np.nonzero(slc_mask)
+                    check_sum = np.sum(slc_mask)
+                else:
+                    check_sum = np.sum(orient_img)
+
                 if check_sum <= th_sum:
                     print("{} idx={} is empty. Skipping.".format(orient_name, idx))
                 else:
                     save_path = "{}/data_{}_{}_idx_{:03d}".format(orient_name, row['subj_id'], orient_name, idx)
+                    print("Saving: {}".format(save_path))
                     save_path = os.path.join(save_dir, save_path)
-                    volume = volume.transpose(2, 0, 1)  # channel x width x height)
+                    orient_img = orient_img.transpose(2, 0, 1)  # channel x width x height)
 
-                    np.savez(save_path, data=volume)
+                    means = []
+                    stds = []
+
+                    for ch in range(orient_img.shape[0]):
+
+                        if within_brain:
+                            # calculate stats only within brain region
+                            roi = orient_img[ch][roi_idxs]
+                            mu = roi.mean()
+                            std = roi.std()
+                        else:
+                            mu = orient_img[ch].mean()
+                            std = orient_img[ch].std()
+
+                        means.append(mu)
+                        stds.append(std)
+
+                    np.savez_compressed(save_path,
+                                        data=orient_img,
+                                        mask=slc_mask.astype('uint8'),
+                                        means=np.array(means),
+                                        stds=np.array(stds))
 
             print("Processed in {:.5f} seconds.".format(time.time() - st))
     print("Done!")
@@ -314,7 +359,8 @@ def create_dataset_from_data_mask(features, data_masks, labels=None, multi_label
         Args:
           features: numpy.ndarray of shape WxHxDxT: diffusion MRI data.
           data_masks: numpy.ndarray of shape WxHxDxC: multilabel binary mask volume.
-          labels: if not None, names for classes will be used instead of numbers.
+          labels: If not None, names for classes will be used instead of numbers.
+          multi_label: If True multi labe one hot encoding labels will be generated.
 
         Returns:
           x_train, y_train
@@ -322,7 +368,7 @@ def create_dataset_from_data_mask(features, data_masks, labels=None, multi_label
 
     x_set, y_set, voxel_coords = [], [], []
     if multi_label:
-        voxel_coords = np.nonzero(data_masks)[:3] # take only spatial dims
+        voxel_coords = np.nonzero(data_masks)[:3]  # take only spatial dims
         voxel_coords = list(zip(*voxel_coords))  # make triples
         voxel_coords = set(voxel_coords)  # remove duplicates
         for pt in voxel_coords:
@@ -367,15 +413,15 @@ def preds_to_data_mask(preds, voxel_coords, labels, vol_size=(145, 174, 145)):
     return data_mask
 
 
-def make_orient_features(features, coords, orient):
+def make_orient_features(features, coords, orient, scale=1):
     orient_features = []
     for crd in coords:
         if orient == 'sagittal':
-            orient_features.append(features[crd[0], crd[1], crd[2], :])
+            orient_features.append(features[crd[0]//scale, crd[1]//scale, crd[2]//scale, :])
         elif orient == 'coronal':
-            orient_features.append(features[crd[1], crd[0], crd[2], :])
+            orient_features.append(features[crd[1]//scale, crd[0]//scale, crd[2]//scale, :])
         elif orient == 'axial':
-            orient_features.append(features[crd[2], crd[0], crd[1]])
+            orient_features.append(features[crd[2]//scale, crd[0]//scale, crd[1]//scale])
         else:
             raise ValueError('Unknown orientation.')
 

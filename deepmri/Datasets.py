@@ -39,16 +39,17 @@ class OrientationDatasetChannelNorm(Dataset):
         file_name = self.file_names[idx]
         file_path = os.path.join(self.data_dir, file_name)
 
-        x = np.load(file_path)['data']
-
-        means, stds = [], []
+        orient_img = np.load(file_path)
+        x = orient_img['data']
+        mask = orient_img['mask']
+        means, stds = orient_img['means'], orient_img['stds']
 
         if self.to_tensor:
             x = torch.tensor(x).float()
+            if mask is not None:
+                mask = torch.tensor(mask).float()
 
         if self.normalize:
-            means, stds = zip(*[(slc.mean(), slc.std()) for slc in x])
-
             if self.to_tensor:
                 means = torch.tensor(means).float()[..., None, None]
                 stds = torch.tensor(stds).float()[..., None, None]
@@ -56,12 +57,9 @@ class OrientationDatasetChannelNorm(Dataset):
                 means = np.array(means)[..., None, None]
                 stds = np.array(stds)[..., None, None]
 
-            x = x - means
-            for i in range(x.shape[0]):
-                if stds[i] != 0:
-                    x[i] /= stds[i]
+            x = (x - means)/stds
 
-        sample = {'data': x, 'file_name': file_name, 'means': means, 'stds': stds}
+        sample = {'data': x, 'file_name': file_name, 'means': means, 'stds': stds, 'mask': mask}
 
         return sample
 

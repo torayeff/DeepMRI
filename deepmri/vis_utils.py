@@ -132,6 +132,26 @@ def show_one_masked_slice(img,
     plt.show()
 
 
+def show_tiled_images(images, titles, n_rows, n_cols,  figsize=(36, 16),
+                      suptitle='Title', title_x=0.5, title_y=0.9,
+                      fontsize=18, zero_space=False):
+    """Shows tiled images in grid."""
+
+    fig = plt.figure(figsize=figsize)
+    axes = [fig.add_subplot(n_rows, n_cols, i+1) for i in range(len(images))]
+    for c, ax in enumerate(axes):
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.imshow(images[c], origin='lower')
+        ax.set_title(titles[c])
+        ax.axis('off')
+
+    if zero_space:
+        fig.subplots_adjust(wspace=0, hspace=0)
+    fig.suptitle(suptitle, x=title_x, y=title_y, fontsize=fontsize)
+    plt.show()
+
+
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
@@ -177,21 +197,20 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
 
 
-def visualize_ae_results(x, encoder, decoder, criterion, device, mu, std, t,
+def visualize_ae_results(data, t, encoder, decoder, criterion, device,
                          scale_back=True,
                          suptitle="Visualization",
-                         cmap=None):
+                         cmap=None,
+                         masked_loss=False):
     """Visualizes AE results.
 
     Args:
-      x: Data to to evaluate and visualize.
+      data: Data to to evaluate and visualize.
+      t: Time point.
       encoder: Encoder model.
       decoder: Decoder model.
       criterion: Criterion.
       device: Device.
-      mu: Mean value.
-      std: Standard deviation.
-      t: Time point.
       scale_back:  If True scales back to the original voxel values. (Default value = True)
       suptitle:  Sup title.(Default value = "Visualization")
       cmap:  Color map. (Default value = None)
@@ -203,27 +222,40 @@ def visualize_ae_results(x, encoder, decoder, criterion, device, mu, std, t,
     decoder.eval()
 
     # x is tensor with dim C x W x H
+    x = data['data']
     x = x.unsqueeze(0)  # add batch dim
+    mu = data['means'].to(device)
+    std = data['stds'].to(device)
 
     with torch.no_grad():
         x = x.to(device)
-        y = decoder(encoder(x))
-        loss_before_scaling = criterion(x, y)
+        out = decoder(encoder(x))
+
+    if masked_loss:
+        mask = data['mask'].unsqueeze(0).unsqueeze(0).to(device)
+        x = torch.mul(x, mask)
+        out = torch.mul(out, mask)
+        loss_before_scaling = criterion(x, out) / torch.sum(mask)
+    else:
+        loss_before_scaling = criterion(x, out)
 
     if scale_back:
         x = x * std + mu
-        y = y * std + mu
-        y = y.clamp(min=0)
-        loss_after_scaling = criterion(x, y)
+        out = out * std + mu
+        out = out.clamp(min=0)
+        if masked_loss:
+            loss_after_scaling = criterion(x, out) / torch.sum(mask)
+        else:
+            loss_after_scaling = criterion(x, out)
 
     x = x.squeeze().cpu().numpy()
-    y = y.squeeze().cpu().numpy()
+    out = out.squeeze().cpu().numpy()
 
     original_title = "Original\n Minval: {:.5f}, Maxval: {:.5f}".format(x[t].min(), x[t].max())
-    recons_title = "Reconstruction\n Minval: {:.5f}, Maxval: {:.5f}".format(y[t].min(), y[t].max())
+    recons_title = "Reconstruction\n Minval: {:.5f}, Maxval: {:.5f}".format(out[t].min(), out[t].max())
     show_slices([
         x[t],
-        y[t]
+        out[t]
     ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16, cmap=cmap)
     print("Loss: {}".format(loss_before_scaling))
     if scale_back:

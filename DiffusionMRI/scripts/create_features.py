@@ -5,20 +5,25 @@ import os
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets  # noqa: E402
-from DiffusionMRI.Conv2dAEFullSpatial import ConvEncoder  # noqa: E402
+# from DiffusionMRI.Conv2dAEFullSpatial import ConvEncoder  # noqa: E402
+from DiffusionMRI.Conv2dAESagittal import ConvEncoder  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
-subj_id = '786569'
+subj_id = '784565'
+# subj_id = '786569'
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-orients = ['sagittal', 'coronal', 'axial']
-model_names = ["SagittalConv2dAEFullSpatial", "CoronalConv2dAEFullSpatial", "AxialConv2dAEFullSpatial"]
-feature_shapes = [(145, 174, 145, 36),
-                  (174, 145, 145, 36),
-                  (145, 145, 174, 36)]
+# orients = ['sagittal', 'coronal', 'axial']
+# model_names = ["SagittalConv2dAEFullSpatial", "CoronalConv2dAEFullSpatial", "AxialConv2dAEFullSpatial"]
+orients = ['sagittal']
+model_names = ["SagittalConv2dAE"]
+feature_shapes = [(145, 22, 19, 128),
+                  (174, 19, 19, 128),
+                  (145, 19, 22, 128)]
 encoder = ConvEncoder(input_channels=288)
 encoder.to(device)
+encoder.eval()
 
 for i, orient in enumerate(orients):
     print("Processing {} features".format(orient))
@@ -43,7 +48,7 @@ for i, orient in enumerate(orients):
             feature = encoder(x).detach().cpu().squeeze().permute(1, 2, 0)
             idx = int(data['file_name'][0][:-4][-3:])
             orient_features[idx] = feature
-            # print(idx)
+            print(idx)
 
         orient_features = orient_features.numpy()
-        np.savez(os.path.join(features_save_path, '{}_features.npz'.format(orient)), data=orient_features)
+        np.savez(os.path.join(features_save_path, 'strided_{}_features.npz'.format(orient)), data=orient_features)
