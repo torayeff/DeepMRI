@@ -15,7 +15,7 @@ data_path = experiment_dir + 'tractseg_data/train/sagittal/'
 model_name = "SagittalConv2dAE"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
-deterministic = False  # reproducibility
+deterministic = True  # reproducibility
 seed = 0  # random seed for reproducibility
 if deterministic:
     torch.manual_seed(seed)
@@ -25,7 +25,7 @@ torch.backends.cudnn.deterministic = deterministic
 # data
 batch_size = 16
 
-start_epoch = 0  # for loading pretrained weights
+start_epoch = 1400  # for loading pretrained weights
 num_epochs = 50000  # number of epochs to trains
 checkpoint = 100  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
@@ -58,7 +58,8 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion = nn.MSELoss(reduction='sum')  # !!! for masked loss
 criterion = CustomLosses.MaskedMSE()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.0003)
+# optimizer = torch.optim.Adam(parameters, lr=0.00003)
+optimizer = torch.optim.SGD(parameters, lr=0.001)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,
@@ -77,7 +78,7 @@ utils.train_ae(encoder,
                start_epoch=start_epoch,
                scheduler=None,
                checkpoint=checkpoint,
-               print_iter=False,
+               print_iter=True,
                eval_epoch=50,
                masked_loss=True)
 

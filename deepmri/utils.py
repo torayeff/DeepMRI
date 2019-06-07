@@ -2,8 +2,11 @@ import math
 import time
 import numpy as np
 import torch
-
-from deepmri.vis_utils import visualize_ae_results
+import torch.nn as nn
+import matplotlib.pyplot as plt
+from deepmri.CustomLosses import MaskedMSE
+from deepmri import vis_utils
+from matplotlib.lines import Line2D
 
 
 def calc_conv_dim(w, k, s, p):
@@ -175,6 +178,53 @@ def evaluate_rnn_encoder_decoder(encoder, decoder, criterion, dataloader, device
         print("Average loss: {}".format(running_loss / total))
 
 
+def img_stats(sample, t=None):
+    mask = sample['mask']
+    x = sample['data']
+    y = sample['out']
+
+    # scale_back
+    x_back = x * sample['stds'] + sample['means']
+    y_back = y * sample['stds'] + sample['means']
+
+    # clamp negative and over maximum values
+    y_back = y_back.clamp(min=x_back.min(), max=x_back.max())
+
+    # zero out background
+    x[:, mask == 0] = 0
+    y[:, mask == 0] = 0
+    x_back[:, mask == 0] = 0
+    y_back[:, mask == 0] = 0
+
+    masked_mse = MaskedMSE()
+    mse = nn.MSELoss(reduction='mean')
+
+    loss = masked_mse(x.unsqueeze(0), y.unsqueeze(0), mask.unsqueeze(0).unsqueeze(0))
+    scaled_loss = masked_mse(x_back.unsqueeze(0),
+                             y_back.unsqueeze(0),
+                             mask.unsqueeze(0).unsqueeze(0))
+
+    print("Avg. loss: {:.5f}, Avg. scaled loss: {:.5f}".format(loss.item(), scaled_loss.item()))
+
+    if t is not None:
+        slc_x = x_back[t]
+        slc_y = y_back[t]
+        roi_x = slc_x[mask == 1]
+        roi_y = slc_y[mask == 1]
+        roi_loss = mse(roi_x, roi_y)
+        min_x, max_x = slc_x.min().item(), slc_x.max().item()
+        min_y, max_y = slc_y.min().item(), slc_y.max().item()
+
+        vis_utils.show_slices(
+            [slc_x.numpy(), slc_y.numpy(), mask.numpy()],
+            titles=['x, min: {:.2f}, max: {:.2f}'.format(min_x, max_x),
+                    'y, min: {:.2f}, max: {:.2f}'.format(min_y, max_y),
+                    'mask'],
+            suptitle='Loss in ROI: {:.2f}'.format(roi_loss.item()),
+            cmap='gray'
+        )
+
+
 def dataset_performance(dataset,
                         encoder,
                         decoder,
@@ -184,9 +234,6 @@ def dataset_performance(dataset,
                         every_iter=10 ** 10,
                         eval_mode=True,
                         plot=False,
-                        mu=None,
-                        std=None,
-                        scale_back=True,
                         masked_loss=False):
     """Calculates average loss on whole dataset.
 
@@ -200,9 +247,6 @@ def dataset_performance(dataset,
       every_iter:  Print statistics every iteration. (Default value = 10 ** 10)
       eval_mode:  Boolean for the model mode. (Default value = True)
       plot:  Boolean to plot. (Default value = False)
-      mu: Mean value.
-      std: Standard deviation.
-      scale_back: If True loss will be calculated on original voxel values.
       masked_loss: If True loss will be calculated over masked region only.
 
     Returns:
@@ -226,8 +270,8 @@ def dataset_performance(dataset,
     min_loss = 10 ** 9
     max_loss = 0
 
-    best_img = None
-    worst_img = None
+    best = None
+    worst = None
 
     print("Total examples: {}".format(total_examples))
 
@@ -236,40 +280,26 @@ def dataset_performance(dataset,
         eval_start = time.time()
         for i, data in enumerate(dataset, 1):
             x = data['data'].unsqueeze(0).to(device)
-
-            out = decoder(encoder(x))
-
-            # scale back to original voxel values
-            if scale_back:
-                if (mu is None) and (std is None):
-                    x = x.detach().cpu().squeeze()
-                    out = out.detach().cpu().squeeze()
-                    x = x * data['stds'] + data['means']
-                    out = out * data['stds'] + data['means']
-
-                    x = x.unsqueeze(0).to(device)
-                    out = out.unsqueeze(0).to(device)
-                else:
-                    x = x * std + mu
-                    out = out * std + mu
-
-                out = out.clamp(min=x.min())
+            feature = encoder(x)
+            out = decoder(feature)
+            mask = data['mask'].unsqueeze(0).unsqueeze(0).to(device)
 
             if masked_loss:
-                mask = data['mask'].unsqueeze(1).to(device)
-                x = torch.mul(x, mask)
-                out = torch.mul(out, mask)
-                loss = criterion(x, out) / torch.sum(mask)
+                loss = criterion(x, out, mask)
             else:
                 loss = criterion(x, out)
 
             if loss.item() < min_loss:
                 min_loss = loss.item()
-                best_img = data
+                best = data
+                best['out'] = out.detach().cpu().squeeze()
+                best['feature'] = feature.detach().cpu().squeeze()
 
             if loss.item() > max_loss:
                 max_loss = loss.item()
-                worst_img = data
+                worst = data
+                worst['out'] = out.detach().cpu().squeeze()
+                worst['feature'] = feature.detach().cpu().squeeze()
 
             running_loss = running_loss + loss.item()
 
@@ -288,24 +318,10 @@ def dataset_performance(dataset,
           .format(min_loss,
                   max_loss,
                   avg_loss,
-                  best_img['file_name'],
-                  worst_img['file_name']))
+                  best['file_name'],
+                  worst['file_name']))
 
-    if plot:
-
-        print("Showing slice at t={}".format(t))
-
-        # show best reconstruction
-        mu_best, mu_worst = mu, mu
-        std_best, std_worst = std, std
-
-        if mu_best is None:
-            mu_best = best_img['means'].to(device)
-            mu_worst = worst_img['means'].to(device)
-
-        if std_best is None:
-            std_best = best_img['stds'].to(device)
-            std_worst = worst_img['stds'].to(device)
+    return best, worst
 
 
 def evaluate_ae(encoder,
@@ -354,11 +370,12 @@ def evaluate_ae(encoder,
             total_examples += batch['data'].size(0)
 
             if print_iter:
-                print("Batch #{}, Batch loss: {}".format(i, loss.item()))
+                print("Batch #{}, Batch loss: {:.5f}".format(i, loss.item()))
 
         avg_loss = running_loss / total_examples
 
-    print("Evaluated {} examples, Avg. loss: {}, Time: {:.5f}".format(total_examples, avg_loss, time.time() - start))
+    print("Evaluated {} examples, Avg. loss: {:.5f}, Time: {:.5f}".format(total_examples, avg_loss,
+                                                                          time.time() - start))
     return avg_loss
 
 
@@ -437,7 +454,7 @@ def train_ae(encoder,
             running_loss = running_loss + loss.item() * batch['data'].size(0)
             total_examples += batch['data'].size(0)
             if print_iter:
-                print("Iteration #{}, loss: {}, iter time: {}".format(iters, loss.item(), time.time() - iter_time))
+                print("Iteration #{}, loss: {:.5f}, iter time: {}".format(iters, loss.item(), time.time() - iter_time))
             iters += 1
 
         if epoch % checkpoint == 0:
@@ -449,10 +466,10 @@ def train_ae(encoder,
                                                                                    epoch + start_epoch))
 
         epoch_loss = running_loss / total_examples
-        print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch + start_epoch,
-                                                                                 num_epochs,
-                                                                                 epoch_loss,
-                                                                                 time.time() - epoch_start))
+        print("Epoch #{}/{},  epoch loss: {:.5f}, epoch time: {:.5f} seconds".format(epoch + start_epoch,
+                                                                                     num_epochs,
+                                                                                     epoch_loss,
+                                                                                     time.time() - epoch_start))
         # evaluate on trainloader
         if epoch % eval_epoch == 0:
             evaluate_ae(encoder, decoder, criterion, device, trainloader, print_iter=print_iter,
@@ -460,3 +477,35 @@ def train_ae(encoder,
 
         if scheduler is not None:
             scheduler.step(epoch_loss)
+
+
+def plot_grad_flow(named_parameters):
+    """
+    Credits https://discuss.pytorch.org/t/check-gradient-flow-in-network/15063/10
+    Plots the gradients flowing through different layers in the net during training.
+    Can be used for checking for possible gradient vanishing / exploding problems.
+
+    Usage: Plug this function in Trainer class after loss.backwards() as
+    "plot_grad_flow(self.model.named_parameters())" to visualize the gradient flow
+    """
+    ave_grads = []
+    max_grads = []
+    layers = []
+    for n, p in named_parameters:
+        if p.requires_grad and ("bias" not in n):
+            layers.append(n)
+            ave_grads.append(p.grad.abs().mean())
+            max_grads.append(p.grad.abs().max())
+    plt.bar(np.arange(len(max_grads)), max_grads, alpha=0.1, lw=1, color="c")
+    plt.bar(np.arange(len(max_grads)), ave_grads, alpha=0.1, lw=1, color="b")
+    plt.hlines(0, 0, len(ave_grads) + 1, lw=2, color="k")
+    plt.xticks(range(0, len(ave_grads), 1), layers, rotation="vertical")
+    plt.xlim(left=0, right=len(ave_grads))
+    plt.ylim(bottom=-0.001, top=0.02)  # zoom in on the lower gradient regions
+    plt.xlabel("Layers")
+    plt.ylabel("average gradient")
+    plt.title("Gradient flow")
+    plt.grid(True)
+    plt.legend([Line2D([0], [0], color="c", lw=4),
+                Line2D([0], [0], color="b", lw=4),
+                Line2D([0], [0], color="k", lw=4)], ['max-gradient', 'mean-gradient', 'zero-gradient'])

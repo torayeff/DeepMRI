@@ -2,10 +2,14 @@ import sys
 import time
 import torch
 import torch.nn as nn
+import matplotlib.pyplot as plt
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
 from DiffusionMRI.Conv2dAESagittal import ConvEncoder, ConvDecoder  # noqa: E402
+
+torch.manual_seed(0)
+torch.backends.cudnn.deterministic = True
 
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/train/sagittal/'
@@ -14,7 +18,7 @@ model_name = "SagittalConv2dAE"
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.manual_seed(0)
 torch.backends.cudnn.deterministic = True
-batch_size = 11
+batch_size = 16
 
 trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, bg_zero=True)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=10)
@@ -24,62 +28,65 @@ encoder = ConvEncoder(input_channels=288)
 decoder = ConvDecoder(out_channels=288)
 encoder.to(device)
 decoder.to(device)
+start_epoch = 2200
+# start_epoch = 0
+if start_epoch != 0:
+    encoder_path = "{}/models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
+    decoder_path = "{}/models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
+    encoder.load_state_dict(torch.load(encoder_path))
+    decoder.load_state_dict(torch.load(decoder_path))
+    print("Loaded pretrained weights starting from epoch {}".format(start_epoch))
 
-criterion = nn.MSELoss(reduction='sum')
-masked_mse = CustomLosses.MaskedMSE()
+criterion = CustomLosses.MaskedMSE()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
 optimizer = torch.optim.Adam(parameters, lr=0.0003)
 
-for b, batch in enumerate(trainloader):
-    st = time.time()
-    optimizer.zero_grad()
-    bs = batch['data'].shape[0]
-    x = batch['data'].to(device)
-    out = decoder(encoder(x))
+num_epochs = 1
+print_iter = False
+utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=True)
+for epoch in range(1, num_epochs + 1):
+    encoder.train()
+    decoder.train()
+    epoch_start = time.time()
+    total_examples = 0
+    running_loss = 0.0
 
-    mask = batch['mask'].unsqueeze(1).to(device)
-    x = torch.mul(x, mask)
-    out = torch.mul(out, mask)
+    iters = 1
 
-    # loss = criterion(x, out) / torch.sum(mask)
-    # loss = masked_mse(x, out, mask)
-    loss = 0
-    ch = batch['data'].shape[1]
+    for batch in trainloader:
+        iter_time = time.time()
 
-    for j in range(bs):
-        sample_loss = criterion(x[j], out[j]) / (mask[j].sum())
-        loss = loss + sample_loss
-    loss = loss / bs
+        # zero gradients
+        optimizer.zero_grad()
 
-    loss.backward()
-    optimizer.step()
-    print("{:.5f}".format(time.time() - st))
+        # forward
+        x = batch['data'].to(device)
+        out = decoder(encoder(x))
 
-    print("Batch #: {}, batch size: {}, loss: {}".format(b, bs, loss.item()))
+        # calculate loss
+        mask = batch['mask'].unsqueeze(1).to(device)
+        loss = criterion(x, out, mask)
 
+        # backward
+        loss.backward()
 
+        # update params
+        optimizer.step()
 
+        # track loss
+        running_loss = running_loss + loss.item() * batch['data'].size(0)
+        total_examples += batch['data'].size(0)
+        if print_iter:
+            print("Iteration #{}, loss: {}, iter time: {}".format(iters, loss.item(), time.time() - iter_time))
 
-# batch = next(iter(trainloader))
-#
-# x = batch['data'].to(device)
-# out = decoder(encoder(x))
-#
-# mask = batch['mask'].unsqueeze(1).to(device)
-# x = torch.mul(x, mask)
-# out = torch.mul(out, mask)
-#
-# loss = criterion(x, out) / torch.sum(mask)
-# custom_loss = masked_mse(x, out, mask)
-#
-# avg_loss = 0
-# bs = batch['data'].shape[0]
-# ch = batch['data'].shape[1]
-#
-# for b in range(bs):
-#     sample_loss = criterion(x[b], out[b]) / (ch * mask[b].sum())
-#     avg_loss = avg_loss + sample_loss
-# avg_loss = avg_loss / bs
-#
-# print(loss.item(), custom_loss.item(), avg_loss.item())
+        named_parameters = list(encoder.named_parameters()) + list(decoder.named_parameters())
+        utils.plot_grad_flow(named_parameters)
 
+        iters += 1
+
+    epoch_loss = running_loss / total_examples
+    print("Epoch #{}/{},  epoch loss: {}, epoch time: {:.5f} seconds".format(epoch + start_epoch,
+                                                                             num_epochs,
+                                                                             epoch_loss,
+                                                                             time.time() - epoch_start))
+plt.show()

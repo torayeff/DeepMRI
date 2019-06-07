@@ -27,7 +27,8 @@ encoder.eval()
 
 for i, orient in enumerate(orients):
     print("Processing {} features".format(orient))
-    data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'orients', orient)
+    # data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'orients', orient)
+    data_path = experiment_dir + 'tractseg_data/train/sagittal/'
     features_save_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'orient_features')
 
     # mu = 453.9321075958082
@@ -36,7 +37,7 @@ for i, orient in enumerate(orients):
     dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True, bg_zero=True)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
 
-    epoch = 200
+    epoch = 2200
     encoder_path = "{}/models/{}_encoder_epoch_{}".format(experiment_dir, model_names[i], epoch)
     encoder.load_state_dict(torch.load(encoder_path))
     print("Loaded pretrained weights starting from epoch {} for {}".format(epoch, model_names[i]))
@@ -51,4 +52,4 @@ for i, orient in enumerate(orients):
             print(idx)
 
         orient_features = orient_features.numpy()
-        np.savez(os.path.join(features_save_path, 'strided_{}_features.npz'.format(orient)), data=orient_features)
+        np.savez(os.path.join(features_save_path, 'new_strided_{}_features.npz'.format(orient)), data=orient_features)
