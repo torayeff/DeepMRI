@@ -5,8 +5,8 @@ sys.path.append('/home/agajan/DeepMRI')
 
 from deepmri import ds_utils  # noqa: E402
 
-csv_file = "/home/agajan/experiment_DiffusionMRI/tractseg_data/train.csv"
-save_dir = '/home/agajan/experiment_DiffusionMRI/tractseg_data/train/'
+csv_file = "/home/agajan/experiment_DiffusionMRI/tractseg_data/test.csv"
+save_dir = '/home/agajan/experiment_DiffusionMRI/tractseg_data/test/'
 ds_utils.create_orientation_dataset(csv_file, save_dir, orients=(0, ), th_sum=0, within_brain=True)
 
 # make empty volumes

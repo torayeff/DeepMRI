@@ -33,7 +33,7 @@ for i, orient in enumerate(orients):
     # mu = 453.9321075958082
     # std = 969.7367041395971
     # dataset = Datasets.OrientationDataset(data_path, mu=mu, std=std, normalize=True, sort_fns=True)
-    dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True)
+    dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True, bg_zero=True)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
 
     epoch = 200

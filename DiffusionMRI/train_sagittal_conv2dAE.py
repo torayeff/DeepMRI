@@ -4,18 +4,18 @@ import torch
 import torch.nn as nn
 
 sys.path.append('/home/agajan/DeepMRI')
-from deepmri import Datasets, utils  # noqa: E402
+from deepmri import Datasets, CustomLosses, utils  # noqa: E402
 from DiffusionMRI.Conv2dAESagittal import ConvEncoder, ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'tractseg_data/overfit/sagittal/'
-model_name = "masked2_brainSagittalConv2dAE"
+data_path = experiment_dir + 'tractseg_data/train/sagittal/'
+model_name = "SagittalConv2dAE"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
-deterministic = True  # reproducibility
+deterministic = False  # reproducibility
 seed = 0  # random seed for reproducibility
 if deterministic:
     torch.manual_seed(seed)
@@ -27,10 +27,10 @@ batch_size = 16
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 50000  # number of epochs to trains
-checkpoint = 1000  # save model every checkpoint epoch
+checkpoint = 100  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
-trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True)
+trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, bg_zero=True)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
 total_examples = len(trainset)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
@@ -55,10 +55,10 @@ p2 = utils.count_model_parameters(decoder)
 print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[1] + p2[1]))
 
 # criterion and optimizer settings
-criterion = nn.MSELoss(reduction='sum')  # !!! for masked loss
+# criterion = nn.MSELoss(reduction='sum')  # !!! for masked loss
+criterion = CustomLosses.MaskedMSE()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
 optimizer = torch.optim.Adam(parameters, lr=0.0003)
-# optimizer = torch.optim.SGD(parameters, lr=0.0001)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,

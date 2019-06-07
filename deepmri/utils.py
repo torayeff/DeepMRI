@@ -307,31 +307,6 @@ def dataset_performance(dataset,
             std_best = best_img['stds'].to(device)
             std_worst = worst_img['stds'].to(device)
 
-        visualize_ae_results(best_img['data'],
-                             encoder,
-                             decoder,
-                             criterion,
-                             device,
-                             mu_best,
-                             std_best,
-                             t,
-                             suptitle='Best reconstruction.',
-                             scale_back=True,
-                             cmap='gray')
-
-        # show worst reconstruction
-        visualize_ae_results(worst_img['data'],
-                             encoder,
-                             decoder,
-                             criterion,
-                             device,
-                             mu_worst,
-                             std_worst,
-                             t,
-                             suptitle='Worst reconstruction',
-                             scale_back=True,
-                             cmap='gray')
-
 
 def evaluate_ae(encoder,
                 decoder,
@@ -371,9 +346,7 @@ def evaluate_ae(encoder,
             # calculate loss
             if masked_loss:
                 mask = batch['mask'].unsqueeze(1).to(device)
-                x = torch.mul(x, mask)
-                out = torch.mul(out, mask)
-                loss = criterion(x, out) / torch.sum(mask)
+                loss = criterion(x, out, mask)
             else:
                 loss = criterion(x, out)
             # track loss
@@ -450,9 +423,7 @@ def train_ae(encoder,
             # calculate loss
             if masked_loss:
                 mask = batch['mask'].unsqueeze(1).to(device)
-                x = torch.mul(x, mask)
-                out = torch.mul(out, mask)
-                loss = criterion(x, out) / torch.sum(mask)
+                loss = criterion(x, out, mask)
             else:
                 loss = criterion(x, out)
 
@@ -466,7 +437,7 @@ def train_ae(encoder,
             running_loss = running_loss + loss.item() * batch['data'].size(0)
             total_examples += batch['data'].size(0)
             if print_iter:
-                print("Iteration #{}, iter time: {}, loss: {}".format(iters, time.time() - iter_time, loss.item()))
+                print("Iteration #{}, loss: {}, iter time: {}".format(iters, loss.item(), time.time() - iter_time))
             iters += 1
 
         if epoch % checkpoint == 0:

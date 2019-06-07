@@ -30,7 +30,7 @@ def show_slices(slices,
     fig.suptitle(suptitle, fontsize=fontsize)
     for i, slc in enumerate(slices):
         axes[i].set_title(titles[i])
-        axes[i].imshow(slc.T, cmap=cmap, origin="lower")
+        axes[i].imshow(slc.T, cmap=cmap, origin="lower", interpolation='none')
     fig.tight_layout(rect=[0, 0, 1, 0.9])
     plt.show()
 
@@ -197,11 +197,14 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
 
 
-def visualize_ae_results(data, t, encoder, decoder, criterion, device,
-                         scale_back=True,
+def visualize_ae_results(data,
+                         t,
+                         encoder,
+                         decoder,
+                         criterion,
+                         device,
                          suptitle="Visualization",
-                         cmap=None,
-                         masked_loss=False):
+                         cmap=None):
     """Visualizes AE results.
 
     Args:
@@ -211,45 +214,34 @@ def visualize_ae_results(data, t, encoder, decoder, criterion, device,
       decoder: Decoder model.
       criterion: Criterion.
       device: Device.
-      scale_back:  If True scales back to the original voxel values. (Default value = True)
       suptitle:  Sup title.(Default value = "Visualization")
       cmap:  Color map. (Default value = None)
-
     Returns:
         None
     """
     encoder.eval()
     decoder.eval()
 
-    # x is tensor with dim C x W x H
-    x = data['data']
-    x = x.unsqueeze(0)  # add batch dim
-    mu = data['means'].to(device)
-    std = data['stds'].to(device)
-
     with torch.no_grad():
-        x = x.to(device)
-        out = decoder(encoder(x))
+        x = data['data'].unsqueeze(0).to(device)
+        feature = encoder(x)
+        y = decoder(feature)
 
-    if masked_loss:
-        mask = data['mask'].unsqueeze(0).unsqueeze(0).to(device)
-        x = torch.mul(x, mask)
-        out = torch.mul(out, mask)
-        loss_before_scaling = criterion(x, out) / torch.sum(mask)
-    else:
-        loss_before_scaling = criterion(x, out)
+    x = data['data']
+    mask = data['mask']
+    y = y.detach().cpu().squeeze()
 
-    if scale_back:
-        x = x * std + mu
-        out = out * std + mu
-        out = out.clamp(min=0)
-        if masked_loss:
-            loss_after_scaling = criterion(x, out) / torch.sum(mask)
-        else:
-            loss_after_scaling = criterion(x, out)
+    # scale back to original voxel values
+    x = x * data['stds'] + data['means']
+    x[:, mask == 0] = 0
+    y = y * data['stds'] + data['means']
+    y[:, mask == 0] = 0
 
-    x = x.squeeze().cpu().numpy()
-    out = out.squeeze().cpu().numpy()
+    # region of interest
+    roi_x = x[:, mask == 1]
+    roi_y = y[:, mask == 1]
+
+
 
     original_title = "Original\n Minval: {:.5f}, Maxval: {:.5f}".format(x[t].min(), x[t].max())
     recons_title = "Reconstruction\n Minval: {:.5f}, Maxval: {:.5f}".format(out[t].min(), out[t].max())

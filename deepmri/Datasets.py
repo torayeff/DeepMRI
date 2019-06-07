@@ -11,20 +11,25 @@ import numpy as np
 class OrientationDatasetChannelNorm(Dataset):
     """Orientation dataset for dMRI."""
 
-    def __init__(self, data_dir, file_names=None, normalize=True, to_tensor=True, sort_fns=False):
+    def __init__(self,
+                 data_dir,
+                 file_names=None,
+                 normalize=True,
+                 bg_zero=True,
+                 sort_fns=True):
         """
         Args:
             data_dir: Directory with .npz volumes.
             file_names: File names in dat_dir.
-            normalize: If True, the data will be normalized
-            to_tensor: If True, numpy array will be converted to tensor.
+            normalize: If True, the data will be normalized.
+            bg_zero: If True, background values will be zeroed after normalization.
             sort_fns: If True sorts file_names
         """
 
         self.data_dir = data_dir
         self.file_names = file_names
         self.normalize = normalize
-        self.to_tensor = to_tensor
+        self.bg_zero = bg_zero
 
         if file_names is None:
             self.file_names = os.listdir(data_dir)
@@ -40,24 +45,17 @@ class OrientationDatasetChannelNorm(Dataset):
         file_path = os.path.join(self.data_dir, file_name)
 
         orient_img = np.load(file_path)
-        x = orient_img['data']
-        mask = orient_img['mask']
-        means, stds = orient_img['means'], orient_img['stds']
-
-        if self.to_tensor:
-            x = torch.tensor(x).float()
-            if mask is not None:
-                mask = torch.tensor(mask).float()
+        x = torch.tensor(orient_img['data']).float()
+        mask = torch.tensor(orient_img['mask']).float()
+        means = torch.tensor(orient_img['means']).float()[..., None, None]  # add extra dims
+        stds = torch.tensor(orient_img['stds']).float()[..., None, None]  # extra dims
 
         if self.normalize:
-            if self.to_tensor:
-                means = torch.tensor(means).float()[..., None, None]
-                stds = torch.tensor(stds).float()[..., None, None]
-            else:
-                means = np.array(means)[..., None, None]
-                stds = np.array(stds)[..., None, None]
-
             x = (x - means)/stds
+
+        # make background values zero
+        if self.bg_zero:
+            x[:, mask == 0] = 0
 
         sample = {'data': x, 'file_name': file_name, 'means': means, 'stds': stds, 'mask': mask}
 
