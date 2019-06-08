@@ -370,13 +370,12 @@ def create_dataset_from_data_mask(features, data_masks, labels=None, multi_label
     if multi_label:
         voxel_coords = np.nonzero(data_masks)[:3]  # take only spatial dims
         voxel_coords = list(zip(*voxel_coords))  # make triples
-        voxel_coords = set(voxel_coords)  # remove duplicates
+        voxel_coords = list(set(voxel_coords))  # remove duplicates
         for pt in voxel_coords:
             x = features[pt[0], pt[1], pt[2], :]
             y = data_masks[pt[0], pt[1], pt[2], :]
             x_set.append(x)
             y_set.append(y)
-
     else:
         for pt in np.transpose(np.nonzero(data_masks)):
             voxel_coords.append((pt[0], pt[1], pt[2]))
@@ -389,7 +388,7 @@ def create_dataset_from_data_mask(features, data_masks, labels=None, multi_label
             else:
                 y_set.append(labels[y])
 
-    return np.array(x_set), np.array(y_set), voxel_coords
+    return np.array(x_set), np.array(y_set), np.array(voxel_coords)
 
 
 def preds_to_data_mask(preds, voxel_coords, labels, vol_size=(145, 174, 145)):
@@ -407,8 +406,9 @@ def preds_to_data_mask(preds, voxel_coords, labels, vol_size=(145, 174, 145)):
     data_mask = np.zeros((*vol_size, len(labels)))
 
     for pred, crd in zip(preds, voxel_coords):
-        ch = labels.index(str(pred))
-        data_mask[crd[0], crd[1], crd[2], ch] = 1
+        for ch, v in enumerate(pred):
+            if v != 0:
+                data_mask[crd[0], crd[1], crd[2], ch] = 1
 
     return data_mask
 
@@ -417,11 +417,11 @@ def make_orient_features(features, coords, orient, scale=1):
     orient_features = []
     for crd in coords:
         if orient == 'sagittal':
-            orient_features.append(features[crd[0]//scale, crd[1]//scale, crd[2]//scale, :])
+            orient_features.append(features[crd[0], crd[1]//scale, crd[2]//scale, :])
         elif orient == 'coronal':
-            orient_features.append(features[crd[1]//scale, crd[0]//scale, crd[2]//scale, :])
+            orient_features.append(features[crd[1], crd[0]//scale, crd[2]//scale, :])
         elif orient == 'axial':
-            orient_features.append(features[crd[2]//scale, crd[0]//scale, crd[1]//scale])
+            orient_features.append(features[crd[2], crd[0]//scale, crd[1]//scale, :])
         else:
             raise ValueError('Unknown orientation.')
 

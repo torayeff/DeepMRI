@@ -28,4 +28,4 @@ bvals_3 = [round(int(x)/100)*100 for x in bvals]
 for a, b, c in zip(bvals_1, bvals_2, bvals_3):
     print(a, " -- ", b, " -- ", c)
 
-print(a==b)
+print(a == b == c)

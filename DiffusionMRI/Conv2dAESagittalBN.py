@@ -15,7 +15,7 @@ class ConvEncoder(nn.Module):
                 padding=1,
                 bias=False
             ),
-            nn.GroupNorm(16, 288),
+            nn.BatchNorm2d(288),
             nn.ReLU(),
 
             # N x 288 x 87 x 73 --> N x 144 x 44 x 37
@@ -27,7 +27,7 @@ class ConvEncoder(nn.Module):
                 padding=1,
                 bias=False
             ),
-            nn.GroupNorm(12, 144),
+            nn.BatchNorm2d(144),
             nn.ReLU(),
 
             # N x 144 x 44 x 37 --> N x 128 x 22 x 19
@@ -39,7 +39,7 @@ class ConvEncoder(nn.Module):
                 padding=1,
                 bias=False
             ),
-            nn.GroupNorm(8, 128),
+            nn.BatchNorm2d(128),
             nn.ReLU()
         )
 
@@ -62,7 +62,7 @@ class ConvDecoder(nn.Module):
                 output_padding=(1, 0),
                 bias=False
             ),
-            nn.GroupNorm(12, 144),
+            nn.BatchNorm2d(144),
             nn.ReLU(),
 
             # N x 144 x 44 x 37 --> N x 288 x 87 x 73
@@ -75,7 +75,7 @@ class ConvDecoder(nn.Module):
                 output_padding=(0, 0),
                 bias=False
             ),
-            nn.GroupNorm(16, 288),
+            nn.BatchNorm2d(288),
             nn.ReLU(),
 
             # N x 288 x 87 x 73 --> N x 288 x 174 x 145

@@ -5,8 +5,8 @@ import os
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
-from DiffusionMRI.Conv2dAESagittal import ConvEncoder as SagittalEncoder  # noqa: E402
-from DiffusionMRI.Conv2dAESagittal import ConvDecoder as SagittalDecoder  # noqa: E402
+from DiffusionMRI.Conv2dAESagittalGN import ConvEncoder as SagittalEncoder  # noqa: E402
+from DiffusionMRI.Conv2dAESagittalGN import ConvDecoder as SagittalDecoder  # noqa: E402
 
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
