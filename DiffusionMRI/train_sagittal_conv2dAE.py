@@ -1,18 +1,17 @@
 import sys
 import time
 import torch
-import torch.nn as nn
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.Conv2dAESagittalBN import ConvEncoder, ConvDecoder  # noqa: E402
+from DiffusionMRI.Conv2dAEFullSpatial import ConvEncoder, ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/train/sagittal/'
-model_name = "SagittalConv2dAEBN"
+model_name = "SagittalConv2dAEFullSpatial"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -25,7 +24,7 @@ torch.backends.cudnn.deterministic = deterministic
 # data
 batch_size = 16
 
-start_epoch = 5500  # for loading pretrained weights
+start_epoch = 300  # for loading pretrained weights
 num_epochs = 50000  # number of epochs to trains
 checkpoint = 100  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
@@ -58,8 +57,8 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion = nn.MSELoss(reduction='sum')  # !!! for masked loss
 criterion = CustomLosses.MaskedMSE()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-# optimizer = torch.optim.Adam(parameters, lr=0.0003)
-optimizer = torch.optim.SGD(parameters, lr=0.00001)
+optimizer = torch.optim.Adam(parameters)
+# optimizer = torch.optim.SGD(parameters, lr=0.001)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,

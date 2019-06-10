@@ -157,11 +157,11 @@ def create_orientation_dataset(csv_file,
                         means.append(mu)
                         stds.append(std)
 
-                    np.savez_compressed(save_path,
-                                        data=orient_img,
-                                        mask=slc_mask.astype('uint8'),
-                                        means=np.array(means),
-                                        stds=np.array(stds))
+                    np.savez(save_path,
+                             data=orient_img,
+                             mask=slc_mask.astype('uint8'),
+                             means=np.array(means),
+                             stds=np.array(stds))
 
             print("Processed in {:.5f} seconds.".format(time.time() - st))
     print("Done!")
@@ -417,11 +417,11 @@ def make_orient_features(features, coords, orient, scale=1):
     orient_features = []
     for crd in coords:
         if orient == 'sagittal':
-            orient_features.append(features[crd[0], crd[1]//scale, crd[2]//scale, :])
+            orient_features.append(features[crd[0], crd[1] // scale, crd[2] // scale, :])
         elif orient == 'coronal':
-            orient_features.append(features[crd[1], crd[0]//scale, crd[2]//scale, :])
+            orient_features.append(features[crd[1], crd[0] // scale, crd[2] // scale, :])
         elif orient == 'axial':
-            orient_features.append(features[crd[2], crd[0]//scale, crd[1]//scale, :])
+            orient_features.append(features[crd[2], crd[0] // scale, crd[1] // scale, :])
         else:
             raise ValueError('Unknown orientation.')
 
