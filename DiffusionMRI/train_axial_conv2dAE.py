@@ -5,7 +5,7 @@ import torch.nn as nn
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
-from DiffusionMRI.Conv2dAEFullSpatial import ConvEncoder, ConvDecoder  # noqa: E402
+from DiffusionMRI.ArchivedModels.Conv2dAEFullSpatial import ConvEncoder, ConvDecoder  # noqa: E402
 
 script_start = time.time()
 

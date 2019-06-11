@@ -107,6 +107,18 @@ def create_orientation_dataset(csv_file,
             print("Processing {} orientation...".format(orient_name))
             st = time.time()
 
+            if th_sum == 'avg':
+                orient_masks = None
+                if orient == 0:
+                    orient_masks = [mask for mask in brain_mask]
+                elif orient == 1:
+                    orient_masks = [mask for mask in brain_mask.transpose(1, 0, 2)]
+                elif orient == 2:
+                    orient_masks = [mask for mask in brain_mask.transpose(2, 0, 1)]
+
+                th_sum = sum(orient_masks).sum() / data.shape[orient]
+                print("Threshold for {} is {}".format(orient_names[orient], th_sum))
+
             for idx in range(data.shape[orient]):
                 orient_img = None
                 slc_mask = None
@@ -413,7 +425,7 @@ def preds_to_data_mask(preds, voxel_coords, labels, vol_size=(145, 174, 145)):
     return data_mask
 
 
-def make_orient_features(features, coords, orient, scale=1):
+def features_from_coords(features, coords, orient, scale=1):
     orient_features = []
     for crd in coords:
         if orient == 'sagittal':

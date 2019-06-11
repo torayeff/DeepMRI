@@ -4,17 +4,17 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.Conv2dAEFullSpatial import ConvEncoder, ConvDecoder  # noqa: E402
+from DiffusionMRI.Conv2dAECoronal import ConvEncoder, ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'tractseg_data/train_3000/coronal/'
-model_name = "CoronalConv2dAEFullSpatial"
+data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
+model_name = "Conv2dAECoronal"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
-deterministic = False  # reproducibility
+deterministic = True  # reproducibility
 seed = 0  # random seed for reproducibility
 if deterministic:
     torch.manual_seed(seed)
@@ -22,7 +22,7 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-batch_size = 64
+batch_size = 16
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 50000  # number of epochs to trains
@@ -37,8 +37,8 @@ print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(
                                                                                 total_examples / batch_size))
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = ConvEncoder(input_channels=90)
-decoder = ConvDecoder(out_channels=90)
+encoder = ConvEncoder()
+decoder = ConvDecoder()
 encoder.to(device)
 decoder.to(device)
 

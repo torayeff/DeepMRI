@@ -134,7 +134,7 @@ def show_one_masked_slice(img,
 
 def show_tiled_images(images, titles, n_rows, n_cols,  figsize=(36, 16),
                       suptitle='Title', title_x=0.5, title_y=0.9,
-                      fontsize=18, zero_space=False):
+                      fontsize=18, zero_space=False, cmap=None):
     """Shows tiled images in grid."""
 
     fig = plt.figure(figsize=figsize)
@@ -142,7 +142,7 @@ def show_tiled_images(images, titles, n_rows, n_cols,  figsize=(36, 16),
     for c, ax in enumerate(axes):
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        ax.imshow(images[c], origin='lower')
+        ax.imshow(images[c], origin='lower', cmap=cmap)
         ax.set_title(titles[c])
         ax.axis('off')
 
