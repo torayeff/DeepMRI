@@ -10,11 +10,11 @@ script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'data/train/coronal/'
-model_name = "Conv2dAEFullSpatial_18"
+data_path = experiment_dir + 'tractseg_data/784565/overfit/'
+model_name = "exp2_Conv2dAEFullSpatial"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
-deterministic = True  # reproducibility
+deterministic = False  # reproducibility
 seed = 0  # random seed for reproducibility
 if deterministic:
     torch.manual_seed(seed)
@@ -22,11 +22,11 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-batch_size = 32
+batch_size = 2
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 5  # number of epochs to trains
-checkpoint = 1  # save model every checkpoint epoch
+num_epochs = 10000  # number of epochs to trains
+checkpoint = 100  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, bg_zero=True)
@@ -64,7 +64,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        patience=5)
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
-# utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=True)
+utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=True)
 utils.train_ae(encoder,
                decoder,
                criterion,
@@ -77,7 +77,7 @@ utils.train_ae(encoder,
                start_epoch=start_epoch,
                scheduler=None,
                checkpoint=checkpoint,
-               print_iter=True,
+               print_iter=False,
                eval_epoch=10,
                masked_loss=True)
 

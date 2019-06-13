@@ -307,14 +307,13 @@ def create_multilabel_mask(labels, masks_path, nodif_brain_mask_path, vol_size=(
     return mask_ml.astype('uint8')
 
 
-def create_data_masks(ml_masks, slice_orients, labels, max_samples_per_label):
+def create_data_masks(ml_masks, slice_orients, labels):
     """Creates multilabel binary mask for training from full multilabel binary mask.
     Args:
         ml_masks: Full multilabel binary mask.
         slice_orients: Slice orientations and their indices to take training voxels,
                         e.g., slice_orients = [('sagittal', 72), ('sagittal', 89)]
         labels: Labels.
-        max_samples_per_label: Maximum number of samples per label to take for training.
     Returns:
         Multilabe binary mask for training.
     """
@@ -323,37 +322,21 @@ def create_data_masks(ml_masks, slice_orients, labels, max_samples_per_label):
 
     for orient in slice_orients:
         if orient[0] == 'sagittal':
-            slc = ml_masks[orient[1], :, :]
-            data_slc = data_masks[orient[1], :, :]
+            slc = ml_masks[orient[1], :, :, :]
+            data_slc = data_masks[orient[1], :, :, :]
         elif orient[0] == 'coronal':
-            slc = ml_masks[:, orient[1], :]
-            data_slc = data_masks[:, orient[1], :]
+            slc = ml_masks[:, orient[1], :, :]
+            data_slc = data_masks[:, orient[1], :, :]
         elif orient[0] == 'axial':
-            slc = ml_masks[:, :, orient[1]]
-            data_slc = data_masks[:, :, orient[1]]
+            slc = ml_masks[:, :, orient[1], :]
+            data_slc = data_masks[:, :, orient[1], :]
         else:
             print('Invalid orientation name was given.')
             continue
 
         for ch, label in enumerate(labels):
-            max_samples = max_samples_per_label[ch]
             label_mask = slc[:, :, ch]
-
-            label_coords = np.nonzero(label_mask)
-            clen = len(label_coords[0])
-
-            # if the number of annotations is more than max_samples
-            # take max_sample annotations from the middle, and zero out others
-            # else take all the annotations
-            if clen > max_samples:
-                start = (clen // 2) - (max_samples // 2) - (max_samples % 2)
-                end = start + max_samples
-                annot_coords = (label_coords[0][start:end], label_coords[1][start:end])
-            else:
-                annot_coords = label_coords
-
-            # assign annotations
-            data_slc[:, :, ch][annot_coords] = 1
+            data_slc[:, :, ch][np.nonzero(label_mask)] = 1
 
     total = 0
     for ch, label in enumerate(labels):
