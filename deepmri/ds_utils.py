@@ -160,11 +160,23 @@ def create_orientation_dataset(csv_file,
                         if within_brain:
                             # calculate stats only within brain region
                             roi = orient_img[ch][roi_idxs]
-                            mu = roi.mean()
-                            std = roi.std()
+
+                            if len(roi) != 0:
+                                mu = roi.mean()
+                                std = roi.std()
+                            else:
+                                # this happens when slice does not contain any brain region
+                                mu = 0
+                                std = 1
                         else:
                             mu = orient_img[ch].mean()
                             std = orient_img[ch].std()
+
+                        if std == 0:
+                            # this happens when mask says that there is a brain region
+                            # but actually there is no any brain region
+                            # results in ROI with all zeros.
+                            std = 1  # dirty hack
 
                         means.append(mu)
                         stds.append(std)
