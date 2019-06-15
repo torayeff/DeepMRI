@@ -4,14 +4,15 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.Conv2dAEFullSpatial import ConvEncoder, ConvDecoder  # noqa: E402
+from DiffusionMRI.Conv2dAECoronal import ConvEncoder, ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'data/train/coronal/'
-model_name = "Conv2dAEFullSpatial_18"
+# data_path = experiment_dir + 'tractseg_data/784565/overfit/'
+model_name = "Conv2dAECoronal"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -25,7 +26,7 @@ torch.backends.cudnn.deterministic = deterministic
 batch_size = 32
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 5  # number of epochs to trains
+num_epochs = 1  # number of epochs to trains
 checkpoint = 1  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
@@ -56,8 +57,7 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = CustomLosses.MaskedMSE()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.003)
-# optimizer = torch.optim.SGD(parameters, lr=0.3)
+optimizer = torch.optim.Adam(parameters, lr=0.0003)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,

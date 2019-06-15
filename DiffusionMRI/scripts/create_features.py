@@ -5,16 +5,16 @@ import os
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets  # noqa: E402
-from DiffusionMRI.Conv2dAEFullSpatial import ConvEncoder  # noqa: E402
+from DiffusionMRI.Conv2dAECoronal import ConvEncoder  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
-subj_id = '786569'
+subj_id = '784565'
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 orients = ['coronal']
-model_names = ["Conv2dAEFullSpatial"]
-feature_shapes = [(174, 145, 145, 36)]
+model_names = ["Conv2dAECoronal"]
+feature_shapes = [(174, 72, 72, 4)]
 encoder = ConvEncoder()
 encoder.to(device)
 encoder.eval()
@@ -27,7 +27,7 @@ for i, orient in enumerate(orients):
     dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True, bg_zero=True)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
 
-    epoch = 2
+    epoch = 1
     encoder_path = "{}models/{}_encoder_epoch_{}".format(experiment_dir, model_names[i], epoch)
     encoder.load_state_dict(torch.load(encoder_path))
     print("Loaded pretrained weights starting from epoch {} for {}".format(epoch, model_names[i]))
@@ -45,5 +45,5 @@ for i, orient in enumerate(orients):
             print(idx)
 
         orient_features = orient_features.numpy()
-        np.savez(os.path.join(features_save_path, 'full_{}_features_epoch_{}.npz'.format(orient, epoch)),
+        np.savez(os.path.join(features_save_path, 'ch4_{}_features_epoch_{}.npz'.format(orient, epoch)),
                  data=orient_features)
