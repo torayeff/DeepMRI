@@ -73,6 +73,7 @@ def create_orientation_dataset(csv_file,
                                save_dir,
                                orients=(0, 1, 2),
                                th_sum=0,
+                               avg=False,
                                within_brain=True):
     """Creates axial, coronal, sagittal volumes.
 
@@ -81,6 +82,7 @@ def create_orientation_dataset(csv_file,
       save_dir: Directory to save the data.
       orients: 0 - Sagittal, 1 - Coronal, 2 - Axial (Default value = (0, 1, 2)
       th_sum: if volume sum is less than th_sum, do not save it.
+      avg: If True threshold will be calculated on average image.
       within_brain: If True only regions within brain mask will be considered.
 
     Returns:
@@ -107,7 +109,7 @@ def create_orientation_dataset(csv_file,
             print("Processing {} orientation...".format(orient_name))
             st = time.time()
 
-            if th_sum == 'avg':
+            if avg:
                 orient_masks = None
                 if orient == 0:
                     orient_masks = [mask for mask in brain_mask]
