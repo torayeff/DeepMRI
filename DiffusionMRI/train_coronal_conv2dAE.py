@@ -4,18 +4,18 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.Conv2dAECoronal import ConvEncoder, ConvDecoder  # noqa: E402
+from DiffusionMRI.Conv2dAE import ConvEncoder, ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'data/train/coronal/'
-# data_path = experiment_dir + 'tractseg_data/784565/overfit/'
+# data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
 model_name = "Conv2dAECoronal"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
-deterministic = True  # reproducibility
+deterministic = False  # reproducibility
 seed = 0  # random seed for reproducibility
 if deterministic:
     torch.manual_seed(seed)
@@ -23,10 +23,10 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-batch_size = 32
+batch_size = 8
 
-start_epoch = 0  # for loading pretrained weights
-num_epochs = 1  # number of epochs to trains
+start_epoch = 31  # for loading pretrained weights
+num_epochs = 19  # number of epochs to trains
 checkpoint = 1  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
@@ -77,7 +77,7 @@ utils.train_ae(encoder,
                start_epoch=start_epoch,
                scheduler=None,
                checkpoint=checkpoint,
-               print_iter=True,
+               print_iter=False,
                eval_epoch=10,
                masked_loss=True)
 
