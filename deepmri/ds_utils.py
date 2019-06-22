@@ -322,14 +322,14 @@ def create_multilabel_mask(labels, masks_path, nodif_brain_mask_path, vol_size=(
 
 
 def create_data_masks(ml_masks, slice_orients, labels):
-    """Creates multilabel binary mask for training from full multilabel binary mask.
+    """Creates multilabel binary mask from full multilabel binary mask for given orienations.
     Args:
         ml_masks: Full multilabel binary mask.
-        slice_orients: Slice orientations and their indices to take training voxels,
+        slice_orients: Slice orientations and their indices to include in mask,
                         e.g., slice_orients = [('sagittal', 72), ('sagittal', 89)]
         labels: Labels.
     Returns:
-        Multilabe binary mask for training.
+        Multilabel binary mask for given slice orientations.
     """
 
     data_masks = np.zeros(ml_masks.shape)
@@ -365,22 +365,21 @@ def create_data_masks(ml_masks, slice_orients, labels):
 def create_dataset_from_data_mask(features,
                                   data_masks,
                                   labels=None,
-                                  multi_label=False,
-                                  nonzero=True):
+                                  multi_label=False):
     """Creates voxel level dataset.
 
         Args:
-          features: numpy.ndarray of shape WxHxDxT: diffusion MRI data.
+          features: numpy.ndarray of shape WxHxDxK.
           data_masks: numpy.ndarray of shape WxHxDxC: multilabel binary mask volume.
           labels: If not None, names for classes will be used instead of numbers.
-          multi_label: If True multi labe one hot encoding labels will be generated.
-          nonzero: If True, only nonzero values will be considered.
+          multi_label: If True multi label one hot encoding labels will be generated.
 
         Returns:
-          x_train, y_train
+          x_set, y_set, coords_set
         """
 
     x_set, y_set, coords_set = [], [], []
+
     if multi_label:
         voxel_coords = np.nonzero(data_masks)[:3]  # take only spatial dims
         voxel_coords = list(zip(*voxel_coords))  # make triples
@@ -389,22 +388,20 @@ def create_dataset_from_data_mask(features,
             x = features[pt[0], pt[1], pt[2], :]
             y = data_masks[pt[0], pt[1], pt[2], :]
 
-            if (not nonzero) or (nonzero and (np.count_nonzero(x) != 0)):
-                x_set.append(x)
-                y_set.append(y)
-                coords_set.append((pt[0], pt[1], pt[2]))
+            x_set.append(x)
+            y_set.append(y)
+            coords_set.append((pt[0], pt[1], pt[2]))
     else:
         for pt in np.transpose(np.nonzero(data_masks)):
             x = features[pt[0], pt[1], pt[2], :]
             y = pt[3]
 
-            if (not nonzero) or (nonzero and (np.count_nonzero(x) != 0)):
-                x_set.append(x)
-                coords_set.append((pt[0], pt[1], pt[2]))
-                if labels is None:
-                    y_set.append(y)
-                else:
-                    y_set.append(labels[y])
+            x_set.append(x)
+            coords_set.append((pt[0], pt[1], pt[2]))
+            if labels is None:
+                y_set.append(y)
+            else:
+                y_set.append(labels[y])
 
     return np.array(x_set), np.array(y_set), np.array(coords_set)
 

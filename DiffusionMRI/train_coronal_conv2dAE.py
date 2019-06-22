@@ -4,15 +4,14 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.Conv2dAEStrided import ConvEncoder, ConvDecoder  # noqa: E402
+from DiffusionMRI.Conv2dAE import ConvEncoder, ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-# data_path = experiment_dir + 'data/train/coronal/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "Conv2dAECoronalStrided"
+model_name = "Conv2dAECoronal"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -27,7 +26,7 @@ batch_size = 8
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 1000  # number of epochs to trains
-checkpoint = 100  # save model every checkpoint epoch
+checkpoint = 1000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, bg_zero=True)
@@ -38,7 +37,7 @@ print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(
                                                                                 total_examples / batch_size))
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = ConvEncoder(input_size=(145, 145))
+encoder = ConvEncoder()
 decoder = ConvDecoder()
 encoder.to(device)
 decoder.to(device)
@@ -57,14 +56,14 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = CustomLosses.MaskedMSE()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.0003)
+optimizer = torch.optim.Adam(parameters, lr=0.003)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,
                                                        patience=5)
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
-# utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=True)
+utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=True)
 utils.train_ae(encoder,
                decoder,
                criterion,
@@ -78,7 +77,7 @@ utils.train_ae(encoder,
                scheduler=None,
                checkpoint=checkpoint,
                print_iter=False,
-               eval_epoch=10,
+               eval_epoch=1000,
                masked_loss=True)
 
 print("Total running time: {}".format(time.time() - script_start))
