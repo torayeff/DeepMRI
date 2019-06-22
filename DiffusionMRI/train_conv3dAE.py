@@ -1,19 +1,19 @@
 import sys
 import time
 import torch
+import nibabel as nib
 
 sys.path.append('/home/agajan/DeepMRI')
-from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.Conv2dAEStrided import ConvEncoder, ConvDecoder  # noqa: E402
+from deepmri import Datasets, utils  # noqa: E402
+from DiffusionMRI.Conv3dAE import ConvEncoder, ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-# data_path = experiment_dir + 'data/train/coronal/'
-data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "Conv2dAECoronalStrided"
-
+data_path = experiment_dir + 'tractseg_data/784565/data.nii.gz'
+model_name = "Conv3dAE"
+# ------------------------------------------Model-----------------------------------------------------------------------
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
 seed = 0  # random seed for reproducibility
@@ -22,23 +22,22 @@ if deterministic:
 torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input size varies
 torch.backends.cudnn.deterministic = deterministic
 
-# data
-batch_size = 8
-
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 1000  # number of epochs to trains
-checkpoint = 100  # save model every checkpoint epoch
+num_epochs = 10000  # number of epochs to trains
+checkpoint = 1000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
-
-trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, bg_zero=True)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
-total_examples = len(trainset)
-print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
-                                                                                batch_size,
-                                                                                total_examples / batch_size))
+channels = 64
+dmri_data = nib.load(data_path).get_data()[:, :, :, :channels]
+mu = dmri_data.mean()
+std = dmri_data.std()
+dmri_data = (dmri_data - mu) / std
+dmri_data = dmri_data.transpose(3, 0, 1, 2)
+dmri_data = torch.tensor(dmri_data).float().unsqueeze(0)
+print(dmri_data.shape)
+trainloader = [{'data': dmri_data}]
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = ConvEncoder(input_size=(145, 145))
+encoder = ConvEncoder()
 decoder = ConvDecoder()
 encoder.to(device)
 decoder.to(device)
@@ -55,7 +54,7 @@ p2 = utils.count_model_parameters(decoder)
 print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[1] + p2[1]))
 
 # criterion and optimizer settings
-criterion = CustomLosses.MaskedMSE()
+criterion = torch.nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
 optimizer = torch.optim.Adam(parameters, lr=0.0003)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
@@ -78,7 +77,7 @@ utils.train_ae(encoder,
                scheduler=None,
                checkpoint=checkpoint,
                print_iter=False,
-               eval_epoch=10,
-               masked_loss=True)
+               eval_epoch=1000,
+               masked_loss=False)
 
 print("Total running time: {}".format(time.time() - script_start))

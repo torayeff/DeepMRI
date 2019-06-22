@@ -362,7 +362,11 @@ def create_data_masks(ml_masks, slice_orients, labels):
     return data_masks
 
 
-def create_dataset_from_data_mask(features, data_masks, labels=None, multi_label=False):
+def create_dataset_from_data_mask(features,
+                                  data_masks,
+                                  labels=None,
+                                  multi_label=False,
+                                  nonzero=True):
     """Creates voxel level dataset.
 
         Args:
@@ -370,12 +374,13 @@ def create_dataset_from_data_mask(features, data_masks, labels=None, multi_label
           data_masks: numpy.ndarray of shape WxHxDxC: multilabel binary mask volume.
           labels: If not None, names for classes will be used instead of numbers.
           multi_label: If True multi labe one hot encoding labels will be generated.
+          nonzero: If True, only nonzero values will be considered.
 
         Returns:
           x_train, y_train
         """
 
-    x_set, y_set, voxel_coords = [], [], []
+    x_set, y_set, coords_set = [], [], []
     if multi_label:
         voxel_coords = np.nonzero(data_masks)[:3]  # take only spatial dims
         voxel_coords = list(zip(*voxel_coords))  # make triples
@@ -383,21 +388,25 @@ def create_dataset_from_data_mask(features, data_masks, labels=None, multi_label
         for pt in voxel_coords:
             x = features[pt[0], pt[1], pt[2], :]
             y = data_masks[pt[0], pt[1], pt[2], :]
-            x_set.append(x)
-            y_set.append(y)
+
+            if (not nonzero) or (nonzero and (np.count_nonzero(x) != 0)):
+                x_set.append(x)
+                y_set.append(y)
+                coords_set.append((pt[0], pt[1], pt[2]))
     else:
         for pt in np.transpose(np.nonzero(data_masks)):
-            voxel_coords.append((pt[0], pt[1], pt[2]))
             x = features[pt[0], pt[1], pt[2], :]
             y = pt[3]
-            x_set.append(x)
 
-            if labels is None:
-                y_set.append(y)
-            else:
-                y_set.append(labels[y])
+            if (not nonzero) or (nonzero and (np.count_nonzero(x) != 0)):
+                x_set.append(x)
+                coords_set.append((pt[0], pt[1], pt[2]))
+                if labels is None:
+                    y_set.append(y)
+                else:
+                    y_set.append(labels[y])
 
-    return np.array(x_set), np.array(y_set), np.array(voxel_coords)
+    return np.array(x_set), np.array(y_set), np.array(coords_set)
 
 
 def preds_to_data_mask(preds, voxel_coords, labels, vol_size=(145, 174, 145)):

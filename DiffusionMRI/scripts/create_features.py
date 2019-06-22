@@ -5,7 +5,7 @@ import os
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets  # noqa: E402
-from DiffusionMRI.Conv2dAE import ConvEncoder  # noqa: E402
+from DiffusionMRI.Conv2dAEStrided import ConvEncoder  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
@@ -13,12 +13,12 @@ torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
-orients = ['axial']
-model_names = ["Conv2dAEAxial"]
-feature_shapes = [(145, 145, 174, 6)]
+orients = ['coronal']
+model_names = ["Conv2dAECoronalStrided"]
+feature_shapes = [(174, 145, 145, 18)]
 epoch = 1000
 
-encoder = ConvEncoder()
+encoder = ConvEncoder(input_size=(145, 145))
 encoder.to(device)
 encoder.eval()
 
@@ -47,5 +47,5 @@ for i, orient in enumerate(orients):
             print(idx)
 
         orient_features = orient_features.numpy()
-        np.savez(os.path.join(features_save_path, 'overfit_{}_features_epoch_{}.npz'.format(orient, epoch)),
+        np.savez(os.path.join(features_save_path, 'overfit_strided_{}_features_channel_18_epoch_{}.npz'.format(orient, epoch)),
                  data=orient_features)
