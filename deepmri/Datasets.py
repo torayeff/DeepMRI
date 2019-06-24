@@ -8,6 +8,53 @@ import h5py
 import numpy as np
 
 
+class NeighborhoodDataset(Dataset):
+    """Neighborhood dataset for dMRI."""
+
+    def __init__(self, data_dir, nh=3, normalize=True):
+        """
+        Args:
+            data_dir: Data directory with mask and diffusion image.
+            nh: Neighborhood.
+        """
+
+        print("Loading data...")
+        mask = nib.load(os.path.join(data_dir, 'nodif_brain_mask.nii.gz')).get_data()
+        self.data = nib.load(os.path.join(data_dir, 'data.nii.gz')).get_data()
+        print("Making training set...")
+        self.coords = np.transpose(np.nonzero(mask)).tolist()
+        self.coords = [
+            crd for crd in self.coords if
+            len(np.nonzero(self.data[crd[0], crd[1], crd[2]])[0]) != 0
+        ]
+        self.nh = nh
+        self.normalize = normalize
+
+    def __len__(self):
+        return len(self.coords)
+
+    def __getitem__(self, idx):
+        coord = self.coords[idx]
+        bx = self.get_borders(coord[0], self.data.shape[0], nh=self.nh)
+        by = self.get_borders(coord[1], self.data.shape[1], nh=self.nh)
+        bz = self.get_borders(coord[2], self.data.shape[2], nh=self.nh)
+
+        # make cube
+        cube = self.data[bx[0]:bx[1], by[0]:by[1], bz[0]:bz[1], :]
+        cube = cube.transpose(3, 0, 1, 2)  # transpose to make channels first
+        cube = torch.tensor(cube).float()
+        if self.normalize:
+            cube = (cube - cube.mean()) / cube.std()
+        return {'data': cube, 'coord': coord}
+
+    @staticmethod
+    def get_borders(crd, border, nh=3):
+        start = max(crd - (nh // 2), 0)
+        end = min(crd + (nh // 2) + 1, border)
+
+        return start, end
+
+
 class OrientationDatasetChannelNorm(Dataset):
     """Orientation dataset for dMRI."""
 
