@@ -393,7 +393,8 @@ def train_ae(encoder,
              checkpoint=1,
              print_iter=False,
              eval_epoch=5,
-             masked_loss=False
+             masked_loss=False,
+             sparsity=None
              ):
     """Trains AutoEncoder.
 
@@ -435,14 +436,18 @@ def train_ae(encoder,
 
             # forward
             x = batch['data'].to(device)
-            out = decoder(encoder(x))
+            h = encoder(x)
+            y = decoder(h)
 
             # calculate loss
             if masked_loss:
                 mask = batch['mask'].unsqueeze(1).to(device)
-                loss = criterion(x, out, mask)
+                loss = criterion(x, y, mask)
             else:
-                loss = criterion(x, out)
+                loss = criterion(x, y)
+
+            if sparsity is not None:
+                loss = loss + sparsity * torch.abs(h).sum()
 
             # backward
             loss.backward()
