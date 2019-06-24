@@ -24,7 +24,7 @@ torch.backends.cudnn.deterministic = deterministic
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 10000  # number of epochs to trains
-checkpoint = 10000  # save model every checkpoint epoch
+checkpoint = 1000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 data = np.load(data_path)['data']
 # mu = data.mean()
@@ -77,6 +77,7 @@ utils.train_ae(encoder,
                checkpoint=checkpoint,
                print_iter=False,
                eval_epoch=1000,
-               masked_loss=False)
+               masked_loss=False,
+               sparsity=0.001)
 
 print("Total running time: {}".format(time.time() - script_start))

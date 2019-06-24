@@ -10,8 +10,8 @@ script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "Conv2dAECoronal"
+data_path = experiment_dir + 'tractseg_data/784565/orientation_slices/coronal/'
+model_name = "Conv2dAECoronalAll"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -55,6 +55,11 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 
 # criterion and optimizer settings
 criterion = CustomLosses.MaskedMSE()
+masked_loss = True
+
+# criterion = torch.nn.MSELoss()
+# masked_loss = False
+
 parameters = list(encoder.parameters()) + list(decoder.parameters())
 optimizer = torch.optim.Adam(parameters, lr=0.003)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
@@ -63,7 +68,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        patience=5)
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
-utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=True)
+utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss)
 utils.train_ae(encoder,
                decoder,
                criterion,
@@ -78,6 +83,6 @@ utils.train_ae(encoder,
                checkpoint=checkpoint,
                print_iter=False,
                eval_epoch=1000,
-               masked_loss=True)
+               masked_loss=masked_loss)
 
 print("Total running time: {}".format(time.time() - script_start))

@@ -419,6 +419,8 @@ def train_ae(encoder,
         None
     """
     print("Training started for {} epochs.".format(num_epochs))
+    if sparsity is not None:
+        print('Sparsity is on with lambda={}'.format(sparsity))
     for epoch in range(1, num_epochs + 1):
         encoder.train()
         decoder.train()

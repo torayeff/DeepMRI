@@ -9,13 +9,13 @@ class ConvEncoder(nn.Module):
             # N x 288 x H x W x D --> N x 7 x 1 x 1 x 1
             nn.Conv3d(
                 in_channels=288,
-                out_channels=7,
+                out_channels=288,
                 kernel_size=3,
                 stride=1,
                 padding=0,
                 bias=True
             ),
-            nn.ReLU()
+            nn.LeakyReLU()
         )
 
     def forward(self, x):
@@ -30,7 +30,7 @@ class ConvDecoder(nn.Module):
         self.decode = nn.Sequential(
             # N x 7 x 1 x 1 x 1 --> N x 288 x H x W x D
             nn.ConvTranspose3d(
-                in_channels=7,
+                in_channels=288,
                 out_channels=288,
                 kernel_size=3,
                 stride=1,

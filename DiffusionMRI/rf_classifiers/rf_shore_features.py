@@ -55,8 +55,8 @@ clf = RandomForestClassifier(n_estimators=100,
                              n_jobs=-1,
                              max_features='auto',
                              class_weight='balanced',
-                             max_depth=12,
-                             min_samples_leaf=4)
+                             max_depth=20,
+                             min_samples_leaf=8)
 print("Fitting classiffier.")
 clf.fit(X_train, y_train)
 

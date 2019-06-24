@@ -12,8 +12,9 @@ script_start = time.time()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 subj_id = '784565'
+epoch = 10000
 data_path = experiment_dir + 'tractseg_data/{}/shore/shore_coefficients_radial_border_2.npz'.format(subj_id)
-save_path = experiment_dir + 'tractseg_data/{}/learned_features/shore_features.npz'.format(subj_id)
+save_path = experiment_dir + 'tractseg_data/{}/learned_features/shore_features_epoch_{}.npz'.format(subj_id, epoch)
 model_name = "Conv3dAE"
 # ------------------------------------------Model-----------------------------------------------------------------------
 encoder = ConvEncoder()
@@ -21,7 +22,6 @@ decoder = ConvDecoder()
 encoder.to(device)
 decoder.to(device)
 
-epoch = 10000
 encoder_path = '{}/models/{}_encoder_epoch_{}'.format(experiment_dir, model_name, epoch)
 decoder_path = '{}/models/{}_decoder_epoch_{}'.format(experiment_dir, model_name, epoch)
 encoder.load_state_dict(torch.load(encoder_path))
@@ -34,6 +34,8 @@ data = torch.tensor(data).float().unsqueeze(0)
 # ------------------------------------------Create Features-------------------------------------------------------------
 criterion = torch.nn.MSELoss()
 with torch.no_grad():
+    encoder.eval()
+    decoder.eval()
     x = data.to(device)
     features = encoder(x)
     y = decoder(features)
