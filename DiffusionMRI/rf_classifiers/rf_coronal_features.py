@@ -22,12 +22,12 @@ ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 # load learned features
 orientation = 'coronal'
 feature_scale = 1
-feature_name = 'coronal_features_epoch_1000.npz'
-feature_name = 'avg_coronal_nh3.npz'
+feature_name = 'coronal_features_epoch_50.npz'
+# feature_name = 'avg_coronal_nh3.npz'
 features_path = join(data_dir, subj_id, 'learned_features', feature_name)
 learned_features = np.load(features_path)['data']
 print('Learned {} features are used as features. Features shape: {}'.format(orientation, learned_features.shape))
-# learned_features = learned_features.transpose(1, 0, 2, 3)
+learned_features = learned_features.transpose(1, 0, 2, 3)
 print("Features shape after transpose (to match coordinates): ", learned_features.shape)
 
 # -----------------------------------------Prepare train set------------------------------------------

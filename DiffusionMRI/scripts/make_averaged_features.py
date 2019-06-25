@@ -11,9 +11,9 @@ fbval = join(exp_dir, subj_id, 'bvals')
 fbvec = join(exp_dir, subj_id, 'bvecs')
 
 nh = 3
-data = np.load(join(exp_dir, subj_id, 'learned_features/coronal_features_epoch_1000.npz'))['data']
-data = data.transpose(1, 0, 2, 3)
-save_path = join(exp_dir, subj_id, 'learned_features', 'avg_coronal_nh{}.npz'.format(nh))
+data = np.load(join(exp_dir, subj_id, 'learned_features/shore_features_epoch_10000.npz'))['data']
+# data = data.transpose(1, 0, 2, 3)
+save_path = join(exp_dir, subj_id, 'learned_features', 'avg_shore_epoch_10000_nh{}.npz'.format(nh))
 
 
 def get_borders(x, border, nh=3):

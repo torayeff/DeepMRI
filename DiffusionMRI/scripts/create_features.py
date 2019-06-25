@@ -16,7 +16,7 @@ subj_id = '784565'
 orients = ['coronal']
 model_names = ["Conv2dAECoronal"]
 feature_shapes = [(174, 145, 145, 7)]
-epoch = 1000
+epoch = 50
 
 encoder = ConvEncoder()
 encoder.to(device)

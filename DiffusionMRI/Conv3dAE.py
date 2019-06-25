@@ -13,9 +13,9 @@ class ConvEncoder(nn.Module):
                 kernel_size=3,
                 stride=1,
                 padding=1,
-                bias=False
+                bias=True
             ),
-            nn.LeakyReLU()
+            nn.ReLU()
         )
 
     def forward(self, x):

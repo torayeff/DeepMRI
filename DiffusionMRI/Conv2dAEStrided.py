@@ -7,29 +7,29 @@ class ConvEncoder(nn.Module):
         super().__init__()
 
         self.encode = nn.Sequential(
-            # N x 288 x H x W --> N x 72 x H/2 x W/2
+            # N x 288 x H x W --> N x 7 x H/2 x W/2
             nn.Conv2d(
                 in_channels=288,
-                out_channels=18,
+                out_channels=7,
                 kernel_size=3,
                 stride=2,
                 padding=1,
                 bias=False
             ),
             nn.ReLU(),
-            nn.BatchNorm2d(18),
+            nn.BatchNorm2d(7),
 
-            # N x 72 x H/2 x W/2 --> N x 36 x H/4 x W/4
+            # N x 7 x H/2 x W/2 --> N x 7 x H/4 x W/4
             nn.Conv2d(
-                in_channels=18,
-                out_channels=18,
+                in_channels=7,
+                out_channels=7,
                 kernel_size=3,
                 stride=2,
                 padding=1,
                 bias=False
             ),
             nn.ReLU(),
-            nn.BatchNorm2d(18)
+            nn.BatchNorm2d(7)
         )
 
         self.input_size = input_size
@@ -45,9 +45,9 @@ class ConvDecoder(nn.Module):
         super().__init__()
 
         self.decode = nn.Sequential(
-            # N x 36 x H x W --> N x 288 x H x W
+            # N x 7 x H x W --> N x 288 x H x W
             nn.Conv2d(
-                in_channels=18,
+                in_channels=7,
                 out_channels=288,
                 kernel_size=1,
                 stride=1,

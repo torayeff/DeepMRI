@@ -10,8 +10,8 @@ script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'tractseg_data/784565/orientation_slices/coronal/'
-model_name = "Conv2dAECoronalAll"
+data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
+model_name = "Conv2dAECoronal"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -26,7 +26,7 @@ batch_size = 8
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 1000  # number of epochs to trains
-checkpoint = 1000  # save model every checkpoint epoch
+checkpoint = 100  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, bg_zero=True)
@@ -61,7 +61,7 @@ masked_loss = True
 # masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.003)
+optimizer = torch.optim.Adam(parameters)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,
@@ -82,7 +82,7 @@ utils.train_ae(encoder,
                scheduler=None,
                checkpoint=checkpoint,
                print_iter=False,
-               eval_epoch=1000,
+               eval_epoch=50,
                masked_loss=masked_loss)
 
 print("Total running time: {}".format(time.time() - script_start))
