@@ -4,14 +4,14 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
-from DiffusionMRI.NHConv3dAE import ConvEncoder, ConvDecoder  # noqa: E402
+from DiffusionMRI.OneAE import Encoder, Decoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/'
-model_name = "NHConv3dAE3x3x3"
+model_name = "OneAE"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -22,16 +22,16 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-batch_size = 2**15
+batch_size = 2 ** 15
 
-start_epoch = 0  # for loading pretrained weights
-num_epochs = 1000  # number of epochs to trains
-checkpoint = 100  # save model every checkpoint epoch
+start_epoch = 40000  # for loading pretrained weights
+num_epochs = 10000  # number of epochs to trains
+checkpoint = 10000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
-trainset = Datasets.NeighborhoodDataset(data_path,
-                                        file_name='shore/shore_coefficients_radial_border_2.npz',
-                                        normalize=True)
+trainset = Datasets.VoxelDataset(data_path,
+                                 file_name='data.nii.gz',
+                                 normalize=True)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
 total_examples = len(trainset)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
@@ -39,8 +39,8 @@ print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(
                                                                                 total_examples / batch_size))
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = ConvEncoder(7, 7)
-decoder = ConvDecoder(7, 7)
+encoder = Encoder()
+decoder = Decoder()
 encoder.to(device)
 decoder.to(device)
 
@@ -59,7 +59,7 @@ criterion = torch.nn.MSELoss()
 masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.005)
+optimizer = torch.optim.Adam(parameters, lr=0.0001)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,

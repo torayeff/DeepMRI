@@ -8,10 +8,47 @@ import h5py
 import numpy as np
 
 
+class VoxelDataset(Dataset):
+    """Voxel dataset for dMRI."""
+
+    def __init__(self, data_dir, file_name, normalize=False):
+        """
+        Args:
+            data_dir: Data directory with mask and diffusion image.
+        """
+
+        print("Loading data...")
+        if file_name.endswith('.nii.gz'):
+            self.data = nib.load(os.path.join(data_dir, file_name)).get_data()
+        else:
+            self.data = np.load(os.path.join(data_dir, file_name))['data']
+        mask = nib.load(os.path.join(data_dir, 'nodif_brain_mask.nii.gz')).get_data()
+        print("Making training set...")
+        self.coords = np.transpose(np.nonzero(mask)).tolist()
+        self.coords = [
+            crd for crd in self.coords if
+            len(np.nonzero(self.data[crd[0], crd[1], crd[2]])[0]) != 0
+        ]
+        self.normalize = normalize
+
+    def __len__(self):
+        return len(self.coords)
+
+    def __getitem__(self, idx):
+        coord = self.coords[idx]
+
+        # make cube
+        voxels = self.data[coord[0], coord[1], coord[2], :].reshape(-1)
+        voxels = torch.tensor(voxels).float()
+        if self.normalize:
+            voxels = (voxels - voxels.mean()) / voxels.std()
+        return {'data': voxels, 'coord': coord}
+
+
 class NeighborhoodDataset(Dataset):
     """Neighborhood dataset for dMRI."""
 
-    def __init__(self, data_dir, nh=3, normalize=True):
+    def __init__(self, data_dir, file_name, nh=3, normalize=False):
         """
         Args:
             data_dir: Data directory with mask and diffusion image.
@@ -19,8 +56,11 @@ class NeighborhoodDataset(Dataset):
         """
 
         print("Loading data...")
+        if file_name.endswith('.nii.gz'):
+            self.data = nib.load(os.path.join(data_dir, file_name)).get_data()
+        else:
+            self.data = np.load(os.path.join(data_dir, file_name))['data']
         mask = nib.load(os.path.join(data_dir, 'nodif_brain_mask.nii.gz')).get_data()
-        self.data = nib.load(os.path.join(data_dir, 'data.nii.gz')).get_data()
         print("Making training set...")
         self.coords = np.transpose(np.nonzero(mask)).tolist()
         self.coords = [

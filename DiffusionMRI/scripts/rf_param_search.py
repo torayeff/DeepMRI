@@ -20,7 +20,11 @@ masks_path = join(data_dir, subj_id, 'tract_masks')
 ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
-features = np.random.randn(145, 174, 145, 7)
+feature_name = 'one_ae_features.npz'
+features_path = join(data_dir, subj_id, 'learned_features', feature_name)
+learned_features = np.load(features_path)['data']
+print('Learned neighborhood features are used as features. Features shape: {}'.format(learned_features.shape))
+features = learned_features
 
 # -----------------------------------------Prepare train set------------------------------------------
 print('Prepare train set'.center(100, '-'))
@@ -45,7 +49,7 @@ X_test = np.hstack((test_coords, X_test))
 print("Testset shape: ", X_test.shape)
 
 
-mdps = [5, 10, 12, 15, 20, 25, 100]
+mdps = [12, 15, 20, 25, 100]
 msls = [1, 2, 4, 8, 16]
 train_scores = []
 test_scores = []

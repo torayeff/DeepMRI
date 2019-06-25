@@ -20,7 +20,7 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
 # load learned features
-feature_name = 'nh_features_epoch_20.npz'
+feature_name = 'learned_avg_shore2_features_epoch_1000.npz'
 features_path = join(data_dir, subj_id, 'learned_features', feature_name)
 learned_features = np.load(features_path)['data']
 print('Learned neighborhood features are used as features. Features shape: {}'.format(learned_features.shape))

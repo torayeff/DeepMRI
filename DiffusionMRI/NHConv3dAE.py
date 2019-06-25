@@ -2,20 +2,20 @@ import torch.nn as nn
 
 
 class ConvEncoder(nn.Module):
-    def __init__(self):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
 
         self.encode = nn.Sequential(
-            # N x 288 x H x W x D --> N x 7 x 1 x 1 x 1
+            # N x IN x H x W x D --> N x OUT x 1 x 1 x 1
             nn.Conv3d(
-                in_channels=288,
-                out_channels=288,
+                in_channels=in_channels,
+                out_channels=out_channels,
                 kernel_size=3,
                 stride=1,
                 padding=0,
                 bias=True
             ),
-            nn.LeakyReLU()
+            nn.ReLU()
         )
 
     def forward(self, x):
@@ -24,14 +24,14 @@ class ConvEncoder(nn.Module):
 
 
 class ConvDecoder(nn.Module):
-    def __init__(self):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
 
         self.decode = nn.Sequential(
-            # N x 7 x 1 x 1 x 1 --> N x 288 x H x W x D
+            # N x IN x 1 x 1 x 1 --> N x OUT x H x W x D
             nn.ConvTranspose3d(
-                in_channels=288,
-                out_channels=288,
+                in_channels=in_channels,
+                out_channels=out_channels,
                 kernel_size=3,
                 stride=1,
                 padding=0,

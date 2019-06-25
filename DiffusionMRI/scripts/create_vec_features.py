@@ -3,13 +3,13 @@ import torch
 import numpy as np
 
 sys.path.append('/home/agajan/DeepMRI')
-from deepmri import Datasets, utils  # noqa: E402
-from DiffusionMRI.NHConv3dAE import ConvEncoder, ConvDecoder  # noqa: E402
+from deepmri import Datasets  # noqa: E402
+from DiffusionMRI.OneAE import Encoder, Decoder  # noqa: E402
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/'
-model_name = 'NHConv3dAE3x3x3'
+model_name = 'OneAE'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -19,12 +19,12 @@ if deterministic:
 torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input size varies
 torch.backends.cudnn.deterministic = deterministic
 
-trainset = Datasets.NeighborhoodDataset(data_path,
-                                        file_name='shore/shore_coefficients_radial_border_2.npz',
-                                        normalize=True)
+trainset = Datasets.VoxelDataset(data_path,
+                                 file_name='data.nii.gz',
+                                 normalize=False)
 total_examples = len(trainset)
 
-batch_size = 2**15
+batch_size = 2 ** 15
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=6)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
                                                                                 batch_size,
@@ -32,22 +32,22 @@ print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(
 
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = ConvEncoder(7, 7)
-decoder = ConvDecoder(7, 7)
+encoder = Encoder()
+decoder = Decoder()
 encoder.to(device)
 decoder.to(device)
 encoder.eval()
 decoder.eval()
 
-start_epoch = 1000
-channels = 7
+start_epoch = 40000
+channels = 288
 encoder_path = "{}/models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 decoder_path = "{}/models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 encoder.load_state_dict(torch.load(encoder_path))
 decoder.load_state_dict(torch.load(decoder_path))
 print("Loaded pretrained weights starting from epoch {}".format(start_epoch))
 
-nh_features = np.zeros((145, 174, 145, channels))
+learned_features = np.zeros((145, 174, 145, channels))
 c = 0
 with torch.no_grad():
     for data in trainloader:
@@ -57,9 +57,9 @@ with torch.no_grad():
             crd_1 = data['coord'][1][b].item()
             crd_2 = data['coord'][2][b].item()
             fvec = f[b].detach().cpu().squeeze().numpy().reshape(channels)
-            nh_features[crd_0, crd_1, crd_2] = fvec
+            learned_features[crd_0, crd_1, crd_2] = fvec
         c += 1
         print(c, end=" ")
 
-save_path = data_path + 'learned_features/learned_avg_shore2_features_epoch_{}.npz'.format(start_epoch)
-np.savez(save_path, data=nh_features)
+save_path = data_path + 'learned_features/one_ae_features.npz'.format(start_epoch)
+np.savez(save_path, data=learned_features)
