@@ -14,20 +14,23 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_names = ["Conv2dAECoronal"]
+model_names = ["Conv2dAESHORECoronal"]
 feature_shapes = [(174, 145, 145, 7)]
-epoch = 50
+epoch = 10000
 
-encoder = ConvEncoder()
+encoder = ConvEncoder(in_channels=7, out_channels=7)
 encoder.to(device)
 encoder.eval()
 
 for i, orient in enumerate(orients):
     print("Processing {} features".format(orient))
-    data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'orientation_slices', orient)
+    data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id)
     features_save_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'learned_features')
 
-    dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True, bg_zero=True)
+    # dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True, bg_zero=True)
+    dataset = Datasets.SHORESlices(data_path,
+                                   file_name='shore_coefficients_radial_border_2.npz',
+                                   normalize=False)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
 
     encoder_path = "{}models/{}_encoder_epoch_{}".format(experiment_dir, model_names[i], epoch)
@@ -42,10 +45,17 @@ for i, orient in enumerate(orients):
             feature = encoder(x)
             orient_feature = feature.detach().cpu().squeeze().permute(1, 2, 0)
 
-            idx = int(data['file_name'][0][:-4][-3:])
+            # idx = int(data['file_name'][0][:-4][-3:])
+            idx = int(data['slice_idx'])
             orient_features[idx] = orient_feature
             print(idx)
 
         orient_features = orient_features.numpy()
-        np.savez(os.path.join(features_save_path, '{}_features_epoch_{}.npz'.format(orient, epoch)),
+        # transpose features
+        if orient == 'coronal':
+            orient_features = orient_features.transpose(1, 0, 2, 3)
+        if orient == 'axial':
+            orient_features = orient_features.transpose(1, 2, 0, 3)
+
+        np.savez(os.path.join(features_save_path, 'shore_{}_features_epoch_{}.npz'.format(orient, epoch)),
                  data=orient_features)

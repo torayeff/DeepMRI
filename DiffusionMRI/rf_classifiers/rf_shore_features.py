@@ -20,7 +20,7 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
 # load shore features
-shore_path = join(data_dir, subj_id, 'learned_features', 'avg_shore_epoch_10000_nh3.npz')
+shore_path = join(data_dir, subj_id, 'learned_features', 'shore_features_epoch_10000.npz')
 shore_features = np.load(shore_path)['data']
 print('Learned SHORE features are used as features. Features shape: {}'.format(shore_features.shape))
 
@@ -56,7 +56,7 @@ clf = RandomForestClassifier(n_estimators=100,
                              max_features='auto',
                              class_weight='balanced',
                              max_depth=20,
-                             min_samples_leaf=4)
+                             min_samples_leaf=8)
 print("Fitting classiffier.")
 clf.fit(X_train, y_train)
 

@@ -12,8 +12,8 @@ script_start = time.time()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 subj_id = '784565'
-epoch = 10000
-data_path = experiment_dir + 'tractseg_data/{}/shore/shore_coefficients_radial_border_2.npz'.format(subj_id)
+epoch = 8000
+data_path = experiment_dir + 'tractseg_data/{}/shore_coefficients_radial_border_2.npz'.format(subj_id)
 save_path = experiment_dir + 'tractseg_data/{}/learned_features/shore_features_epoch_{}.npz'.format(subj_id, epoch)
 model_name = "Conv3dAE"
 # ------------------------------------------Model-----------------------------------------------------------------------

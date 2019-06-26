@@ -20,11 +20,11 @@ masks_path = join(data_dir, subj_id, 'tract_masks')
 ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
-shore_path = join(data_dir, subj_id, 'learned_features', 'avg_shore_epoch_10000_nh3.npz')
-shore_features = np.load(shore_path)['data']
-print('Learned SHORE features are used as features. Features shape: {}'.format(shore_features.shape))
-features = shore_features
-
+# -----------------------------------------Load Features------------------------------------------
+feature_name = 'shore_features_epoch_8000.npz'
+print(feature_name)
+features_path = join(data_dir, subj_id, 'learned_features', feature_name)
+features = np.load(features_path)['data']
 # -----------------------------------------Prepare train set------------------------------------------
 print('Prepare train set'.center(100, '-'))
 train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]

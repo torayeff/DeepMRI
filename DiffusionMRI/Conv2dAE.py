@@ -2,14 +2,14 @@ import torch.nn as nn
 
 
 class ConvEncoder(nn.Module):
-    def __init__(self):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
 
         self.encode = nn.Sequential(
-            # N x 288 x H x W --> N x 7 x H x W
+            # N x IN x H x W --> N x OUT x H x W
             nn.Conv2d(
-                in_channels=288,
-                out_channels=7,
+                in_channels=in_channels,
+                out_channels=out_channels,
                 kernel_size=3,
                 stride=1,
                 padding=1,
@@ -24,14 +24,14 @@ class ConvEncoder(nn.Module):
 
 
 class ConvDecoder(nn.Module):
-    def __init__(self):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
 
         self.decode = nn.Sequential(
-            # N x 7 x H x W --> N x 288 x H x W
+            # N x IN x H x W --> N x OUT x H x W
             nn.Conv2d(
-                in_channels=7,
-                out_channels=288,
+                in_channels=in_channels,
+                out_channels=out_channels,
                 kernel_size=1,
                 stride=1,
                 padding=0,

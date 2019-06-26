@@ -94,7 +94,11 @@ def create_orientation_dataset(csv_file,
     for _, row in df.iterrows():
 
         print("Loading file: {}".format(row['dmri_path']))
-        data = nib.load(row['dmri_path']).get_fdata()  # 4D data: W x H x D x T
+        if row['dmri_path'].endswith('.nii.gz'):
+            data = nib.load(row['dmri_path']).get_fdata()  # 4D data: W x H x D x T
+        else:
+            data = np.load(row['dmri_path'])['data']  # 4D data: W x H x D x T
+
         brain_mask = None
 
         if within_brain:

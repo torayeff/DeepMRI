@@ -5,14 +5,14 @@ import numpy as np
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import utils  # noqa: E402
-from DiffusionMRI.Conv3dAE import ConvEncoder, ConvDecoder  # noqa: E402
+from DiffusionMRI.Conv3dAEStrided import ConvEncoder, ConvDecoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/shore_coefficients_radial_border_2.npz'
-model_name = "Conv3dAE"
+model_name = "Conv3dAEStrided"
 # ------------------------------------------Model-----------------------------------------------------------------------
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -22,8 +22,8 @@ if deterministic:
 torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input size varies
 torch.backends.cudnn.deterministic = deterministic
 
-start_epoch = 8000  # for loading pretrained weights
-num_epochs = 1000  # number of epochs to trains
+start_epoch = 0  # for loading pretrained weights
+num_epochs = 10000  # number of epochs to trains
 checkpoint = 1000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 data = np.load(data_path)['data']
@@ -36,7 +36,7 @@ print(data.shape)
 trainloader = [{'data': data}]
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = ConvEncoder()
+encoder = ConvEncoder(input_size=(145, 174, 145))
 decoder = ConvDecoder()
 encoder.to(device)
 decoder.to(device)
@@ -55,7 +55,7 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = torch.nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.00005)
+optimizer = torch.optim.Adam(parameters, lr=0.1)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,

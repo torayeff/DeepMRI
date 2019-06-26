@@ -8,6 +8,47 @@ import h5py
 import numpy as np
 
 
+class SHORESlices(Dataset):
+    """SHORE Slices dataset for dMRI."""
+
+    def __init__(self, data_dir, file_name, normalize=False, bg_zero=True):
+        """
+        Args:
+            data_dir: Data directory with mask and diffusion image.
+        """
+
+        print("Loading data...")
+        if file_name.endswith('.nii.gz'):
+            self.data = nib.load(os.path.join(data_dir, file_name)).get_data()
+        else:
+            self.data = np.load(os.path.join(data_dir, file_name))['data']
+        self.mask = nib.load(os.path.join(data_dir, 'nodif_brain_mask.nii.gz')).get_data()
+        self.normalize = normalize
+        self.indices = []
+        self.bg_zero = bg_zero
+        for idx in range(174):
+            check_sum = np.sum(self.mask[:, idx, :])
+            if check_sum > 0:
+                self.indices.append(idx)
+
+    def __len__(self):
+        return len(self.indices)
+
+    def __getitem__(self, idx):
+        slice_idx = self.indices[idx]
+        x = self.data[:, slice_idx, :, :].transpose(2, 0, 1)
+        x = torch.tensor(x).float()
+        mask = self.mask[:, slice_idx, :]
+        mask = torch.tensor(mask).float()
+
+        if self.normalize:
+            x = (x - x.mean()) / x.std()
+
+        if self.bg_zero:
+            x[:, mask == 0] = 0
+        return {'data': x, 'slice_idx': slice_idx, 'mask': mask}
+
+
 class VoxelDataset(Dataset):
     """Voxel dataset for dMRI."""
 

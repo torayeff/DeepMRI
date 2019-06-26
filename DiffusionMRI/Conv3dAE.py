@@ -32,9 +32,9 @@ class ConvDecoder(nn.Module):
             nn.Conv3d(
                 in_channels=7,
                 out_channels=7,
-                kernel_size=1,
+                kernel_size=3,
                 stride=1,
-                padding=0,
+                padding=1,
                 bias=True
             )
         )
