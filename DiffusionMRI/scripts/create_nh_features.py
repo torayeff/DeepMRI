@@ -20,7 +20,7 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 trainset = Datasets.NeighborhoodDataset(data_path,
-                                        file_name='shore/shore_coefficients_radial_border_2.npz',
+                                        file_name='shore_coefficients_radial_border_2.npz',
                                         normalize=True)
 total_examples = len(trainset)
 
@@ -39,7 +39,7 @@ decoder.to(device)
 encoder.eval()
 decoder.eval()
 
-start_epoch = 1000
+start_epoch = 10000
 channels = 7
 encoder_path = "{}/models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 decoder_path = "{}/models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)

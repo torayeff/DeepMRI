@@ -12,7 +12,7 @@ script_start = time.time()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 subj_id = '784565'
-epoch = 8000
+epoch = 1000
 data_path = experiment_dir + 'tractseg_data/{}/shore_coefficients_radial_border_2.npz'.format(subj_id)
 save_path = experiment_dir + 'tractseg_data/{}/learned_features/shore_features_epoch_{}.npz'.format(subj_id, epoch)
 model_name = "Conv3dAE"
@@ -40,7 +40,7 @@ with torch.no_grad():
     features = encoder(x)
     y = decoder(features)
     print('Reconstruction loss: {}'.format(criterion(x, y).item()))
-    print('Loss between x and f: {}'.format(criterion(x, features).item()))
+    # print('Loss between x and f: {}'.format(criterion(x, features).item()))
     features = features.detach().cpu().squeeze().numpy()
     features = features.transpose(1, 2, 3, 0)
     print(features.shape)

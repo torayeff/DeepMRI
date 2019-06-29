@@ -24,7 +24,7 @@ torch.backends.cudnn.deterministic = deterministic
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 10000  # number of epochs to trains
-checkpoint = 1000  # save model every checkpoint epoch
+checkpoint = 10000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 data = np.load(data_path)['data']
 # mu = data.mean()
@@ -55,7 +55,7 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = torch.nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.1)
+optimizer = torch.optim.Adam(parameters)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,

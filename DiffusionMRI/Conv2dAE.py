@@ -13,7 +13,7 @@ class ConvEncoder(nn.Module):
                 kernel_size=3,
                 stride=1,
                 padding=1,
-                bias=True
+                bias=False
             ),
             nn.ReLU()
         )

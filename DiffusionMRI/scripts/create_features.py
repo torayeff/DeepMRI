@@ -14,23 +14,20 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_names = ["Conv2dAESHORECoronal"]
+model_names = ["Conv2dAECoronal"]
 feature_shapes = [(174, 145, 145, 7)]
-epoch = 10000
+epoch = 1000
 
-encoder = ConvEncoder(in_channels=7, out_channels=7)
+encoder = ConvEncoder(in_channels=288, out_channels=7)
 encoder.to(device)
 encoder.eval()
 
 for i, orient in enumerate(orients):
     print("Processing {} features".format(orient))
-    data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id)
+    data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'training_slices', orient)
     features_save_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'learned_features')
 
-    # dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True, bg_zero=True)
-    dataset = Datasets.SHORESlices(data_path,
-                                   file_name='shore_coefficients_radial_border_2.npz',
-                                   normalize=False)
+    dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True, bg_zero=True)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
 
     encoder_path = "{}models/{}_encoder_epoch_{}".format(experiment_dir, model_names[i], epoch)
@@ -45,8 +42,7 @@ for i, orient in enumerate(orients):
             feature = encoder(x)
             orient_feature = feature.detach().cpu().squeeze().permute(1, 2, 0)
 
-            # idx = int(data['file_name'][0][:-4][-3:])
-            idx = int(data['slice_idx'])
+            idx = int(data['file_name'][0][:-4][-3:])
             orient_features[idx] = orient_feature
             print(idx)
 
@@ -57,5 +53,5 @@ for i, orient in enumerate(orients):
         if orient == 'axial':
             orient_features = orient_features.transpose(1, 2, 0, 3)
 
-        np.savez(os.path.join(features_save_path, 'shore_{}_features_epoch_{}.npz'.format(orient, epoch)),
+        np.savez(os.path.join(features_save_path, '{}_features_epoch_{}.npz'.format(orient, epoch)),
                  data=orient_features)

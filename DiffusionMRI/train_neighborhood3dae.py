@@ -24,14 +24,15 @@ torch.backends.cudnn.deterministic = deterministic
 # data
 batch_size = 2**15
 
-start_epoch = 0  # for loading pretrained weights
-num_epochs = 1000  # number of epochs to trains
-checkpoint = 100  # save model every checkpoint epoch
+start_epoch = 10000  # for loading pretrained weights
+num_epochs = 10000  # number of epochs to trains
+checkpoint = 10000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.NeighborhoodDataset(data_path,
-                                        file_name='shore/shore_coefficients_radial_border_2.npz',
-                                        normalize=True)
+                                        file_name='shore_coefficients_radial_border_2.npz',
+                                        normalize=False,
+                                        nh=3)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
 total_examples = len(trainset)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
@@ -59,7 +60,7 @@ criterion = torch.nn.MSELoss()
 masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.005)
+optimizer = torch.optim.Adam(parameters)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,

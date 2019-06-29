@@ -22,7 +22,7 @@ if deterministic:
 torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input size varies
 torch.backends.cudnn.deterministic = deterministic
 
-start_epoch = 8000  # for loading pretrained weights
+start_epoch = 0  # for loading pretrained weights
 num_epochs = 1000  # number of epochs to trains
 checkpoint = 1000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
@@ -55,7 +55,7 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = torch.nn.MSELoss()
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.00005)
+optimizer = torch.optim.Adam(parameters, lr=0.003)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,
@@ -76,7 +76,7 @@ utils.train_ae(encoder,
                scheduler=None,
                checkpoint=checkpoint,
                print_iter=False,
-               eval_epoch=1000,
+               eval_epoch=100,
                masked_loss=False)
 
 print("Total running time: {}".format(time.time() - script_start))
