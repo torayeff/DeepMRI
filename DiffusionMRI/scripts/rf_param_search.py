@@ -13,20 +13,18 @@ print('Setting up and loading data'.center(100, '-'))
 data_dir = '/home/agajan/experiment_DiffusionMRI/tractseg_data/'
 subj_id = '784565'
 print('Experiment for subject id={}.'.format(subj_id))
-labels = ['CG', 'CST', 'FX', 'CC']
+labels = ['Other', 'CG', 'CST', 'FX', 'CC']
 
 # load masks
 masks_path = join(data_dir, subj_id, 'tract_masks')
 ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
-ml_masks = ml_masks[:, :, :, 2:]  # remove background class and other class
+ml_masks = ml_masks[:, :, :, 1:]  # remove background class and other class
 
 # -----------------------------------------Load Features------------------------------------------
-features = np.load(join(data_dir, subj_id, 'learned_features/coronal_features_epoch_1000.npz'))['data']
-# features_1 = np.load(join(data_dir, subj_id, 'shore_coefficients_radial_border_2.npz'))['data']
-# features_2 = np.load(join(data_dir, subj_id, 'learned_features', 'learned_avg_shore2_features_epoch_10000.npz'))['data']
+features_1 = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_2.npz'))['data']
+features_2 = np.load(join(data_dir, subj_id, 'learned_features/strided_coronal_features_epoch_200.npz'))['data']
 # print(features_1.shape, features_2.shape)
-# features = np.concatenate((features_1, features_2), axis=3)
-# features = features_1
+features = np.concatenate((features_1, features_2), axis=3)
 print(features.shape)
 # -----------------------------------------Prepare train set------------------------------------------
 print('Prepare train set'.center(100, '-'))
@@ -51,7 +49,7 @@ X_test = np.hstack((test_coords, X_test))
 print("Testset shape: ", X_test.shape)
 
 
-mdps = [12, 15, 20, 25, 100]
+mdps = [12, 15, 20, 25, 100, None]
 msls = [1, 2, 4, 8, 16]
 train_scores = []
 test_scores = []
@@ -91,7 +89,7 @@ for max_depth in mdps:
         test_preds = clf.predict(X_test)
         #
         # test_acc = sklearn.metrics.accuracy_score(y_test, test_preds)
-        test_f1_macro = sklearn.metrics.f1_score(y_test, test_preds, average='macro')
+        test_f1_macro = sklearn.metrics.f1_score(y_test[:, 1:], test_preds[:, 1:], average='macro')
         # test_f1s = sklearn.metrics.f1_score(y_test, test_preds, average=None)
         #
         # print("Accuracy: {:.5f}, F1_macro: {:.5f}".format(test_acc, test_f1_macro))
@@ -121,11 +119,14 @@ clf.fit(X_train, y_train)
 print('Evaluation on test set'.center(100, '-'))
 test_preds = clf.predict(X_test)
 
+y_test = y_test[:, 1:]
+test_preds = test_preds[:, 1:]
+
 test_acc = sklearn.metrics.accuracy_score(y_test, test_preds)
 test_f1_macro = sklearn.metrics.f1_score(y_test, test_preds, average='macro')
 test_f1s = sklearn.metrics.f1_score(y_test, test_preds, average=None)
 
 print("Accuracy: {:.5f}, F1_macro: {:.5f}".format(test_acc, test_f1_macro))
 for c, f1 in enumerate(test_f1s):
-    print("F1 for {}: {:.5f}".format(labels[c], f1))
+    print("F1 for {}: {:.5f}".format(labels[c+1], f1))
 print('Runtime: {:.5f}'.format(time.time() - st))

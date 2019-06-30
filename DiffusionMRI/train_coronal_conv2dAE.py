@@ -26,7 +26,7 @@ batch_size = 8
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 1000  # number of epochs to trains
-checkpoint = 100  # save model every checkpoint epoch
+checkpoint = 1000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, bg_zero=True)
@@ -37,8 +37,8 @@ print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(
                                                                                 total_examples / batch_size))
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = ConvEncoder()
-decoder = ConvDecoder()
+encoder = ConvEncoder(in_channels=288, out_channels=7)
+decoder = ConvDecoder(in_channels=7, out_channels=288)
 encoder.to(device)
 decoder.to(device)
 

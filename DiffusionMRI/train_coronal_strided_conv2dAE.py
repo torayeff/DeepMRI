@@ -14,7 +14,7 @@ data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
 model_name = "Conv2dAECoronalStrided"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
-deterministic = False  # reproducibility
+deterministic = True  # reproducibility
 seed = 0  # random seed for reproducibility
 if deterministic:
     torch.manual_seed(seed)

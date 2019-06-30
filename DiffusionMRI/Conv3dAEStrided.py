@@ -17,6 +17,7 @@ class ConvEncoder(nn.Module):
                 bias=False
             ),
             nn.ReLU(),
+            nn.BatchNorm3d(7),
         )
         self.input_size = input_size
 
@@ -31,7 +32,7 @@ class ConvDecoder(nn.Module):
         super().__init__()
 
         self.decode = nn.Sequential(
-            # N x 7 x H/2 x W/2 x D/2 --> N x 7 x H x W x D
+            # N x 7 x H x W x D --> N x 7 x H x W x D
             nn.Conv3d(
                 in_channels=7,
                 out_channels=7,

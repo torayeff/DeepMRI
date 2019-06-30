@@ -9,12 +9,11 @@ data_path = join(exp_dir, subj_id, 'data.nii.gz')
 mask_path = join(exp_dir, subj_id, 'nodif_brain_mask.nii.gz')
 fbval = join(exp_dir, subj_id, 'bvals')
 fbvec = join(exp_dir, subj_id, 'bvecs')
+nh = 5
 
-nh = 3
-data = np.load(join(exp_dir, subj_id, 'learned_features/strided_coronal_features_epoch_400.npz'))['data']
+data = np.load(join(exp_dir, subj_id, 'shore_features/shore_coefficients_radial_border_2.npz'))['data']
 print(data.shape)
-data = data.transpose(1, 0, 2, 3)
-save_path = join(exp_dir, subj_id, 'learned_features', 'avg_strided_coronal_epoch_400_nh{}.npz'.format(nh))
+save_path = join(exp_dir, subj_id, 'shore_features', 'avg_shore2_nh{}.npz'.format(nh))
 
 
 def get_borders(x, border, nh=3):
@@ -26,7 +25,6 @@ def get_borders(x, border, nh=3):
 
 
 averaged_features = np.zeros(data.shape)
-nh = 3
 print('Neighborhood: {}'.format(nh))
 for x in range(145):
     bx = get_borders(x, 145)

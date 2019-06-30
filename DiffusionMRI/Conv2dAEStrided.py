@@ -18,18 +18,6 @@ class ConvEncoder(nn.Module):
             ),
             nn.ReLU(),
             nn.BatchNorm2d(7),
-
-            # N x 7 x H/2 x W/2 --> N x 7 x H/4 x W/4
-            nn.Conv2d(
-                in_channels=7,
-                out_channels=7,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-                bias=False
-            ),
-            nn.ReLU(),
-            nn.BatchNorm2d(7)
         )
 
         self.input_size = input_size

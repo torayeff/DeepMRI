@@ -20,7 +20,7 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
 # load shore coefficients
-shore_path = join(data_dir, subj_id, 'shore', 'avg_nh3_shore_coefficients_radial_border_2.npz')
+shore_path = join(data_dir, subj_id, 'shore_features', 'shore_coefficients_radial_border_2.npz')
 shore_coeffs = np.load(shore_path)['data']
 print('SHORE coefficients are used as features. Features shape: {}'.format(shore_coeffs.shape))
 
@@ -33,7 +33,7 @@ X_train, y_train, train_coords = ds_utils.create_dataset_from_data_mask(shore_co
                                                                         labels=labels,
                                                                         multi_label=True)
 X_train = np.hstack((train_coords, X_train))
-print("Trainset shape: ", X_train.shape)
+print("Trainset shape: ", X_train.shape, y_train.shape)
 
 # ------------------------------------------Prepare test set------------------------------------------
 print('Prepare test set'.center(100, '-'))
@@ -44,7 +44,7 @@ X_test, y_test, test_coords = ds_utils.create_dataset_from_data_mask(shore_coeff
                                                                      labels=labels,
                                                                      multi_label=True)
 X_test = np.hstack((test_coords, X_test))
-print("Testset shape: ", X_test.shape)
+print("Testset shape: ", X_test.shape, y_test.shape)
 
 # --------------------------------------Random Forest Classifier--------------------------------------
 print('Random Forest Classifier'.center(100, '-'))
@@ -75,10 +75,13 @@ for c, f1 in enumerate(train_f1s):
 print('Evaluation on test set'.center(100, '-'))
 test_preds = clf.predict(X_test)
 
+y_test = y_test[:, 1:]
+test_preds = test_preds[:, 1:]
+
 test_acc = sklearn.metrics.accuracy_score(y_test, test_preds)
 test_f1_macro = sklearn.metrics.f1_score(y_test, test_preds, average='macro')
 test_f1s = sklearn.metrics.f1_score(y_test, test_preds, average=None)
 
 print("Accuracy: {:.5f}, F1_macro: {:.5f}".format(test_acc, test_f1_macro))
 for c, f1 in enumerate(test_f1s):
-    print("F1 for {}: {:.5f}".format(labels[c], f1))
+    print("F1 for {}: {:.5f}".format(labels[c+1], f1))
