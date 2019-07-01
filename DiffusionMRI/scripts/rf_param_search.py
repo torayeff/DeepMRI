@@ -22,7 +22,7 @@ ml_masks = ml_masks[:, :, :, 1:]  # remove background class and other class
 
 # -----------------------------------------Load Features------------------------------------------
 # features_1 = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_2.npz'))['data']
-features_2 = np.load(join(data_dir, subj_id, 'learned_features/Conv2dAECoronal_features_epoch_200.npz'))['data']
+features_2 = np.load(join(data_dir, subj_id, 'learned_features/Conv2dAECoronalStrided_deep_features_epoch_1500.npz'))['data']
 # print(features_1.shape, features_2.shape)
 # features = np.concatenate((features_1, features_2), axis=3)
 features = features_2
