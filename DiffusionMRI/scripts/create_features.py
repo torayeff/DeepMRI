@@ -14,9 +14,9 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Conv2dAECoronalStrided_deep"
+model_name = "Conv2dAECoronalStrided"
 feature_shapes = [(174, 145, 145, 7)]
-epoch = 1500
+epoch = 200
 
 encoder = ConvEncoder(input_size=(145, 145))
 encoder.to(device)
@@ -39,7 +39,11 @@ for i, orient in enumerate(orients):
 
         for j, data in enumerate(dataloader):
             x = data['data'].to(device)
-            feature = encoder(x)
+            feature = encoder(x, return_all=True)
+            # print(feature[0].shape, feature[1].shape, feature[2].shape)
+            feature = feature[1]
+            # feature = torch.cat((feature[0], feature[2]), dim=1)
+            print(feature.shape)
             orient_feature = feature.detach().cpu().squeeze().permute(1, 2, 0)
 
             idx = int(data['file_name'][0][:-4][-3:])

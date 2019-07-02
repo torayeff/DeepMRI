@@ -21,11 +21,11 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class and other class
 
 # -----------------------------------------Load Features------------------------------------------
-# features_1 = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_2.npz'))['data']
-features_2 = np.load(join(data_dir, subj_id, 'learned_features/Conv2dAECoronalStrided_deep_features_epoch_1500.npz'))['data']
+features_1 = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_2.npz'))['data']
+features_2 = np.load(join(data_dir, subj_id, 'learned_features/Conv2dAECoronalStrided_features_epoch_200.npz'))['data']
 # print(features_1.shape, features_2.shape)
-# features = np.concatenate((features_1, features_2), axis=3)
-features = features_2
+features = np.concatenate((features_1, features_2), axis=3)
+# features = features_2
 print(features.shape)
 # -----------------------------------------Prepare train set------------------------------------------
 print('Prepare train set'.center(100, '-'))

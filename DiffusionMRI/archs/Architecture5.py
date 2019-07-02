@@ -10,9 +10,9 @@ class ConvEncoder(nn.Module):
             nn.Conv2d(
                 in_channels=288,
                 out_channels=7,
-                kernel_size=3,
+                kernel_size=5,
                 stride=2,
-                padding=0,
+                padding=1,
                 bias=False
             ),
             nn.ReLU(),
