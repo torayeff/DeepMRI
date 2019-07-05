@@ -22,9 +22,9 @@ ml_masks = ml_masks[:, :, :, 1:]  # remove background class and other class
 
 # -----------------------------------------Load Features------------------------------------------
 features_1 = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_2.npz'))['data']
-features_2 = np.load(join(data_dir, subj_id, 'learned_features/Conv2dAECoronalStrided_SHORE_features_epoch_200.npz'))['data']
+features_2 = np.load(join(data_dir, subj_id, 'learned_features/Conv2dAECoronalStrided_features_epoch_200.npz'))['data']
 # print(features_1.shape, features_2.shape)
-features = np.concatenate((features_1, features_2), axis=3)
+# features = np.concatenate((features_1, features_2), axis=3)
 features = features_2
 print(features.shape)
 # -----------------------------------------Prepare train set------------------------------------------
@@ -35,7 +35,8 @@ X_train, y_train, train_coords = ds_utils.create_dataset_from_data_mask(features
                                                                         train_masks,
                                                                         labels=labels,
                                                                         multi_label=True)
-X_train = np.hstack((train_coords, X_train))
+# X_train = np.hstack((train_coords, X_train))
+# X_train = train_coords
 print("Trainset shape: ", X_train.shape)
 
 # ------------------------------------------Prepare test set------------------------------------------
@@ -46,13 +47,17 @@ X_test, y_test, test_coords = ds_utils.create_dataset_from_data_mask(features,
                                                                      test_masks,
                                                                      labels=labels,
                                                                      multi_label=True)
-X_test = np.hstack((test_coords, X_test))
+# X_test = np.hstack((test_coords, X_test))
+# X_test = test_coords
 print("Testset shape: ", X_test.shape)
 
 
 mdps = [12, 15, 20, 25, 100, None]
-# mdps = [15]
 msls = [1, 2, 4, 8, 16]
+
+# mdps = [15, 20]
+# msls = [2, 4, 8]
+
 train_scores = []
 test_scores = []
 best_score = 0

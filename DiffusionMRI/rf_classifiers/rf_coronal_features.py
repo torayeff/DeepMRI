@@ -20,7 +20,7 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
 # load learned features
-feature_name = 'coronal_features_epoch_1000.npz'
+feature_name = 'Conv2dAECoronalStrided_features_epoch_50.npz'
 features_path = join(data_dir, subj_id, 'learned_features', feature_name)
 learned_features = np.load(features_path)['data']
 
@@ -55,8 +55,8 @@ clf = RandomForestClassifier(n_estimators=100,
                              n_jobs=-1,
                              max_features='auto',
                              class_weight='balanced',
-                             max_depth=15,
-                             min_samples_leaf=2)
+                             max_depth=100,
+                             min_samples_leaf=8)
 print("Fitting classiffier.")
 clf.fit(X_train, y_train)
 
@@ -75,10 +75,14 @@ for c, f1 in enumerate(train_f1s):
 print('Evaluation on test set'.center(100, '-'))
 test_preds = clf.predict(X_test)
 
+y_test = y_test[:, 1:]
+test_preds = test_preds[:, 1:]
+
 test_acc = sklearn.metrics.accuracy_score(y_test, test_preds)
 test_f1_macro = sklearn.metrics.f1_score(y_test, test_preds, average='macro')
 test_f1s = sklearn.metrics.f1_score(y_test, test_preds, average=None)
 
 print("Accuracy: {:.5f}, F1_macro: {:.5f}".format(test_acc, test_f1_macro))
 for c, f1 in enumerate(test_f1s):
-    print("F1 for {}: {:.5f}".format(labels[c], f1))
+    print("F1 for {}: {:.5f}".format(labels[c+1], f1))
+

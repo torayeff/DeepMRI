@@ -10,8 +10,8 @@ script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'tractseg_data/784565/shore_slices/coronal/'
-model_name = "Conv2dAECoronalStrided_SHORE"
+data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
+model_name = "Conv2dAECoronalStrided"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility

@@ -8,15 +8,15 @@ class ConvEncoder(nn.Module):
 
         self.encode = nn.Sequential(
             nn.Conv2d(
-                in_channels=7,
-                out_channels=14,
+                in_channels=288,
+                out_channels=7,
                 kernel_size=3,
                 stride=2,
                 padding=0,
                 bias=False
             ),
             nn.ReLU(),
-            nn.BatchNorm2d(14),
+            nn.BatchNorm2d(7),
         )
 
         self.input_size = input_size
@@ -35,8 +35,8 @@ class ConvDecoder(nn.Module):
 
         self.decode = nn.Sequential(
             nn.Conv2d(
-                in_channels=14,
-                out_channels=7,
+                in_channels=7,
+                out_channels=288,
                 kernel_size=1,
                 stride=1,
                 padding=0,
