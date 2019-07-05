@@ -10,8 +10,8 @@ script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "Conv2dAECoronalStrided"
+data_path = experiment_dir + 'tractseg_data/784565/shore_slices/coronal/'
+model_name = "Conv2dAECoronalStrided_SHORE"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -26,7 +26,7 @@ batch_size = 8
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 200  # number of epochs to trains
-checkpoint = 100  # save model every checkpoint epoch
+checkpoint = 200  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, bg_zero=True)

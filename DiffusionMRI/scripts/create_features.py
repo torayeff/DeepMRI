@@ -14,8 +14,8 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Conv2dAECoronalStrided"
-feature_shapes = [(174, 145, 145, 7)]
+model_name = "Conv2dAECoronalStrided_SHORE"
+feature_shapes = [(174, 145, 145, 14)]
 epoch = 200
 
 encoder = ConvEncoder(input_size=(145, 145))
@@ -24,7 +24,7 @@ encoder.eval()
 
 for i, orient in enumerate(orients):
     print("Processing {} features".format(orient))
-    data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'training_slices', orient)
+    data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'shore_slices', orient)
     features_save_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'learned_features')
 
     dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True, bg_zero=True)

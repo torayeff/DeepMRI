@@ -7,23 +7,25 @@ class ConvEncoder(nn.Module):
         super().__init__()
 
         self.encode = nn.Sequential(
-            # N x 7 x H x W x D --> N x 7 x H/2 x W/2 x D/2
-            nn.Conv3d(
+            nn.Conv2d(
                 in_channels=7,
-                out_channels=7,
+                out_channels=5,
                 kernel_size=3,
                 stride=2,
                 padding=0,
                 bias=False
             ),
             nn.ReLU(),
-            nn.BatchNorm3d(7),
+            nn.BatchNorm2d(5),
         )
+
         self.input_size = input_size
 
-    def forward(self, x):
-        out = self.encode(x)
-        out = interpolate(out, size=self.input_size, mode='trilinear', align_corners=True)
+    def forward(self, x, return_all=False):
+        out1 = self.encode(x)
+        out = interpolate(out1, size=self.input_size, mode='bilinear', align_corners=True)
+        if return_all:
+            return out1, out
         return out
 
 
@@ -32,15 +34,14 @@ class ConvDecoder(nn.Module):
         super().__init__()
 
         self.decode = nn.Sequential(
-            # N x 7 x H x W x D --> N x 7 x H x W x D
-            nn.Conv3d(
-                in_channels=7,
+            nn.Conv2d(
+                in_channels=5,
                 out_channels=7,
                 kernel_size=1,
                 stride=1,
                 padding=0,
                 bias=True
-            ),
+            )
         )
 
     def forward(self, h):
