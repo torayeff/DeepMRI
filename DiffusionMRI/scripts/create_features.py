@@ -5,7 +5,7 @@ import os
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets  # noqa: E402
-from DiffusionMRI.Conv2dAEStrided import ConvEncoder  # noqa: E402
+from DiffusionMRI.Conv2dAE import ConvEncoder  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
@@ -14,11 +14,11 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Conv2dAECoronalStrided"
+model_name = "Conv2dAECoronal_conv1x1"
 feature_shapes = [(174, 145, 145, 7)]
-epoch = 200
+epoch = 90
 
-encoder = ConvEncoder(input_size=(145, 145))
+encoder = ConvEncoder(in_channels=288, out_channels=7)
 encoder.to(device)
 encoder.eval()
 

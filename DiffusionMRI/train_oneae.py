@@ -24,8 +24,8 @@ torch.backends.cudnn.deterministic = deterministic
 # data
 batch_size = 2 ** 15
 
-start_epoch = 40000  # for loading pretrained weights
-num_epochs = 10000  # number of epochs to trains
+start_epoch = 0  # for loading pretrained weights
+num_epochs = 100000  # number of epochs to trains
 checkpoint = 10000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 

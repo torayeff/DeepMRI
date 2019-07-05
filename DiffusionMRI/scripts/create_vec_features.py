@@ -21,7 +21,7 @@ torch.backends.cudnn.deterministic = deterministic
 
 trainset = Datasets.VoxelDataset(data_path,
                                  file_name='data.nii.gz',
-                                 normalize=False)
+                                 normalize=True)
 total_examples = len(trainset)
 
 batch_size = 2 ** 15
@@ -39,8 +39,8 @@ decoder.to(device)
 encoder.eval()
 decoder.eval()
 
-start_epoch = 40000
-channels = 288
+start_epoch = 100000
+channels = 7
 encoder_path = "{}/models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 decoder_path = "{}/models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 encoder.load_state_dict(torch.load(encoder_path))
@@ -61,5 +61,5 @@ with torch.no_grad():
         c += 1
         print(c, end=" ")
 
-save_path = data_path + 'learned_features/one_ae_features.npz'.format(start_epoch)
+save_path = data_path + 'learned_features/one_ae_features_epoch_{}.npz'.format(start_epoch)
 np.savez(save_path, data=learned_features)

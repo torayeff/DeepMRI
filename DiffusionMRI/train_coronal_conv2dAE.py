@@ -14,19 +14,19 @@ data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
 model_name = "Conv2dAECoronal_conv1x1"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
-# deterministic = True  # reproducibility
-# seed = 0  # random seed for reproducibility
-# if deterministic:
-#     torch.manual_seed(seed)
-# torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input size varies
-# torch.backends.cudnn.deterministic = deterministic
+deterministic = True  # reproducibility
+seed = 0  # random seed for reproducibility
+if deterministic:
+    torch.manual_seed(seed)
+torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input size varies
+torch.backends.cudnn.deterministic = deterministic
 
 # data
 batch_size = 8
 
-start_epoch = 0  # for loading pretrained weights
+start_epoch = 800  # for loading pretrained weights
 num_epochs = 200  # number of epochs to train
-checkpoint = 50  # save model every checkpoint epoch
+checkpoint = 10  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, bg_zero=True)
@@ -61,7 +61,7 @@ masked_loss = True
 # masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters)
+optimizer = torch.optim.Adam(parameters, lr=0.000001)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,
