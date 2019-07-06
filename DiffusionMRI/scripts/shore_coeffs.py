@@ -28,7 +28,7 @@ mask = nib.load(mask_path).get_data()
 print("Mask shape: ", mask.shape)
 
 st = time.time()
-radial_border = 2
+radial_border = 6
 
 print("Started fitting SHORE model with radial_border={}".format(radial_border))
 asm = ShoreModel(gtab, radial_order=radial_border)
@@ -42,5 +42,5 @@ shore_coeff = np.nan_to_num(shore_coeff, 0)
 
 print("Fitting time: {:.5f}".format(time.time()-st))
 
-save_path = join(exp_dir, subj_id, 'shore/shore_coefficients_radial_border_{}.npz'.format(radial_border))
+save_path = join(exp_dir, subj_id, 'shore_features/shore_coefficients_radial_border_{}.npz'.format(radial_border))
 np.savez(save_path, data=shore_coeff)

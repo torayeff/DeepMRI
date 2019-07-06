@@ -465,10 +465,10 @@ def train_ae(encoder,
             iters += 1
 
         if epoch % checkpoint == 0:
-            torch.save(encoder.state_dict(), "{}models/{}_encoder_epoch_{}".format(experiment_dir,
+            torch.save(encoder.state_dict(), "{}saved_models/{}_encoder_epoch_{}".format(experiment_dir,
                                                                                    model_name,
                                                                                    epoch + start_epoch))
-            torch.save(decoder.state_dict(), "{}models/{}_decoder_epoch_{}".format(experiment_dir,
+            torch.save(decoder.state_dict(), "{}saved_models/{}_decoder_epoch_{}".format(experiment_dir,
                                                                                    model_name,
                                                                                    epoch + start_epoch))
 
