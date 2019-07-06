@@ -9,7 +9,7 @@ from DiffusionMRI.Linear import Encoder, Decoder  # noqa: E402
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/'
-model_name = 'Model2'
+model_name = 'Model1'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -21,7 +21,8 @@ torch.backends.cudnn.deterministic = deterministic
 
 trainset = Datasets.VoxelDataset(data_path,
                                  file_name='data.nii.gz',
-                                 normalize=True)
+                                 normalize=False,
+                                 scale=True)
 total_examples = len(trainset)
 
 batch_size = 2 ** 15
@@ -39,8 +40,8 @@ decoder.to(device)
 encoder.eval()
 decoder.eval()
 
-start_epoch = 100000
-channels = 7
+start_epoch = 10000
+channels = 22
 encoder_path = "{}/saved_models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 decoder_path = "{}/saved_models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 encoder.load_state_dict(torch.load(encoder_path))

@@ -11,7 +11,7 @@ script_start = time.time()
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/'
-model_name = "Model2"
+model_name = "Model1"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -25,13 +25,14 @@ torch.backends.cudnn.deterministic = deterministic
 batch_size = 2 ** 15
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 100000  # number of epochs to trains
-checkpoint = 10000  # save model every checkpoint epoch
+num_epochs = 10000  # number of epochs to trains
+checkpoint = 5000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.VoxelDataset(data_path,
                                  file_name='data.nii.gz',
-                                 normalize=True)
+                                 normalize=False,
+                                 scale=True)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
 total_examples = len(trainset)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
@@ -55,11 +56,12 @@ p1 = utils.count_model_parameters(encoder)
 p2 = utils.count_model_parameters(decoder)
 print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[1] + p2[1]))
 
-criterion = torch.nn.MSELoss()
+# criterion = torch.nn.MSELoss()
+criterion = torch.nn.BCEWithLogitsLoss()
 masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=0.0001)
+optimizer = torch.optim.Adam(parameters, lr=3e-3)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,

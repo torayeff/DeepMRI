@@ -21,8 +21,8 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class and other class
 
 # -----------------------------------------Load Features------------------------------------------
-features_1 = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_4.npz'))['data']
-features_2 = np.load(join(data_dir, subj_id, 'learned_features/final/Model1_features_epoch_80000.npz'))['data']
+features_1 = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_6.npz'))['data']
+features_2 = np.load(join(data_dir, subj_id, 'learned_features/Model1_features_epoch_10000.npz'))['data']
 # print(features_1.shape, features_2.shape)
 # features = np.concatenate((features_1, features_2), axis=3)
 # import nibabel as nib
@@ -57,8 +57,8 @@ print("Testset shape: ", X_test.shape)
 mdps = [12, 15, 20, 25, 100, None]
 msls = [1, 2, 4, 8, 16]
 
-# mdps = [25]
-# msls = [4]
+# mdps = [20]
+# msls = [8]
 
 train_scores = []
 test_scores = []
