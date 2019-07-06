@@ -52,7 +52,7 @@ class SHORESlices(Dataset):
 class VoxelDataset(Dataset):
     """Voxel dataset for dMRI."""
 
-    def __init__(self, data_dir, file_name, normalize=False):
+    def __init__(self, data_dir, file_name, normalize=False, scale=False):
         """
         Args:
             data_dir: Data directory with mask and diffusion image.
@@ -71,6 +71,7 @@ class VoxelDataset(Dataset):
             len(np.nonzero(self.data[crd[0], crd[1], crd[2]])[0]) != 0
         ]
         self.normalize = normalize
+        self.scale = scale
 
     def __len__(self):
         return len(self.coords)
@@ -81,7 +82,10 @@ class VoxelDataset(Dataset):
         # make cube
         voxels = self.data[coord[0], coord[1], coord[2], :].reshape(-1)
         voxels = torch.tensor(voxels).float()
+        if self.scale:
+            voxels = voxels/voxels.max()
         if self.normalize:
+            voxels = voxels/voxels.max()
             voxels = (voxels - voxels.mean()) / voxels.std()
         return {'data': voxels, 'coord': coord}
 

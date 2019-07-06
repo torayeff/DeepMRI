@@ -362,9 +362,9 @@ def evaluate_ae(encoder,
             # calculate loss
             if masked_loss:
                 mask = batch['mask'].unsqueeze(1).to(device)
-                loss = criterion(x, out, mask)
+                loss = criterion(out, x, mask)
             else:
-                loss = criterion(x, out)
+                loss = criterion(out, x)
             # track loss
             running_loss = running_loss + loss.item() * batch['data'].size(0)
             total_examples += batch['data'].size(0)
@@ -433,9 +433,6 @@ def train_ae(encoder,
         for batch in trainloader:
             iter_time = time.time()
 
-            # zero gradients
-            optimizer.zero_grad()
-
             # forward
             x = batch['data'].to(device)
             h = encoder(x)
@@ -444,12 +441,15 @@ def train_ae(encoder,
             # calculate loss
             if masked_loss:
                 mask = batch['mask'].unsqueeze(1).to(device)
-                loss = criterion(x, y, mask)
+                loss = criterion(y, x, mask)
             else:
-                loss = criterion(x, y)
+                loss = criterion(y, x)
 
             if sparsity is not None:
                 loss = loss + sparsity * torch.abs(h).sum()
+
+            # zero gradients
+            optimizer.zero_grad()
 
             # backward
             loss.backward()
