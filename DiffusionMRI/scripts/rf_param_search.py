@@ -23,11 +23,12 @@ ml_masks = ml_masks[:, :, :, 1:]  # remove background class and other class
 # -----------------------------------------Load Features------------------------------------------
 features_1 = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_4.npz'))['data']
 features_2 = np.load(join(data_dir, subj_id, 'learned_features/Model1_features_epoch_10000.npz'))['data']
+features_3 = np.load(join(data_dir, subj_id, 'learned_features/Conv2dAECoronalStrided_features_epoch_200.npz'))['data']
 # print(features_1.shape, features_2.shape)
-features = np.concatenate((features_1, features_2), axis=3)
+# features = np.concatenate((features_1, features_2), axis=3)
 # import nibabel as nib
 # features = nib.load(join(data_dir, subj_id, 'data.nii.gz')).get_data()
-# features = features_2
+features = features_3
 print(features.shape)
 # -----------------------------------------Prepare train set------------------------------------------
 print('Prepare train set'.center(100, '-'))
@@ -37,20 +38,20 @@ X_train, y_train, train_coords = ds_utils.create_dataset_from_data_mask(features
                                                                         train_masks,
                                                                         labels=labels,
                                                                         multi_label=True)
-X_train = np.hstack((train_coords, X_train))
+# X_train = np.hstack((train_coords, X_train))
 print("Trainset shape: ", X_train.shape)
 
 # ------------------------------------------Prepare test set------------------------------------------
 print('Prepare test set'.center(100, '-'))
 print("Test set is the whole brain volume.")
-test_masks = ml_masks
-# test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
-# test_masks = ds_utils.create_data_masks(ml_masks, test_slices, labels)
+# test_masks = ml_masks
+test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
+test_masks = ds_utils.create_data_masks(ml_masks, test_slices, labels)
 X_test, y_test, test_coords = ds_utils.create_dataset_from_data_mask(features,
                                                                      test_masks,
                                                                      labels=labels,
                                                                      multi_label=True)
-X_test = np.hstack((test_coords, X_test))
+# X_test = np.hstack((test_coords, X_test))
 print("Testset shape: ", X_test.shape)
 
 

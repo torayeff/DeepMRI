@@ -14,11 +14,11 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Conv2dAECoronal_conv1x1"
+model_name = "Conv2dAECoronalStrided"
 feature_shapes = [(174, 145, 145, 7)]
-epoch = 90
+epoch = 200
 
-encoder = ConvEncoder(in_channels=288, out_channels=7)
+encoder = ConvEncoder(input_size=(145, 145))
 encoder.to(device)
 encoder.eval()
 
@@ -27,10 +27,14 @@ for i, orient in enumerate(orients):
     data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'training_slices', orient)
     features_save_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'learned_features')
 
-    dataset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, sort_fns=True, bg_zero=True)
+    dataset = Datasets.OrientationDatasetChannelNorm(data_path,
+                                                     normalize=True,
+                                                     scale=False,
+                                                     sort_fns=True,
+                                                     bg_zero=True)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
 
-    encoder_path = "{}models/{}_encoder_epoch_{}".format(experiment_dir, model_name, epoch)
+    encoder_path = "{}saved_models/{}_encoder_epoch_{}".format(experiment_dir, model_name, epoch)
     encoder.load_state_dict(torch.load(encoder_path))
     print("Loaded pretrained weights starting from epoch {} for {}".format(epoch, model_name))
 

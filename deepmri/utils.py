@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from deepmri.CustomLosses import MaskedMSE
+from deepmri.CustomLosses import MaskedLoss
 from deepmri import vis_utils
 from matplotlib.lines import Line2D
 
@@ -196,7 +196,7 @@ def img_stats(sample, t=None):
     x_back[:, mask == 0] = 0
     y_back[:, mask == 0] = 0
 
-    masked_mse = MaskedMSE()
+    masked_mse = MaskedLoss()
     mse = nn.MSELoss(reduction='mean')
 
     loss = masked_mse(x.unsqueeze(0), y.unsqueeze(0), mask.unsqueeze(0).unsqueeze(0))

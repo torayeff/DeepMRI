@@ -29,7 +29,7 @@ num_epochs = 200  # number of epochs to trains
 checkpoint = 200  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
-trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, bg_zero=True)
+trainset = Datasets.OrientationDatasetChannelNorm(data_path, normalize=True, scale=False, bg_zero=True)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
 total_examples = len(trainset)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
@@ -43,8 +43,8 @@ encoder.to(device)
 decoder.to(device)
 
 if start_epoch != 0:
-    encoder_path = "{}/models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
-    decoder_path = "{}/models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
+    encoder_path = "{}/saved_models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
+    decoder_path = "{}/saved_models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
     encoder.load_state_dict(torch.load(encoder_path))
     decoder.load_state_dict(torch.load(decoder_path))
     print("Loaded pretrained weights starting from epoch {}".format(start_epoch))
@@ -54,7 +54,8 @@ p2 = utils.count_model_parameters(decoder)
 print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[1] + p2[1]))
 
 # criterion and optimizer settings
-criterion = CustomLosses.MaskedMSE()
+# criterion = CustomLosses.MaskedLoss(criterion=torch.nn.BCEWithLogitsLoss(reduction='sum'))
+criterion = CustomLosses.MaskedLoss()
 masked_loss = True
 
 # criterion = torch.nn.MSELoss()

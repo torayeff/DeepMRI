@@ -13,10 +13,9 @@ class ConvEncoder(nn.Module):
                 kernel_size=3,
                 stride=2,
                 padding=0,
-                bias=True
+                bias=False
             ),
-            nn.ReLU(),
-            # nn.BatchNorm2d(7),
+            nn.PReLU(7),
         )
 
         self.input_size = input_size

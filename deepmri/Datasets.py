@@ -147,6 +147,7 @@ class OrientationDatasetChannelNorm(Dataset):
                  data_dir,
                  file_names=None,
                  normalize=True,
+                 scale=True,
                  bg_zero=True,
                  sort_fns=True):
         """
@@ -154,12 +155,14 @@ class OrientationDatasetChannelNorm(Dataset):
             data_dir: Directory with .npz volumes.
             file_names: File names in dat_dir.
             normalize: If True, the data will be normalized.
+            scale: If True, the data will be scaled between 0 and 1.
             bg_zero: If True, background values will be zeroed after normalization.
             sort_fns: If True sorts file_names
         """
 
         self.data_dir = data_dir
         self.file_names = file_names
+        self.scale = scale
         self.normalize = normalize
         self.bg_zero = bg_zero
 
@@ -181,6 +184,9 @@ class OrientationDatasetChannelNorm(Dataset):
         mask = torch.tensor(orient_img['mask']).float()
         means = torch.tensor(orient_img['means']).float()[..., None, None]  # add extra dims
         stds = torch.tensor(orient_img['stds']).float()[..., None, None]  # extra dims
+
+        if self.scale:
+            x = x/x.max()
 
         if self.normalize:
             x = (x - means)/stds
