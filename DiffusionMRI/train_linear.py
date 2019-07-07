@@ -24,9 +24,9 @@ torch.backends.cudnn.deterministic = deterministic
 # data
 batch_size = 2 ** 15
 
-start_epoch = 0  # for loading pretrained weights
+start_epoch = 10000  # for loading pretrained weights
 num_epochs = 10000  # number of epochs to trains
-checkpoint = 5000  # save model every checkpoint epoch
+checkpoint = 10000  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.VoxelDataset(data_path,
@@ -46,8 +46,8 @@ encoder.to(device)
 decoder.to(device)
 
 if start_epoch != 0:
-    encoder_path = "{}/models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
-    decoder_path = "{}/models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
+    encoder_path = "{}saved_models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
+    decoder_path = "{}saved_models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
     encoder.load_state_dict(torch.load(encoder_path))
     decoder.load_state_dict(torch.load(decoder_path))
     print("Loaded pretrained weights starting from epoch {}".format(start_epoch))
@@ -61,7 +61,7 @@ criterion = torch.nn.BCEWithLogitsLoss()
 masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=3e-3)
+optimizer = torch.optim.Adam(parameters, lr=1e-3)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,
@@ -83,7 +83,7 @@ utils.train_ae(encoder,
                scheduler=None,
                checkpoint=checkpoint,
                print_iter=False,
-               eval_epoch=100,
+               eval_epoch=100000000,
                masked_loss=masked_loss)
-
+utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss)
 print("Total running time: {:.5f} seconds.".format(time.time() - script_start))

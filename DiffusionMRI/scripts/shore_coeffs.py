@@ -7,7 +7,7 @@ import time
 import numpy as np
 
 # settings
-subj_id = '784565'
+subj_id = '789373'
 exp_dir = '/home/agajan/experiment_DiffusionMRI/tractseg_data/'
 data_path = join(exp_dir, subj_id, 'data.nii.gz')
 mask_path = join(exp_dir, subj_id, 'nodif_brain_mask.nii.gz')
@@ -28,7 +28,7 @@ mask = nib.load(mask_path).get_data()
 print("Mask shape: ", mask.shape)
 
 st = time.time()
-radial_border = 6
+radial_border = 4
 
 print("Started fitting SHORE model with radial_border={}".format(radial_border))
 asm = ShoreModel(gtab, radial_order=radial_border)

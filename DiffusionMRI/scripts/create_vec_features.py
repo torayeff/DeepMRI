@@ -1,6 +1,7 @@
 import sys
 import torch
 import numpy as np
+from os.path import join
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets  # noqa: E402
@@ -8,7 +9,8 @@ from DiffusionMRI.Linear import Encoder, Decoder  # noqa: E402
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'tractseg_data/784565/'
+subj_id = '784565'
+data_path = join(experiment_dir, 'tractseg_data', subj_id)
 model_name = 'Model1'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
@@ -40,7 +42,7 @@ decoder.to(device)
 encoder.eval()
 decoder.eval()
 
-start_epoch = 10000
+start_epoch = 20000
 channels = 22
 encoder_path = "{}/saved_models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 decoder_path = "{}/saved_models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
@@ -62,5 +64,5 @@ with torch.no_grad():
         c += 1
         print(c, end=" ")
 
-save_path = data_path + 'learned_features/{}_features_epoch_{}.npz'.format(model_name, start_epoch)
+save_path = join(data_path, 'learned_features/{}_features_epoch_{}.npz'.format(model_name, start_epoch))
 np.savez(save_path, data=learned_features)
