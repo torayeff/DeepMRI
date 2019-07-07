@@ -68,7 +68,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
 utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss)
-trainloader = [next(iter(trainloader))]
+# trainloader = [next(iter(trainloader))]
 utils.train_ae(encoder,
                decoder,
                criterion,

@@ -42,7 +42,7 @@ decoder.to(device)
 encoder.eval()
 decoder.eval()
 
-start_epoch = 20000
+start_epoch = 200
 channels = 22
 encoder_path = "{}/saved_models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 decoder_path = "{}/saved_models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)

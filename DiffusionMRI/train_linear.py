@@ -22,11 +22,11 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-batch_size = 2 ** 15
+batch_size = 2 ** 14
 
-start_epoch = 10000  # for loading pretrained weights
-num_epochs = 10000  # number of epochs to trains
-checkpoint = 10000  # save model every checkpoint epoch
+start_epoch = 0  # for loading pretrained weights
+num_epochs = 200  # number of epochs to trains
+checkpoint = 200  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.VoxelDataset(data_path,
@@ -61,7 +61,7 @@ criterion = torch.nn.BCEWithLogitsLoss()
 masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=1e-3)
+optimizer = torch.optim.Adam(parameters, lr=4e-3)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        verbose=True,
                                                        min_lr=1e-6,
@@ -69,7 +69,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
 utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss)
-trainloader = [next(iter(trainloader))]
+# trainloader = [next(iter(trainloader))]
 utils.train_ae(encoder,
                decoder,
                criterion,
