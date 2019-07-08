@@ -52,10 +52,19 @@ class SHORESlices(Dataset):
 class VoxelDataset(Dataset):
     """Voxel dataset for dMRI."""
 
-    def __init__(self, data_dir, file_name, normalize=False, scale=False):
+    def __init__(self,
+                 data_dir,
+                 file_name,
+                 normalize=False,
+                 scale=False,
+                 prob=None):
         """
         Args:
             data_dir: Data directory with mask and diffusion image.
+            file_name: File name.
+            normalize: If True, data will be normalized to zero mean and std=1
+            scale: If True, data will be scaled by max value.
+            prob: If is not None, every element will me zeroed out with probability prob
         """
 
         print("Loading data...")
@@ -72,6 +81,7 @@ class VoxelDataset(Dataset):
         ]
         self.normalize = normalize
         self.scale = scale
+        self.prob = prob
 
     def __len__(self):
         return len(self.coords)
@@ -87,7 +97,12 @@ class VoxelDataset(Dataset):
         if self.normalize:
             voxels = voxels/voxels.max()
             voxels = (voxels - voxels.mean()) / voxels.std()
-        return {'data': voxels, 'coord': coord}
+
+        # zero each element with probability self.prob
+        noisy_voxels = []
+        if self.prob is not None:
+            noisy_voxels = voxels * voxels.bernoulli(p=1-self.prob)
+        return {'data': voxels, 'coord': coord, 'noisy_data': noisy_voxels}
 
 
 class NeighborhoodDataset(Dataset):

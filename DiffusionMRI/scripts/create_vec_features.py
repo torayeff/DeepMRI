@@ -11,7 +11,7 @@ from DiffusionMRI.Linear import Encoder, Decoder  # noqa: E402
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 subj_id = '784565'
 data_path = join(experiment_dir, 'tractseg_data', subj_id)
-model_name = 'Model1'
+model_name = 'Model1_denoising'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -21,13 +21,16 @@ if deterministic:
 torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input size varies
 torch.backends.cudnn.deterministic = deterministic
 
+batch_size = 2 ** 15
+prob = 0.2
+start_epoch = 200
+channels = 22
 trainset = Datasets.VoxelDataset(data_path,
                                  file_name='data.nii.gz',
                                  normalize=False,
-                                 scale=True)
+                                 scale=True,
+                                 prob=prob)
 total_examples = len(trainset)
-
-batch_size = 2 ** 15
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=6)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
                                                                                 batch_size,
@@ -42,8 +45,6 @@ decoder.to(device)
 encoder.eval()
 decoder.eval()
 
-start_epoch = 200
-channels = 22
 encoder_path = "{}/saved_models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 decoder_path = "{}/saved_models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 encoder.load_state_dict(torch.load(encoder_path))
@@ -54,7 +55,10 @@ learned_features = np.zeros((145, 174, 145, channels))
 c = 0
 with torch.no_grad():
     for data in trainloader:
-        f = encoder(data['data'].to(device))
+        if prob is not None:
+            f = encoder(data['noisy_data'].to(device))
+        else:
+            f = encoder(data['noisy_data'].to(device))
         for b in range(f.shape[0]):
             crd_0 = data['coord'][0][b].item()
             crd_1 = data['coord'][1][b].item()

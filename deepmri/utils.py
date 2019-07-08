@@ -330,7 +330,8 @@ def evaluate_ae(encoder,
                 device,
                 trainloader,
                 print_iter=False,
-                masked_loss=False
+                masked_loss=False,
+                denoising=False
                 ):
     """Evaluates AE.
 
@@ -342,6 +343,7 @@ def evaluate_ae(encoder,
       trainloader: Train loader
       print_iter:  Print every iteration. (Default value = False)
       masked_loss: If True loss will be calculated over masked region only.
+      denoising: If True, denoising AE will be evaluated.
 
     Returns:
         Average loss.
@@ -356,15 +358,22 @@ def evaluate_ae(encoder,
         running_loss = 0.0
 
         for i, batch in enumerate(trainloader, 1):
+
+            # forward
             x = batch['data'].to(device)
-            out = decoder(encoder(x))
+            if denoising:
+                h = encoder(batch['noisy_data'].to(device))
+            else:
+                h = encoder(x)
+            y = decoder(h)
 
             # calculate loss
             if masked_loss:
                 mask = batch['mask'].unsqueeze(1).to(device)
-                loss = criterion(out, x, mask)
+                loss = criterion(y, x, mask)
             else:
-                loss = criterion(out, x)
+                loss = criterion(y, x)
+
             # track loss
             running_loss = running_loss + loss.item() * batch['data'].size(0)
             total_examples += batch['data'].size(0)
@@ -394,7 +403,8 @@ def train_ae(encoder,
              print_iter=False,
              eval_epoch=5,
              masked_loss=False,
-             sparsity=None
+             sparsity=None,
+             denoising=True
              ):
     """Trains AutoEncoder.
 
@@ -414,6 +424,8 @@ def train_ae(encoder,
       print_iter:  Print every iteration. (Default value = False)
       eval_epoch:  Evaluate every eval_epoch epoch. (Default value = 5)
       masked_loss: If True loss will be calculated over masked region only.
+      sparsity: If not None, sparsity penalty will be applied to hidden activations.
+      denoising: If True, Denoising AE will be trained.
 
     Returns:
         None
@@ -421,6 +433,9 @@ def train_ae(encoder,
     print("Training started for {} epochs.".format(num_epochs))
     if sparsity is not None:
         print('Sparsity is on with lambda={}'.format(sparsity))
+    if denoising:
+        print('Training denoising autencoder.')
+
     for epoch in range(1, num_epochs + 1):
         encoder.train()
         decoder.train()
@@ -435,7 +450,10 @@ def train_ae(encoder,
 
             # forward
             x = batch['data'].to(device)
-            h = encoder(x)
+            if denoising:
+                h = encoder(batch['noisy_data'].to(device))
+            else:
+                h = encoder(x)
             y = decoder(h)
 
             # calculate loss
@@ -466,11 +484,11 @@ def train_ae(encoder,
 
         if epoch % checkpoint == 0:
             torch.save(encoder.state_dict(), "{}saved_models/{}_encoder_epoch_{}".format(experiment_dir,
-                                                                                   model_name,
-                                                                                   epoch + start_epoch))
+                                                                                         model_name,
+                                                                                         epoch + start_epoch))
             torch.save(decoder.state_dict(), "{}saved_models/{}_decoder_epoch_{}".format(experiment_dir,
-                                                                                   model_name,
-                                                                                   epoch + start_epoch))
+                                                                                         model_name,
+                                                                                         epoch + start_epoch))
 
         epoch_loss = running_loss / total_examples
         print("Epoch #{}/{},  epoch loss: {:.5f}, epoch time: {:.5f} seconds".format(epoch + start_epoch,
@@ -480,7 +498,7 @@ def train_ae(encoder,
         # evaluate on trainloader
         if epoch % eval_epoch == 0:
             evaluate_ae(encoder, decoder, criterion, device, trainloader, print_iter=print_iter,
-                        masked_loss=masked_loss)
+                        masked_loss=masked_loss, denoising=denoising)
 
         if scheduler is not None:
             scheduler.step(epoch_loss)
