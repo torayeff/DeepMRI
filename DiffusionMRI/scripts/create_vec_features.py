@@ -11,7 +11,7 @@ from DiffusionMRI.Linear import Encoder, Decoder  # noqa: E402
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 subj_id = '784565'
 data_path = join(experiment_dir, 'tractseg_data', subj_id)
-model_name = 'Model1_denoising'
+model_name = 'SHORE_denoising'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = False  # reproducibility
@@ -22,13 +22,13 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 batch_size = 2 ** 15
-prob = 0.2
-start_epoch = 200
+prob = 0.5
+start_epoch = 10000
 channels = 22
 trainset = Datasets.VoxelDataset(data_path,
-                                 file_name='data.nii.gz',
-                                 normalize=False,
-                                 scale=True,
+                                 file_name='shore_features/shore_coefficients_radial_border_2.npz',
+                                 normalize=True,
+                                 scale=False,
                                  prob=prob)
 total_examples = len(trainset)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=6)
@@ -58,7 +58,7 @@ with torch.no_grad():
         if prob is not None:
             f = encoder(data['noisy_data'].to(device))
         else:
-            f = encoder(data['noisy_data'].to(device))
+            f = encoder(data['data'].to(device))
         for b in range(f.shape[0]):
             crd_0 = data['coord'][0][b].item()
             crd_1 = data['coord'][1][b].item()

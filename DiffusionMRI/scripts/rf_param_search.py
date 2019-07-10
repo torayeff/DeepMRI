@@ -21,14 +21,20 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class and other class
 
 # -----------------------------------------Load Features------------------------------------------
-features = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_4.npz'))['data']
+# features = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_6.npz'))['data']
 features = np.load(join(data_dir, subj_id, 'learned_features/final/Model1_features_epoch_10000.npz'))['data']
+# features = np.load(join(data_dir, subj_id, 'learned_features/SHORE_denoising_features_epoch_10000.npz'))['data']
+# import nibabel as nib
+# features = nib.load(join(data_dir, subj_id, 'data.nii.gz')).get_data()
 print(features.shape)
 # -----------------------------------------Prepare train set------------------------------------------
 print('Prepare train set'.center(100, '-'))
 train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
 train_masks = ds_utils.create_data_masks(ml_masks, train_slices, labels)
-X_train, y_train, train_coords = ds_utils.create_dataset_from_data_mask(features, train_masks)
+X_train, y_train, train_coords = ds_utils.create_dataset_from_data_mask(features,
+                                                                        train_masks,
+                                                                        multi_label=True)
+X_train = np.concatenate((X_train, train_coords), axis=1)
 print("Trainset shape: ", X_train.shape)
 
 # ------------------------------------------Prepare test set------------------------------------------
@@ -37,8 +43,19 @@ print("Test set is the whole brain volume.")
 # test_masks = ml_masks
 test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
 test_masks = ds_utils.create_data_masks(ml_masks, test_slices, labels)
-X_test, y_test, test_coords = ds_utils.create_dataset_from_data_mask(features, test_masks)
+X_test, y_test, test_coords = ds_utils.create_dataset_from_data_mask(features,
+                                                                     test_masks,
+                                                                     multi_label=True)
+X_test = np.concatenate((X_test, test_coords), axis=1)
 print("Testset shape: ", X_test.shape)
+print("Removing train set from test set. Or do we want to include train set also in test set???")
+dims = test_coords.max(0)+1
+idxs_to_remove = np.where(np.in1d(np.ravel_multi_index(test_coords.T, dims),
+                                  np.ravel_multi_index(train_coords.T, dims)))[0]
+print(idxs_to_remove.shape)
+X_test = np.delete(X_test, idxs_to_remove, 0)
+y_test = np.delete(y_test, idxs_to_remove, 0)
+print("Testset shape after cleaning: ", X_test.shape, y_test.shape)
 
 
 mdps = [12, 15, 20, 25, 100, None]
@@ -68,13 +85,9 @@ for max_depth in mdps:
         print("Fitting classiffier.")
         clf.fit(X_train, y_train)
 
-        # --------------------------------------Evaluation on train set---------------------------------------
-        train_preds = clf.predict(X_train)
-        train_f1_macro = sklearn.metrics.f1_score(y_train, train_preds, average='macro')
-        train_scores.append(train_f1_macro)
-
         # ---------------------------------------Evaluation on test set---------------------------------------
         test_preds = clf.predict(X_test)
+        print(test_preds.shape, y_test.shape)
         test_f1_macro = sklearn.metrics.f1_score(y_test[:, 1:], test_preds[:, 1:], average='macro')
         print('Test score: {}, Max depth: {}, Min leaf: {}'.format(test_f1_macro, max_depth, minleaf))
         if test_f1_macro > best_score:
