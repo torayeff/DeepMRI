@@ -9,16 +9,6 @@ class ConvEncoder(nn.Module):
         self.encode = nn.Sequential(
             nn.Conv2d(
                 in_channels=288,
-                out_channels=176,
-                kernel_size=3,
-                stride=2,
-                padding=0,
-                bias=False
-            ),
-            nn.PReLU(176),
-
-            nn.Conv2d(
-                in_channels=176,
                 out_channels=88,
                 kernel_size=3,
                 stride=2,
@@ -64,9 +54,9 @@ class ConvDecoder(nn.Module):
             nn.Conv2d(
                 in_channels=22,
                 out_channels=44,
-                kernel_size=3,
+                kernel_size=1,
                 stride=1,
-                padding=1,
+                padding=0,
                 bias=True
             ),
             nn.PReLU(44),
@@ -74,31 +64,21 @@ class ConvDecoder(nn.Module):
             nn.Conv2d(
                 in_channels=44,
                 out_channels=88,
-                kernel_size=3,
+                kernel_size=1,
                 stride=1,
-                padding=1,
+                padding=0,
                 bias=True
             ),
             nn.PReLU(88),
 
             nn.Conv2d(
                 in_channels=88,
-                out_channels=176,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=True
-            ),
-            nn.PReLU(176),
-
-            nn.Conv2d(
-                in_channels=176,
                 out_channels=288,
-                kernel_size=3,
+                kernel_size=1,
                 stride=1,
-                padding=1,
+                padding=0,
                 bias=True
-            ),
+            )
         )
 
     def forward(self, h):

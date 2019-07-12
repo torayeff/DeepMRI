@@ -14,7 +14,7 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Model8"
+model_name = "Model12"
 feature_shapes = [(174, 145, 145, 22)]
 epoch = 200
 
