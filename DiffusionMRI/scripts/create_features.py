@@ -14,8 +14,8 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Conv2dAECoronalStrided"
-feature_shapes = [(174, 145, 145, 7)]
+model_name = "Model8"
+feature_shapes = [(174, 145, 145, 22)]
 epoch = 200
 
 encoder = ConvEncoder(input_size=(145, 145))
@@ -28,8 +28,8 @@ for i, orient in enumerate(orients):
     features_save_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'learned_features')
 
     dataset = Datasets.OrientationDatasetChannelNorm(data_path,
-                                                     normalize=True,
-                                                     scale=False,
+                                                     scale=True,
+                                                     normalize=False,
                                                      sort_fns=True,
                                                      bg_zero=True)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
@@ -44,10 +44,6 @@ for i, orient in enumerate(orients):
         for j, data in enumerate(dataloader):
             x = data['data'].to(device)
             feature = encoder(x)
-            # # print(feature[0].shape, feature[1].shape, feature[2].shape)
-            # feature = feature[1]
-            # # feature = torch.cat((feature[0], feature[2]), dim=1)
-            # print(feature.shape)
             orient_feature = feature.detach().cpu().squeeze().permute(1, 2, 0)
 
             idx = int(data['file_name'][0][:-4][-3:])

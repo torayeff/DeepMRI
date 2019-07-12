@@ -20,8 +20,8 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
 # load shore coefficients
-feature_path = join(data_dir, subj_id, 'shore_features', 'shore_coefficients_radial_border_4.npz')
-# feature_path = join(data_dir, subj_id, 'learned_features', 'final/Model1_features_epoch_10000.npz')
+# feature_path = join(data_dir, subj_id, 'shore_features', 'shore_coefficients_radial_border_4.npz')
+feature_path = join(data_dir, subj_id, 'learned_features', 'Model5_features_epoch_200.npz')
 features = np.load(feature_path)['data']
 
 # -----------------------------------------Prepare train set------------------------------------------
@@ -37,9 +37,9 @@ print("Trainset shape: ", X_train.shape, y_train.shape)
 # ------------------------------------------Prepare test set------------------------------------------
 print('Prepare test set'.center(100, '-'))
 print("Test set is the whole brain volume.")
-test_masks = ml_masks
-# test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
-# test_masks = ds_utils.create_data_masks(ml_masks, test_slices, labels)
+# test_masks = ml_masks
+test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
+test_masks = ds_utils.create_data_masks(ml_masks, test_slices, labels)
 X_test, y_test, test_coords = ds_utils.create_dataset_from_data_mask(features,
                                                                      test_masks,
                                                                      labels=labels,
@@ -66,8 +66,8 @@ clf = RandomForestClassifier(n_estimators=100,
                              n_jobs=-1,
                              max_features='auto',
                              class_weight='balanced',
-                             max_depth=25,
-                             min_samples_leaf=8)
+                             max_depth=100,
+                             min_samples_leaf=4)
 print("Fitting classiffier.")
 clf.fit(X_train, y_train)
 

@@ -404,7 +404,8 @@ def train_ae(encoder,
              eval_epoch=5,
              masked_loss=False,
              sparsity=None,
-             denoising=True
+             denoising=False,
+             prec=5
              ):
     """Trains AutoEncoder.
 
@@ -426,6 +427,7 @@ def train_ae(encoder,
       masked_loss: If True loss will be calculated over masked region only.
       sparsity: If not None, sparsity penalty will be applied to hidden activations.
       denoising: If True, Denoising AE will be trained.
+      prec: Error precision.
 
     Returns:
         None
@@ -479,7 +481,10 @@ def train_ae(encoder,
             running_loss = running_loss + loss.item() * batch['data'].size(0)
             total_examples += batch['data'].size(0)
             if print_iter:
-                print("Iteration #{}, loss: {:.5f}, iter time: {}".format(iters, loss.item(), time.time() - iter_time))
+                print("Iteration #{}, loss: {:.{}f}, iter time: {}".format(iters,
+                                                                           loss.item(),
+                                                                           prec,
+                                                                           time.time() - iter_time))
             iters += 1
 
         if epoch % checkpoint == 0:
@@ -491,10 +496,11 @@ def train_ae(encoder,
                                                                                          epoch + start_epoch))
 
         epoch_loss = running_loss / total_examples
-        print("Epoch #{}/{},  epoch loss: {:.5f}, epoch time: {:.5f} seconds".format(epoch + start_epoch,
-                                                                                     num_epochs,
-                                                                                     epoch_loss,
-                                                                                     time.time() - epoch_start))
+        print("Epoch #{}/{},  epoch loss: {:.{}f}, epoch time: {:.5f} seconds".format(epoch + start_epoch,
+                                                                                      num_epochs,
+                                                                                      epoch_loss,
+                                                                                      prec,
+                                                                                      time.time() - epoch_start))
         # evaluate on trainloader
         if epoch % eval_epoch == 0:
             evaluate_ae(encoder, decoder, criterion, device, trainloader, print_iter=print_iter,

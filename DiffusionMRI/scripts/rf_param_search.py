@@ -22,7 +22,7 @@ ml_masks = ml_masks[:, :, :, 1:]  # remove background class and other class
 
 # -----------------------------------------Load Features------------------------------------------
 # features = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_6.npz'))['data']
-features = np.load(join(data_dir, subj_id, 'learned_features/final/Model1_features_epoch_10000.npz'))['data']
+features = np.load(join(data_dir, subj_id, 'learned_features/Model8_features_epoch_200.npz'))['data']
 # features = np.load(join(data_dir, subj_id, 'learned_features/SHORE_denoising_features_epoch_10000.npz'))['data']
 # import nibabel as nib
 # features = nib.load(join(data_dir, subj_id, 'data.nii.gz')).get_data()
@@ -34,7 +34,6 @@ train_masks = ds_utils.create_data_masks(ml_masks, train_slices, labels)
 X_train, y_train, train_coords = ds_utils.create_dataset_from_data_mask(features,
                                                                         train_masks,
                                                                         multi_label=True)
-X_train = np.concatenate((X_train, train_coords), axis=1)
 print("Trainset shape: ", X_train.shape)
 
 # ------------------------------------------Prepare test set------------------------------------------
@@ -46,7 +45,6 @@ test_masks = ds_utils.create_data_masks(ml_masks, test_slices, labels)
 X_test, y_test, test_coords = ds_utils.create_dataset_from_data_mask(features,
                                                                      test_masks,
                                                                      multi_label=True)
-X_test = np.concatenate((X_test, test_coords), axis=1)
 print("Testset shape: ", X_test.shape)
 print("Removing train set from test set. Or do we want to include train set also in test set???")
 dims = test_coords.max(0)+1
@@ -61,8 +59,8 @@ print("Testset shape after cleaning: ", X_test.shape, y_test.shape)
 mdps = [12, 15, 20, 25, 100, None]
 msls = [1, 2, 4, 8, 16]
 
-mdps = [100]
-msls = [8]
+# mdps = [100]
+# msls = [8]
 
 train_scores = []
 test_scores = []
