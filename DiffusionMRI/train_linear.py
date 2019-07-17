@@ -4,7 +4,7 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
-from DiffusionMRI.Linear import Encoder, Decoder  # noqa: E402
+from DiffusionMRI.LinearModel import Encoder, Decoder  # noqa: E402
 
 script_start = time.time()
 

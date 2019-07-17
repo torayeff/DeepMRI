@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from deepmri.CustomLosses import MaskedLoss
-from deepmri import vis_utils
+from deepmri import visutils
 from matplotlib.lines import Line2D
 
 
@@ -215,7 +215,7 @@ def img_stats(sample, t=None):
         min_x, max_x = slc_x.min().item(), slc_x.max().item()
         min_y, max_y = slc_y.min().item(), slc_y.max().item()
 
-        vis_utils.show_slices(
+        visutils.show_slices(
             [slc_x.numpy(), slc_y.numpy(), mask.numpy()],
             titles=['x, min: {:.2f}, max: {:.2f}'.format(min_x, max_x),
                     'y, min: {:.2f}, max: {:.2f}'.format(min_y, max_y),

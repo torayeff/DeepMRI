@@ -4,7 +4,7 @@ import numpy as np
 import nibabel as nib
 
 sys.path.append('/home/agajan/DeepMRI')
-from deepmri import ds_utils  # noqa: E402
+from deepmri import dsutils  # noqa: E402
 
 data_dir = '/home/agajan/experiment_DiffusionMRI/tractseg_data/'
 subj_ids = ['784565', '786569', '789373']
@@ -32,7 +32,7 @@ for subj_id in subj_ids:
 
     masks_path = os.path.join(data_dir, subj_id, 'tract_masks')
     nodif_brain_mask_path = os.path.join(data_dir, subj_id, 'nodif_brain_mask.nii.gz')
-    mask_ml = ds_utils.create_multilabel_mask(labels, masks_path, nodif_brain_mask_path, vol_size=(145, 174, 145))
+    mask_ml = dsutils.create_multilabel_mask(labels, masks_path, nodif_brain_mask_path, vol_size=(145, 174, 145))
     save_path = os.path.join(masks_path, 'left_right_multi_label_mask.npz')
     np.savez(save_path, data=mask_ml)
     nib.save(nib.Nifti1Image(mask_ml.astype("uint8"), ref_affine),

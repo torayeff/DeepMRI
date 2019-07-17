@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 import sklearn.metrics
 
 sys.path.append('/home/agajan/DeepMRI')
-from deepmri import ds_utils  # noqa: E402
+from deepmri import dsutils  # noqa: E402
 
 # ------------------------------------Setting up and loading data-------------------------------------
 print('Setting up and loading data'.center(100, '-'))
@@ -27,11 +27,11 @@ features = np.load(feature_path)['data']
 # -----------------------------------------Prepare train set------------------------------------------
 print('Prepare train set'.center(100, '-'))
 train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
-train_masks = ds_utils.create_data_masks(ml_masks, train_slices, labels)
-X_train, y_train, train_coords = ds_utils.create_dataset_from_data_mask(features,
-                                                                        train_masks,
-                                                                        labels=labels,
-                                                                        multi_label=True)
+train_masks = dsutils.create_data_masks(ml_masks, train_slices, labels)
+X_train, y_train, train_coords = dsutils.create_dataset_from_data_mask(features,
+                                                                       train_masks,
+                                                                       labels=labels,
+                                                                       multi_label=True)
 print("Trainset shape: ", X_train.shape, y_train.shape)
 
 # ------------------------------------------Prepare test set------------------------------------------
@@ -39,11 +39,11 @@ print('Prepare test set'.center(100, '-'))
 print("Test set is the whole brain volume.")
 # test_masks = ml_masks
 test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
-test_masks = ds_utils.create_data_masks(ml_masks, test_slices, labels)
-X_test, y_test, test_coords = ds_utils.create_dataset_from_data_mask(features,
-                                                                     test_masks,
-                                                                     labels=labels,
-                                                                     multi_label=True)
+test_masks = dsutils.create_data_masks(ml_masks, test_slices, labels)
+X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(features,
+                                                                    test_masks,
+                                                                    labels=labels,
+                                                                    multi_label=True)
 print("Testset shape: ", X_test.shape, y_test.shape)
 
 print("Removing train set from test set. Or do we want to include train set also in test set???")

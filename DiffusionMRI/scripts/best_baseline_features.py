@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 import sklearn.metrics
 
 sys.path.append('/home/agajan/DeepMRI')
-from deepmri import ds_utils  # noqa: E402
+from deepmri import dsutils  # noqa: E402
 
 # load data
 data_dir = '/home/agajan/experiment_DiffusionMRI/tractseg_data/'
@@ -28,18 +28,18 @@ labels = ['Other', 'CG', 'CST', 'FX', 'CC']
 training_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
 
 # make training data
-train_masks = ds_utils.create_data_masks(ml_masks, training_slices, labels)
-X_train, y_train, train_coords = ds_utils.create_dataset_from_data_mask(dmri_data,
-                                                                        train_masks,
-                                                                        labels=labels,
-                                                                        multi_label=True)
+train_masks = dsutils.create_data_masks(ml_masks, training_slices, labels)
+X_train, y_train, train_coords = dsutils.create_dataset_from_data_mask(dmri_data,
+                                                                       train_masks,
+                                                                       labels=labels,
+                                                                       multi_label=True)
 
 # make test data
 test_masks = ml_masks
-X_test, y_test, test_coords = ds_utils.create_dataset_from_data_mask(dmri_data,
-                                                                     test_masks,
-                                                                     labels=labels,
-                                                                     multi_label=True)
+X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(dmri_data,
+                                                                    test_masks,
+                                                                    labels=labels,
+                                                                    multi_label=True)
 X_train = np.hstack((train_coords, X_train))
 X_test = np.hstack((test_coords, X_test))
 print("X_train: ", X_train.shape)
