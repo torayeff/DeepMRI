@@ -21,7 +21,7 @@ ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
 # load shore coefficients
 # feature_path = join(data_dir, subj_id, 'shore_features', 'shore_coefficients_radial_border_4.npz')
-feature_path = join(data_dir, subj_id, 'learned_features', 'Model5_features_epoch_200.npz')
+feature_path = join(data_dir, subj_id, 'learned_features', 'final/Model10_features_epoch_200.npz')
 features = np.load(feature_path)['data']
 
 # -----------------------------------------Prepare train set------------------------------------------
