@@ -17,6 +17,7 @@ orients = ['coronal']
 model_name = "Model10"
 feature_shapes = [(174, 145, 145, 22)]
 epoch = 200
+noise_prob = None
 
 encoder = ConvEncoder(input_size=(145, 145))
 encoder.to(device)
@@ -27,11 +28,12 @@ for i, orient in enumerate(orients):
     data_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'training_slices', orient)
     features_save_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'learned_features')
 
-    dataset = Datasets.OrientationDatasetChannelNorm(data_path,
-                                                     scale=True,
-                                                     normalize=False,
-                                                     sort_fns=True,
-                                                     bg_zero=True)
+    dataset = Datasets.OrientationDataset(data_path,
+                                          scale=True,
+                                          normalize=False,
+                                          bg_zero=True,
+                                          noise_prob=noise_prob,
+                                          alpha=1)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=10)
 
     encoder_path = "{}saved_models/{}_encoder_epoch_{}".format(experiment_dir, model_name, epoch)
@@ -39,10 +41,17 @@ for i, orient in enumerate(orients):
     print("Loaded pretrained weights starting from epoch {} for {}".format(epoch, model_name))
 
     with torch.no_grad():
+        if bool(noise_prob):
+            print("!!!Denoising Autoencoder!!!")
+
         orient_features = torch.zeros(feature_shapes[i])
 
         for j, data in enumerate(dataloader):
-            x = data['data'].to(device)
+
+            if bool(noise_prob):
+                x = data['noisy_data'].to(device)
+            else:
+                x = data['data'].to(device)
             feature = encoder(x)
             orient_feature = feature.detach().cpu().squeeze().permute(1, 2, 0)
 

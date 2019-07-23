@@ -23,7 +23,7 @@ class ConvEncoder(nn.Module):
                 kernel_size=3,
                 stride=2,
                 padding=0,
-                bias=False
+                bias=True
             ),
             nn.PReLU(44),
 
@@ -33,7 +33,7 @@ class ConvEncoder(nn.Module):
                 kernel_size=3,
                 stride=2,
                 padding=0,
-                bias=False
+                bias=True
             ),
             nn.PReLU(22),
         )
@@ -57,7 +57,7 @@ class ConvDecoder(nn.Module):
                 kernel_size=1,
                 stride=1,
                 padding=0,
-                bias=False
+                bias=True
             ),
             nn.PReLU(44),
 
@@ -67,7 +67,7 @@ class ConvDecoder(nn.Module):
                 kernel_size=1,
                 stride=1,
                 padding=0,
-                bias=False
+                bias=True
             ),
             nn.PReLU(88),
 
@@ -77,7 +77,7 @@ class ConvDecoder(nn.Module):
                 kernel_size=1,
                 stride=1,
                 padding=0,
-                bias=False
+                bias=True
             )
         )
 

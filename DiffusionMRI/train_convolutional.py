@@ -11,7 +11,7 @@ script_start = time.time()
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "Model10_denoising"
+model_name = "Model10"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -25,18 +25,19 @@ torch.backends.cudnn.deterministic = deterministic
 batch_size = 8
 
 # noise probability
-noise_prob = 0.2
+noise_prob = None
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 200  # number of epochs to trains
 checkpoint = 100  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
-trainset = Datasets.OrientationDatasetChannelNorm(data_path,
-                                                  scale=True,
-                                                  normalize=False,
-                                                  bg_zero=True,
-                                                  noise_prob=noise_prob)
+trainset = Datasets.OrientationDataset(data_path,
+                                       scale=True,
+                                       normalize=False,
+                                       bg_zero=True,
+                                       noise_prob=noise_prob,
+                                       alpha=1)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
 total_examples = len(trainset)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
@@ -72,7 +73,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        patience=5)
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
-utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss)
+utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss, denoising=bool(noise_prob))
 utils.train_ae(encoder,
                decoder,
                criterion,
@@ -88,7 +89,7 @@ utils.train_ae(encoder,
                print_iter=False,
                eval_epoch=50,
                masked_loss=masked_loss,
-               denoising=True,
+               denoising=False,
                prec=8)
 
 print("Total running time: {}".format(time.time() - script_start))

@@ -73,7 +73,8 @@ class OrientationDataset(Dataset):
                  scale=True,
                  bg_zero=True,
                  sort_fns=True,
-                 noise_prob=None):
+                 noise_prob=None,
+                 alpha=1):
         """
         Args:
             data_dir: Directory with .npz volumes.
@@ -91,6 +92,7 @@ class OrientationDataset(Dataset):
         self.normalize = normalize
         self.bg_zero = bg_zero
         self.noise_prob = noise_prob
+        self.alpha = alpha
 
         if file_names is None:
             self.file_names = os.listdir(data_dir)
@@ -116,6 +118,9 @@ class OrientationDataset(Dataset):
 
         if self.normalize:
             x = (x - means)/stds
+
+        # alpha multiplier for stability
+        x = x * self.alpha
 
         # make background values zero
         if self.bg_zero:
