@@ -22,7 +22,7 @@ ml_masks = ml_masks[:, :, :, 1:]  # remove background class and other class
 
 # -----------------------------------------Load Features------------------------------------------
 # features = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_6.npz'))['data']
-features = np.load(join(data_dir, subj_id, 'learned_features/Model10_features_epoch_200.npz'))['data']
+features = np.load(join(data_dir, subj_id, 'learned_features/Model10_features_epoch_900.npz'))['data']
 # features = np.load(join(data_dir, subj_id, 'learned_features/SHORE_denoising_features_epoch_10000.npz'))['data']
 # import nibabel as nib
 # features = nib.load(join(data_dir, subj_id, 'data.nii.gz')).get_data()

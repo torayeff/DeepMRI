@@ -16,7 +16,7 @@ subj_id = '784565'
 orients = ['coronal']
 model_name = "Model10"
 feature_shapes = [(174, 145, 145, 22)]
-epoch = 200
+epoch = 900
 noise_prob = None
 
 encoder = ConvEncoder(input_size=(145, 145))

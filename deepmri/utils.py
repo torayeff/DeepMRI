@@ -497,7 +497,7 @@ def train_ae(encoder,
 
         epoch_loss = running_loss / total_examples
         print("Epoch #{}/{},  epoch loss: {:.{}f}, epoch time: {:.5f} seconds".format(epoch + start_epoch,
-                                                                                      num_epochs,
+                                                                                      num_epochs + start_epoch,
                                                                                       epoch_loss,
                                                                                       prec,
                                                                                       time.time() - epoch_start))

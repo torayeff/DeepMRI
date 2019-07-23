@@ -28,8 +28,8 @@ batch_size = 8
 noise_prob = None
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 200  # number of epochs to trains
-checkpoint = 100  # save model every checkpoint epoch
+num_epochs = 1000  # number of epochs to trains
+checkpoint = 10  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDataset(data_path,
@@ -87,7 +87,7 @@ utils.train_ae(encoder,
                scheduler=None,
                checkpoint=checkpoint,
                print_iter=False,
-               eval_epoch=50,
+               eval_epoch=checkpoint,
                masked_loss=masked_loss,
                denoising=False,
                prec=8)
