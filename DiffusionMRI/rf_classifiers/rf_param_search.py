@@ -22,10 +22,13 @@ ml_masks = ml_masks[:, :, :, 1:]  # remove background class and other class
 
 # -----------------------------------------Load Features------------------------------------------
 # features = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_6.npz'))['data']
-features = np.load(join(data_dir, subj_id, 'learned_features/Model10_features_epoch_900.npz'))['data']
+features1 = np.load(join(data_dir, subj_id, 'learned_features/final/Model10_features_epoch_200.npz'))['data']
+features2 = np.load(join(data_dir, subj_id, 'learned_features/final/Model1_features_epoch_10000.npz'))['data']
 # features = np.load(join(data_dir, subj_id, 'learned_features/SHORE_denoising_features_epoch_10000.npz'))['data']
 # import nibabel as nib
 # features = nib.load(join(data_dir, subj_id, 'data.nii.gz')).get_data()
+print(features1.shape, features2.shape)
+features = np.concatenate((features1, features2), axis=3)
 print(features.shape)
 # -----------------------------------------Prepare train set------------------------------------------
 print('Prepare train set'.center(100, '-'))
@@ -39,9 +42,9 @@ print("Trainset shape: ", X_train.shape)
 # ------------------------------------------Prepare test set------------------------------------------
 print('Prepare test set'.center(100, '-'))
 print("Test set is the whole brain volume.")
-# test_masks = ml_masks
-test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
-test_masks = dsutils.create_data_masks(ml_masks, test_slices, labels)
+test_masks = ml_masks
+# test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
+# test_masks = dsutils.create_data_masks(ml_masks, test_slices, labels)
 X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(features,
                                                                     test_masks,
                                                                     multi_label=True)
