@@ -10,16 +10,6 @@ class ConvEncoder(nn.Module):
         self.encode_local = nn.Sequential(
             nn.Conv2d(
                 in_channels=288,
-                out_channels=176,
-                kernel_size=1,
-                stride=1,
-                padding=0,
-                bias=False
-            ),
-            nn.PReLU(176),
-
-            nn.Conv2d(
-                in_channels=176,
                 out_channels=88,
                 kernel_size=1,
                 stride=1,
@@ -52,16 +42,6 @@ class ConvEncoder(nn.Module):
         self.encode_regional = nn.Sequential(
             nn.Conv2d(
                 in_channels=288,
-                out_channels=176,
-                kernel_size=3,
-                stride=2,
-                padding=0,
-                bias=False
-            ),
-            nn.PReLU(176),
-
-            nn.Conv2d(
-                in_channels=176,
                 out_channels=88,
                 kernel_size=3,
                 stride=2,
