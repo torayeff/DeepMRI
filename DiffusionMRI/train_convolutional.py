@@ -11,7 +11,7 @@ script_start = time.time()
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "Model10"
+model_name = "Model17"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -28,8 +28,8 @@ batch_size = 8
 noise_prob = None
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 1000  # number of epochs to trains
-checkpoint = 10  # save model every checkpoint epoch
+num_epochs = 200  # number of epochs to trains
+checkpoint = 200  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDataset(data_path,
@@ -64,6 +64,9 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 # criterion and optimizer settings
 criterion = CustomLosses.MaskedLoss()
 masked_loss = True
+
+# criterion = torch.nn.BCEWithLogitsLoss()
+# masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
 optimizer = torch.optim.Adam(parameters)
