@@ -11,7 +11,7 @@ script_start = time.time()
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "Model19"
+model_name = "Model21"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -70,10 +70,7 @@ masked_loss = True
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
 optimizer = torch.optim.Adam(parameters)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                                                       verbose=True,
-                                                       min_lr=1e-6,
-                                                       patience=5)
+scheduler = None
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
 utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss, denoising=bool(noise_prob))
@@ -87,7 +84,7 @@ utils.train_ae(encoder,
                model_name,
                experiment_dir,
                start_epoch=start_epoch,
-               scheduler=None,
+               scheduler=scheduler,
                checkpoint=checkpoint,
                print_iter=False,
                eval_epoch=checkpoint,

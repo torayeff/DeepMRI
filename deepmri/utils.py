@@ -383,7 +383,7 @@ def evaluate_ae(encoder,
 
         avg_loss = running_loss / total_examples
 
-    print("Evaluated {} examples, Avg. loss: {:.5f}, Time: {:.5f}".format(total_examples, avg_loss,
+    print("Evaluated {} examples, Avg. loss: {:.8f}, Time: {:.5f}".format(total_examples, avg_loss,
                                                                           time.time() - start))
     return avg_loss
 
