@@ -117,6 +117,9 @@ class OrientationDataset(Dataset):
             x = x/x.max()
 
         if self.normalize:
+            mask = torch.tensor(orient_img['mask']).float()
+            means = torch.tensor(orient_img['means']).float()[..., None, None]  # add extra dims
+            stds = torch.tensor(orient_img['stds']).float()[..., None, None]  # extra dims
             x = (x - means)/stds
 
         # alpha multiplier for stability

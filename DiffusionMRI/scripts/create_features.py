@@ -14,7 +14,7 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Model21"
+model_name = "Model19_max_scale"
 feature_shapes = [(174, 145, 145, 32)]
 epoch = 200
 noise_prob = None

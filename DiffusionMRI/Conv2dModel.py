@@ -10,105 +10,85 @@ class ConvEncoder(nn.Module):
         self.encode_local = nn.Sequential(
             nn.Conv2d(
                 in_channels=288,
-                out_channels=256,
+                out_channels=176,
                 kernel_size=1,
                 stride=1,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(256),
+            nn.PReLU(176),
 
             nn.Conv2d(
-                in_channels=256,
-                out_channels=128,
+                in_channels=176,
+                out_channels=88,
                 kernel_size=1,
                 stride=1,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(128),
+            nn.PReLU(88),
 
             nn.Conv2d(
-                in_channels=128,
-                out_channels=64,
+                in_channels=88,
+                out_channels=44,
                 kernel_size=1,
                 stride=1,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(64),
+            nn.PReLU(44),
 
             nn.Conv2d(
-                in_channels=64,
-                out_channels=32,
+                in_channels=44,
+                out_channels=22,
                 kernel_size=1,
                 stride=1,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(32),
-
-            nn.Conv2d(
-                in_channels=32,
-                out_channels=16,
-                kernel_size=1,
-                stride=1,
-                padding=0,
-                bias=True
-            ),
-            nn.PReLU(16),
+            nn.PReLU(22),
         )
 
         self.encode_regional = nn.Sequential(
             nn.Conv2d(
                 in_channels=288,
-                out_channels=256,
+                out_channels=176,
                 kernel_size=3,
                 stride=2,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(256),
+            nn.PReLU(176),
 
             nn.Conv2d(
-                in_channels=256,
-                out_channels=128,
+                in_channels=176,
+                out_channels=88,
                 kernel_size=3,
                 stride=2,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(128),
+            nn.PReLU(88),
 
             nn.Conv2d(
-                in_channels=128,
-                out_channels=64,
+                in_channels=88,
+                out_channels=44,
                 kernel_size=3,
                 stride=2,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(64),
+            nn.PReLU(44),
 
             nn.Conv2d(
-                in_channels=64,
-                out_channels=32,
+                in_channels=44,
+                out_channels=22,
                 kernel_size=3,
                 stride=2,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(32),
-
-            nn.Conv2d(
-                in_channels=32,
-                out_channels=16,
-                kernel_size=3,
-                stride=2,
-                padding=0,
-                bias=True
-            ),
-            nn.PReLU(16),
+            nn.PReLU(22),
         )
 
         self.input_size = input_size
@@ -128,37 +108,27 @@ class ConvDecoder(nn.Module):
 
         self.decode = nn.Sequential(
             nn.Conv2d(
-                in_channels=32,
-                out_channels=64,
+                in_channels=44,
+                out_channels=88,
                 kernel_size=1,
                 stride=1,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(64),
+            nn.PReLU(88),
 
             nn.Conv2d(
-                in_channels=64,
-                out_channels=128,
+                in_channels=88,
+                out_channels=176,
                 kernel_size=1,
                 stride=1,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(128),
+            nn.PReLU(176),
 
             nn.Conv2d(
-                in_channels=128,
-                out_channels=256,
-                kernel_size=1,
-                stride=1,
-                padding=0,
-                bias=True
-            ),
-            nn.PReLU(256),
-
-            nn.Conv2d(
-                in_channels=256,
+                in_channels=176,
                 out_channels=288,
                 kernel_size=1,
                 stride=1,
