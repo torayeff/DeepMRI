@@ -11,7 +11,7 @@ script_start = time.time()
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "Model19_max_scale"
+model_name = "Model19_normalize"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -33,8 +33,8 @@ checkpoint = 200  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDataset(data_path,
-                                       scale=True,
-                                       normalize=False,
+                                       scale=False,
+                                       normalize=True,
                                        bg_zero=True,
                                        noise_prob=noise_prob,
                                        alpha=1)

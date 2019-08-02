@@ -14,8 +14,8 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Model19_max_scale"
-feature_shapes = [(174, 145, 145, 32)]
+model_name = "Model19_normalize"
+feature_shapes = [(174, 145, 145, 44)]
 epoch = 200
 noise_prob = None
 
@@ -29,8 +29,8 @@ for i, orient in enumerate(orients):
     features_save_path = os.path.join(experiment_dir, 'tractseg_data', subj_id, 'learned_features')
 
     dataset = Datasets.OrientationDataset(data_path,
-                                          scale=True,
-                                          normalize=False,
+                                          scale=False,
+                                          normalize=True,
                                           bg_zero=True,
                                           noise_prob=noise_prob,
                                           alpha=1)

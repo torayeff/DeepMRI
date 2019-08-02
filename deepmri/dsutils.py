@@ -445,3 +445,13 @@ def features_from_coords(features, coords, orient, scale=1):
             raise ValueError('Unknown orientation.')
 
     return np.array(orient_features)
+
+
+def label_stats_from_y(y, labels):
+    total = 0
+    for idx, label in enumerate(labels):
+        labels_count = y[:, idx].sum()
+        total += labels_count
+        print("Label: {}, has {} annotations.".format(label, labels_count))
+    print("Total annotations: {}, labels length: {}, overlapping: {}".format(total, y.shape[0], total - y.shape[0]))
+

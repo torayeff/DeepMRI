@@ -20,8 +20,8 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
 # load shore coefficients
-# feature_path = join(data_dir, subj_id, 'shore_features', 'shore_coefficients_radial_border_4.npz')
-feature_path = join(data_dir, subj_id, 'learned_features', 'final/Model10_features_epoch_200.npz')
+feature_path = join(data_dir, subj_id, 'shore_features', 'shore_coefficients_radial_border_4.npz')
+# feature_path = join(data_dir, subj_id, 'learned_features', 'final/Model10_features_epoch_200.npz')
 features = np.load(feature_path)['data']
 
 # -----------------------------------------Prepare train set------------------------------------------
@@ -33,7 +33,7 @@ X_train, y_train, train_coords = dsutils.create_dataset_from_data_mask(features,
                                                                        labels=labels,
                                                                        multi_label=True)
 print("Trainset shape: ", X_train.shape, y_train.shape)
-
+dsutils.label_stats_from_y(y_train, labels)
 # ------------------------------------------Prepare test set------------------------------------------
 print('Prepare test set'.center(100, '-'))
 print("Test set is the whole brain volume.")
@@ -45,7 +45,7 @@ X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(features,
                                                                     labels=labels,
                                                                     multi_label=True)
 print("Testset shape: ", X_test.shape, y_test.shape)
-
+dsutils.label_stats_from_y(y_test, labels)
 print("Removing train set from test set. Or do we want to include train set also in test set???")
 dims = test_coords.max(0)+1
 idxs_to_remove = np.where(np.in1d(np.ravel_multi_index(test_coords.T, dims),
@@ -54,11 +54,9 @@ print(idxs_to_remove.shape)
 X_test = np.delete(X_test, idxs_to_remove, 0)
 y_test = np.delete(y_test, idxs_to_remove, 0)
 print("Testset shape after cleaning: ", X_test.shape, y_test.shape)
+dsutils.label_stats_from_y(y_test, labels)
 # --------------------------------------Random Forest Classifier--------------------------------------
 print('Random Forest Classifier'.center(100, '-'))
-# clf = RandomForestClassifier(n_estimators=100,
-#                              random_state=0,
-#                              n_jobs=-1)
 clf = RandomForestClassifier(n_estimators=100,
                              bootstrap=True,
                              oob_score=True,
@@ -66,8 +64,8 @@ clf = RandomForestClassifier(n_estimators=100,
                              n_jobs=-1,
                              max_features='auto',
                              class_weight='balanced',
-                             max_depth=100,
-                             min_samples_leaf=4)
+                             max_depth=None,
+                             min_samples_leaf=8)
 print("Fitting classiffier.")
 clf.fit(X_train, y_train)
 
