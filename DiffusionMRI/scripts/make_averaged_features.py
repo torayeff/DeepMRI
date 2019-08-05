@@ -9,11 +9,15 @@ data_path = join(exp_dir, subj_id, 'data.nii.gz')
 mask_path = join(exp_dir, subj_id, 'nodif_brain_mask.nii.gz')
 fbval = join(exp_dir, subj_id, 'bvals')
 fbvec = join(exp_dir, subj_id, 'bvecs')
-nh = 5
 
-data = np.load(join(exp_dir, subj_id, 'shore_features/shore_coefficients_radial_border_2.npz'))['data']
+nh = 9
+
+data = nib.load(data_path).get_data()
+save_path = join(exp_dir, subj_id, 'avg_raw_nh{}.npz'.format(nh))
+
+# data = np.load(join(exp_dir, subj_id, 'shore_features/shore_coefficients_radial_border_2.npz'))['data']
+# save_path = join(exp_dir, subj_id, 'shore_features', 'avg_shore2_nh{}.npz'.format(nh))
 print(data.shape)
-save_path = join(exp_dir, subj_id, 'shore_features', 'avg_shore2_nh{}.npz'.format(nh))
 
 
 def get_borders(x, border, nh=3):
