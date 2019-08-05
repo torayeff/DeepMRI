@@ -4,14 +4,14 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
-from DiffusionMRI.LinearAE import Encoder, Decoder  # noqa: E402
+from DiffusionMRI.models.Model1 import Encoder, Decoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/'
-model_name = "Model13"
+model_name = "Model1"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -25,15 +25,14 @@ torch.backends.cudnn.deterministic = deterministic
 batch_size = 2 ** 15
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 200  # number of epochs to trains
-checkpoint = 100  # save model every checkpoint epoch
+num_epochs = 1000  # number of epochs to trains
+checkpoint = 10  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.VoxelDataset(data_path,
                                  file_name='data.nii.gz',
                                  normalize=False,
-                                 scale=True,
-                                 prob=None)
+                                 scale=True)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
 total_examples = len(trainset)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
@@ -71,7 +70,6 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
 utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss, denoising=denoising)
-# trainloader = [next(iter(trainloader))]
 utils.train_ae(encoder,
                decoder,
                criterion,

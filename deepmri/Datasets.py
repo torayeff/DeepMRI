@@ -12,7 +12,7 @@ class VoxelDataset(Dataset):
                  data_dir,
                  file_name,
                  normalize=False,
-                 scale=False,
+                 scale=True,
                  noise_prob=None):
         """
         Args:
