@@ -4,14 +4,14 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.Conv2dModel import ConvEncoder, ConvDecoder  # noqa: E402
+from DiffusionMRI.models.Model10 import Encoder, Decoder  # noqa: E402  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "Model19_normalize"
+model_name = "Model10"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -29,24 +29,23 @@ noise_prob = None
 
 start_epoch = 0  # for loading pretrained weights
 num_epochs = 200  # number of epochs to trains
-checkpoint = 200  # save model every checkpoint epoch
+checkpoint = 100  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDataset(data_path,
-                                       scale=False,
-                                       normalize=True,
+                                       scale=True,
+                                       normalize=False,
                                        bg_zero=True,
                                        noise_prob=noise_prob,
                                        alpha=1)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
-total_examples = len(trainset)
-print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
+print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(len(trainset),
                                                                                 batch_size,
-                                                                                total_examples / batch_size))
+                                                                                len(trainloader)))
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = ConvEncoder(input_size=(145, 145))
-decoder = ConvDecoder()
+encoder = Encoder(input_size=(145, 145))
+decoder = Decoder()
 encoder.to(device)
 decoder.to(device)
 
