@@ -21,9 +21,10 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
 # -----------------------------------------Load Features------------------------------------------
+features = np.load(join(data_dir, subj_id, 'learned_features/Model11_features_epoch_200.npz'))['data']
 # features = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_2.npz'))['data']
-features = np.load(join(data_dir, subj_id, 'learned_features/Model10_features_epoch_200.npz'))['data']
-# features1 = np.load(join(data_dir, subj_id, 'learned_features/final/Model10_features_epoch_200.npz'))['data']
+# features1 = np.load(join(data_dir, subj_id, 'learned_features/final/Model4_bceloss_features_epoch_100.npz'))['data']
+# features2 = np.load(join(data_dir, subj_id, 'learned_features/final/Model9_features_epoch_200.npz'))['data']
 # features2 = np.load(join(data_dir, subj_id, 'learned_features/final/Model16_features_epoch_200.npz'))['data']
 # features = np.load(join(data_dir, subj_id, 'learned_features/SHORE_denoising_features_epoch_10000.npz'))['data']
 # import nibabel as nib
@@ -67,8 +68,9 @@ print("Testset shape after cleaning: ", X_test.shape, y_test.shape)
 
 
 mdps = [None]
-# msls = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-msls = [3]
+msls = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+# msls = [11, 13, 14, 20]
+# msls = [6]
 
 train_scores = []
 test_scores = []
