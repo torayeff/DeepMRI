@@ -21,12 +21,8 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
 # -----------------------------------------Load Features------------------------------------------
-features = np.load(join(data_dir, subj_id, 'learned_features/Model11_features_epoch_200.npz'))['data']
-# features = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_2.npz'))['data']
-# features1 = np.load(join(data_dir, subj_id, 'learned_features/final/Model4_bceloss_features_epoch_100.npz'))['data']
-# features2 = np.load(join(data_dir, subj_id, 'learned_features/final/Model9_features_epoch_200.npz'))['data']
-# features2 = np.load(join(data_dir, subj_id, 'learned_features/final/Model16_features_epoch_200.npz'))['data']
-# features = np.load(join(data_dir, subj_id, 'learned_features/SHORE_denoising_features_epoch_10000.npz'))['data']
+features = np.load(join(data_dir, subj_id, 'learned_features/final/Model2_features_epoch_100.npz'))['data']
+# features = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_4.npz'))['data']
 # import nibabel as nib
 # features = nib.load(join(data_dir, subj_id, 'data.nii.gz')).get_data()
 # features = np.load(join(data_dir, subj_id, 'avg_raw_nh9.npz'))['data']
@@ -41,10 +37,10 @@ X_train, y_train, train_coords = dsutils.create_dataset_from_data_mask(features,
                                                                        train_masks,
                                                                        multi_label=True)
 # X_train = train_coords
-# X_train = np.concatenate((X_train, train_coords), axis=1)
+X_train = np.concatenate((X_train, train_coords), axis=1)
 print(X_train.shape, train_coords.shape)
 print("Trainset shape: ", X_train.shape)
-
+dsutils.label_stats_from_y(y_train, labels)
 # ------------------------------------------Prepare test set------------------------------------------
 print('Prepare test set'.center(100, '-'))
 print("Test set is the whole brain volume.")
@@ -55,22 +51,15 @@ X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(features,
                                                                     test_masks,
                                                                     multi_label=True)
 # X_test = test_coords
-# X_test = np.concatenate((X_test, test_coords), axis=1)
+X_test = np.concatenate((X_test, test_coords), axis=1)
 print("Testset shape: ", X_test.shape)
-print("Removing train set from test set. Or do we want to include train set also in test set???")
-dims = test_coords.max(0)+1
-idxs_to_remove = np.where(np.in1d(np.ravel_multi_index(test_coords.T, dims),
-                                  np.ravel_multi_index(train_coords.T, dims)))[0]
-print(idxs_to_remove.shape)
-X_test = np.delete(X_test, idxs_to_remove, 0)
-y_test = np.delete(y_test, idxs_to_remove, 0)
-print("Testset shape after cleaning: ", X_test.shape, y_test.shape)
-
-
+dsutils.label_stats_from_y(y_test, labels)
+# --------------------------------------Random Forest Classifier--------------------------------------
+print('Random Forest Classifier'.center(100, '-'))
 mdps = [None]
 msls = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 # msls = [11, 13, 14, 20]
-# msls = [6]
+# msls = [9]
 
 train_scores = []
 test_scores = []
@@ -78,8 +67,6 @@ best_score = 0
 best_depth = None
 best_leaf = None
 for minleaf in msls:
-    # --------------------------------------Random Forest Classifier--------------------------------------
-    print('Random Forest Classifier'.center(100, '-'))
     clf = RandomForestClassifier(n_estimators=100,
                                  bootstrap=True,
                                  oob_score=True,

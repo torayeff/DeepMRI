@@ -19,11 +19,11 @@ masks_path = join(data_dir, subj_id, 'tract_masks')
 ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
-# load shore coefficients
-feature_path = join(data_dir, subj_id, 'shore_features', 'shore_coefficients_radial_border_4.npz')
-# feature_path = join(data_dir, subj_id, 'learned_features', 'final/Model10_features_epoch_200.npz')
-features = np.load(feature_path)['data']
-
+# -----------------------------------------Load Features------------------------------------------
+features_name = "raw_288_voxels"
+min_samples_leaf = 9
+import nibabel as nib
+features = nib.load(join(data_dir, subj_id, 'data.nii.gz')).get_data()
 # -----------------------------------------Prepare train set------------------------------------------
 print('Prepare train set'.center(100, '-'))
 train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
@@ -32,6 +32,7 @@ X_train, y_train, train_coords = dsutils.create_dataset_from_data_mask(features,
                                                                        train_masks,
                                                                        labels=labels,
                                                                        multi_label=True)
+# X_train = np.concatenate((X_train, train_coords), axis=1)
 print("Trainset shape: ", X_train.shape, y_train.shape)
 dsutils.label_stats_from_y(y_train, labels)
 # ------------------------------------------Prepare test set------------------------------------------
@@ -44,17 +45,8 @@ X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(features,
                                                                     test_masks,
                                                                     labels=labels,
                                                                     multi_label=True)
+# X_test = np.concatenate((X_test, test_coords), axis=1)
 print("Testset shape: ", X_test.shape, y_test.shape)
-dsutils.label_stats_from_y(y_test, labels)
-print("Removing train set from test set. Or do we want to include train set also in test set???")
-dims = test_coords.max(0)+1
-idxs_to_remove = np.where(np.in1d(np.ravel_multi_index(test_coords.T, dims),
-                                  np.ravel_multi_index(train_coords.T, dims)))[0]
-print(idxs_to_remove.shape)
-X_test = np.delete(X_test, idxs_to_remove, 0)
-y_test = np.delete(y_test, idxs_to_remove, 0)
-print("Testset shape after cleaning: ", X_test.shape, y_test.shape)
-dsutils.label_stats_from_y(y_test, labels)
 # --------------------------------------Random Forest Classifier--------------------------------------
 print('Random Forest Classifier'.center(100, '-'))
 clf = RandomForestClassifier(n_estimators=100,
@@ -65,7 +57,7 @@ clf = RandomForestClassifier(n_estimators=100,
                              max_features='auto',
                              class_weight='balanced',
                              max_depth=None,
-                             min_samples_leaf=8)
+                             min_samples_leaf=min_samples_leaf)
 print("Fitting classiffier.")
 clf.fit(X_train, y_train)
 
@@ -75,14 +67,15 @@ train_preds = clf.predict(X_train)
 train_acc = sklearn.metrics.accuracy_score(y_train, train_preds)
 train_f1_macro = sklearn.metrics.f1_score(y_train, train_preds, average='macro')
 train_f1s = sklearn.metrics.f1_score(y_train, train_preds, average=None)
-# print("OOB Score: {:.5f}".format(clf.oob_score_))
 print("Accuracy: {:.5f}, F1_macro: {:.5f}".format(train_acc, train_f1_macro))
 for c, f1 in enumerate(train_f1s):
     print("F1 for {}: {:.5f}".format(labels[c], f1))
-
 # ---------------------------------------Evaluation on test set---------------------------------------
 print('Evaluation on test set'.center(100, '-'))
 test_preds = clf.predict(X_test)
+
+pred_masks = dsutils.preds_to_data_mask(test_preds, test_coords, labels)
+dsutils.save_pred_masks(pred_masks, data_dir, subj_id, features_name)
 
 y_test = y_test[:, 1:]
 test_preds = test_preds[:, 1:]

@@ -31,7 +31,9 @@ def show_slices(slices,
     for i, slc in enumerate(slices):
         axes[i].set_title(titles[i])
         axes[i].imshow(slc.T, cmap=cmap, origin="lower", interpolation='none')
-    fig.tight_layout(rect=[0, 0, 1, 0.9])
+        axes[i].set_xticks([])
+        axes[i].set_yticks([])
+    # fig.tight_layout(rect=[0, 0, 1, 0.9])
     plt.show()
 
 

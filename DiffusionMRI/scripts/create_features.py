@@ -5,7 +5,7 @@ import os
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets  # noqa: E402
-from DiffusionMRI.models.Model11 import Encoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models_bkp2.Model11 import Encoder  # noqa: E402  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies

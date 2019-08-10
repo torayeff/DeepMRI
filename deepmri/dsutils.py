@@ -455,3 +455,13 @@ def label_stats_from_y(y, labels):
         print("Label: {}, has {} annotations.".format(label, labels_count))
     print("Total annotations: {}, labels length: {}, overlapping: {}".format(total, y.shape[0], total - y.shape[0]))
 
+
+def save_pred_masks(pred_masks, data_dir, subj_id, features_name):
+    ref_img_path = os.path.join(data_dir, subj_id, 'nodif_brain_mask.nii.gz')
+    ref_img = nib.load(ref_img_path)
+    ref_affine = ref_img.affine
+
+    save_path = os.path.join(data_dir, subj_id, 'pred_masks', features_name + "_pred_masks.nii.gz")
+
+    nib.save(nib.Nifti1Image(pred_masks.astype("uint8"), ref_affine), save_path)
+
