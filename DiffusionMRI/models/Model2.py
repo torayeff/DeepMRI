@@ -2,23 +2,13 @@ import torch.nn as nn
 from torch.nn.functional import interpolate
 
 
-class ConvEncoder(nn.Module):
+class Encoder(nn.Module):
     def __init__(self, input_size):
         super().__init__()
 
         self.encode = nn.Sequential(
             nn.Conv2d(
                 in_channels=288,
-                out_channels=44,
-                kernel_size=3,
-                stride=2,
-                padding=0,
-                bias=False
-            ),
-            nn.PReLU(44),
-
-            nn.Conv2d(
-                in_channels=44,
                 out_channels=22,
                 kernel_size=3,
                 stride=2,
@@ -36,7 +26,7 @@ class ConvEncoder(nn.Module):
         return out
 
 
-class ConvDecoder(nn.Module):
+class Decoder(nn.Module):
     def __init__(self):
         super().__init__()
 
@@ -44,9 +34,9 @@ class ConvDecoder(nn.Module):
             nn.Conv2d(
                 in_channels=22,
                 out_channels=288,
-                kernel_size=1,
+                kernel_size=3,
                 stride=1,
-                padding=0,
+                padding=1,
                 bias=True
             )
         )

@@ -21,7 +21,8 @@ ml_masks = np.load(join(masks_path, 'multi_label_mask.npz'))['data']
 ml_masks = ml_masks[:, :, :, 1:]  # remove background class
 
 # -----------------------------------------Load Features------------------------------------------
-features = np.load(join(data_dir, subj_id, 'learned_features/final/Model2_features_epoch_100.npz'))['data']
+features = np.load(join(data_dir, subj_id, 'learned_features/Model7_features_epoch_200.npz'))['data']
+# features2 = np.load(join(data_dir, subj_id, 'learned_features/Model3_features_epoch_200.npz'))['data']
 # features = np.load(join(data_dir, subj_id, 'shore_features/shore_coefficients_radial_border_4.npz'))['data']
 # import nibabel as nib
 # features = nib.load(join(data_dir, subj_id, 'data.nii.gz')).get_data()
@@ -37,21 +38,21 @@ X_train, y_train, train_coords = dsutils.create_dataset_from_data_mask(features,
                                                                        train_masks,
                                                                        multi_label=True)
 # X_train = train_coords
-X_train = np.concatenate((X_train, train_coords), axis=1)
+# X_train = np.concatenate((X_train, train_coords), axis=1)
 print(X_train.shape, train_coords.shape)
 print("Trainset shape: ", X_train.shape)
 dsutils.label_stats_from_y(y_train, labels)
 # ------------------------------------------Prepare test set------------------------------------------
 print('Prepare test set'.center(100, '-'))
 print("Test set is the whole brain volume.")
-test_masks = ml_masks
-# test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
-# test_masks = dsutils.create_data_masks(ml_masks, test_slices, labels)
+# test_masks = ml_masks
+test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
+test_masks = dsutils.create_data_masks(ml_masks, test_slices, labels)
 X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(features,
                                                                     test_masks,
                                                                     multi_label=True)
 # X_test = test_coords
-X_test = np.concatenate((X_test, test_coords), axis=1)
+# X_test = np.concatenate((X_test, test_coords), axis=1)
 print("Testset shape: ", X_test.shape)
 dsutils.label_stats_from_y(y_test, labels)
 # --------------------------------------Random Forest Classifier--------------------------------------

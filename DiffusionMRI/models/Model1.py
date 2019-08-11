@@ -6,7 +6,7 @@ class Encoder(nn.Module):
         super().__init__()
 
         self.encode = nn.Sequential(
-            nn.Linear(288, 22, bias=False),
+            nn.Linear(288, 22, bias=True),
             nn.PReLU(22),
         )
 
