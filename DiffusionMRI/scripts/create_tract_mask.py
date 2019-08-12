@@ -33,10 +33,10 @@ for subj_id in subj_ids:
     masks_path = os.path.join(data_dir, subj_id, 'tract_masks')
     nodif_brain_mask_path = os.path.join(data_dir, subj_id, 'nodif_brain_mask.nii.gz')
     mask_ml = dsutils.create_multilabel_mask(labels, masks_path, nodif_brain_mask_path, vol_size=(145, 174, 145))
-    save_path = os.path.join(masks_path, 'left_right_multi_label_mask.npz')
+    save_path = os.path.join(masks_path, 'left_right_tract_mask.npz')
     np.savez(save_path, data=mask_ml)
     nib.save(nib.Nifti1Image(mask_ml.astype("uint8"), ref_affine),
-             os.path.join(masks_path, 'left_right_multi_label_mask.nii.gz'))
+             os.path.join(masks_path, 'left_right_tract_mask.nii.gz'))
 
     # save also merged
     merged_ml_masks = np.zeros((145, 174, 145, 6))
@@ -62,7 +62,7 @@ for subj_id in subj_ids:
     # remove additions
     merged_ml_masks = merged_ml_masks.clip(max=1)
 
-    save_path = os.path.join(masks_path, 'multi_label_mask.npz')
+    save_path = os.path.join(masks_path, 'tract_masks.npz')
     np.savez(save_path, data=merged_ml_masks.astype('uint8'))
     nib.save(nib.Nifti1Image(merged_ml_masks.astype("uint8"), ref_affine),
-             os.path.join(masks_path, 'multi_label_mask.nii.gz'))
+             os.path.join(masks_path, 'tract_masks.nii.gz'))

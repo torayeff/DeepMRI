@@ -301,3 +301,92 @@ def visualize_masks(dmri_data,
                                masks,
                                suptitle=suptitles[idx] + labels[ch],
                                mask_color=mask_color)
+
+
+def visualize_preds(dmri,
+                    tract_masks,
+                    pred_masks_list,
+                    tract_name,
+                    tract_idx,
+                    orientation,
+                    slice_idxs,
+                    ylabels,
+                    n_rows=2,
+                    figsize=None,
+                    t=1,
+                    fontsize=12):
+    print("Visualizing {} in {} orientation".format(tract_name, orientation))
+    gt_imgs = []  # ground truth
+    pr_imgs_list = []  # predictions
+
+    # add ground truth images
+    for idx in slice_idxs:
+        if orientation == "Sagittal":
+            gt_img = dmri[idx, :, :, t].copy()
+            gt_msk = tract_masks[idx, :, :, tract_idx].copy()
+
+            if figsize is None:
+                figsize = (10, 5.15)
+        elif orientation == "Coronal":
+            gt_img = dmri[:, idx, :, t].copy()
+            gt_msk = tract_masks[:, idx, :, tract_idx].copy()
+
+            if figsize is None:
+                figsize = (10, 6.15)
+
+        elif orientation == "Axial":
+            gt_img = dmri[:, :, idx, t].copy()
+            gt_msk = tract_masks[:, :, idx, tract_idx].copy()
+
+            if figsize is None:
+                figsize = (10, 7.4)
+        else:
+            raise ValueError('Unknown orientation.')
+        gt_out = np.ma.array(gt_img, mask=gt_msk)
+        gt_imgs.append(gt_out)
+
+    # add prediction image
+    for pred_masks in pred_masks_list:
+        for idx in slice_idxs:
+            if orientation == "Sagittal":
+                pred_img = dmri[idx, :, :, t].copy()
+                pred_msk = pred_masks[idx, :, :, tract_idx].copy()
+            elif orientation == "Coronal":
+                pred_img = dmri[:, idx, :, t].copy()
+                pred_msk = pred_masks[:, idx, :, tract_idx].copy()
+            elif orientation == "Axial":
+                pred_img = dmri[:, :, idx, t].copy()
+                pred_msk = pred_masks[:, :, idx, tract_idx].copy()
+            else:
+                raise ValueError('Unknown orientation.')
+
+            pred_out = np.ma.array(pred_img, mask=pred_msk)
+            pr_imgs_list.append(pred_out)
+
+    titles = ["{}: {}".format(orientation, idx) for idx in slice_idxs] * n_rows
+
+    imgs = gt_imgs + pr_imgs_list
+
+    cmap = matplotlib.cm.gray
+    cmap.set_bad("red")
+
+    n_cols = len(slice_idxs)
+
+    fig = plt.figure(figsize=figsize)
+    gs = fig.add_gridspec(n_rows, n_cols, hspace=0, wspace=0)
+
+    y = 0
+    for r in range(n_rows):
+        for c in range(n_cols):
+            j = n_cols * r + c
+            ax = fig.add_subplot(gs[r, c])
+            ax.imshow(imgs[j].T, origin="lower", cmap=cmap)
+            if r == 0:
+                ax.set_title(titles[j], fontsize=fontsize)
+            if c == 0:
+                plt.ylabel(ylabels[y], fontsize=fontsize)
+                y += 1
+
+            ax.set_xticks([])
+            ax.set_yticks([])
+    plt.show()
