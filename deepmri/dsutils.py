@@ -465,3 +465,9 @@ def save_pred_masks(pred_masks, data_dir, subj_id, features_name):
 
     nib.save(nib.Nifti1Image(pred_masks.astype("uint8"), ref_affine), save_path)
 
+
+def save_one_volume(data_pth, save_pth, vol_idx):
+    img = nib.load(data_pth)
+    data = img.get_data()
+    one_vol = data[:, :, :, vol_idx]
+    nib.save(nib.Nifti1Image(one_vol, img.affine, img.header), save_pth)

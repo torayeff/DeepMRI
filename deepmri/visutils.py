@@ -306,11 +306,11 @@ def visualize_masks(dmri_data,
 def visualize_preds(dmri,
                     tract_masks,
                     pred_masks_list,
+                    labels,
                     tract_name,
-                    tract_idx,
                     orientation,
-                    slice_idxs,
                     ylabels,
+                    slice_idxs=None,
                     n_rows=2,
                     figsize=None,
                     t=1,
@@ -318,6 +318,15 @@ def visualize_preds(dmri,
     print("Visualizing {} in {} orientation".format(tract_name, orientation))
     gt_imgs = []  # ground truth
     pr_imgs_list = []  # predictions
+
+    class_idxs = {k: v for v, k in enumerate(labels)}
+    tract_idx = class_idxs[tract_name]
+
+    if slice_idxs is None:
+        if (orientation == "Sagittal") or (orientation == "Axial"):
+            slice_idxs = [54, 71, 72, 73, 90]
+        elif orientation == "Coronal":
+            slice_idxs = [42, 86, 87, 88, 132]
 
     # add ground truth images
     for idx in slice_idxs:

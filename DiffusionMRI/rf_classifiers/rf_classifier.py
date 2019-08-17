@@ -15,12 +15,15 @@ print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
-FEATURES_NAME = "MODEL6"
-FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
-FEATURES_FILE = "learned_features/Model6_features_epoch_200.npz"
+# FEATURES_NAME = "MODEL10"
+FEATURES_NAME = "SHORE4"
+# FEATURES_FILE = "data.nii.gz"
+# FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
+FEATURES_FILE = "learned_features/Model10_features_epoch_200.npz"
+FULL_BRAIN = True
 ADD_COORDS = False
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
-MIN_SAMPLES_LEAF = 10
+MIN_SAMPLES_LEAF = 6
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
 
 # ---------------------------------------------Load Data----------------------------------------------
@@ -82,9 +85,11 @@ for c, f1 in enumerate(train_f1s):
 # ----------------------------------------------Test Set----------------------------------------------
 
 print('Preparing the test set'.center(100, '-'))
-test_masks = TRACT_MASKS.copy()
-# test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
-# test_masks = dsutils.create_data_masks(TRACT_MASKS, test_slices, LABELS)
+if FULL_BRAIN:
+    test_masks = TRACT_MASKS.copy()
+else:
+    test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
+    test_masks = dsutils.create_data_masks(TRACT_MASKS, test_slices, LABELS)
 X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(FEATURES,
                                                                     test_masks,
                                                                     labels=LABELS,

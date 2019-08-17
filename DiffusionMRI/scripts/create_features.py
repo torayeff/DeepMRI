@@ -5,7 +5,7 @@ import os
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets  # noqa: E402
-from DiffusionMRI.models.Model7 import Encoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models.Model10 import Encoder  # noqa: E402  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
@@ -14,7 +14,7 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Model7"
+model_name = "Model10"
 feature_shapes = [(174, 145, 145, 22)]
 epoch = 200
 noise_prob = None

@@ -15,12 +15,12 @@ print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
-FEATURES_NAME = "MODEL6"
-FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
-FEATURES_FILE = "learned_features/Model6_features_epoch_200.npz"
-ADD_COORDS = False
+FEATURES_NAME = "MODEL10"
+# FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
+FEATURES_FILE = "learned_features/Model10_features_epoch_200.npz"
+FULL_BRAIN = True
+ADD_COORDS = True
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
-MIN_SAMPLES_LEAF = 5
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
 
 # ---------------------------------------------Load Data----------------------------------------------
@@ -55,9 +55,11 @@ print("X_train shape: {}, y_train shape: {}".format(X_train.shape, y_train.shape
 # ----------------------------------------------Test Set----------------------------------------------
 
 print('Preparing the test set'.center(100, '-'))
-test_masks = TRACT_MASKS.copy()
-# test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
-# test_masks = dsutils.create_data_masks(TRACT_MASKS, test_slices, LABELS)
+if FULL_BRAIN:
+    test_masks = TRACT_MASKS.copy()
+else:
+    test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
+    test_masks = dsutils.create_data_masks(TRACT_MASKS, test_slices, LABELS)
 X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(FEATURES,
                                                                     test_masks,
                                                                     labels=LABELS,
@@ -70,6 +72,7 @@ print("X_test shape: {}, y_test shape: {}".format(X_test.shape, y_test.shape))
 print('Random Forest Classifier'.center(100, '-'))
 
 msls = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+# msls = [11, 12, 13]
 
 train_scores = []
 test_scores = []
