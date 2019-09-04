@@ -471,3 +471,15 @@ def save_one_volume(data_pth, save_pth, vol_idx):
     data = img.get_data()
     one_vol = data[:, :, :, vol_idx]
     nib.save(nib.Nifti1Image(one_vol, img.affine, img.header), save_pth)
+
+
+def make_training_slices(seed_slices, it, c, train_slices):
+    idx = (-1) ** it * c
+    if it % 2 == 0:
+        c += 1
+
+    for sl in seed_slices:
+        new_slc = (sl[0], sl[1] + idx)
+        train_slices.append(new_slc)
+
+    return c, train_slices
