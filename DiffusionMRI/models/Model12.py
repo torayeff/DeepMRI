@@ -93,10 +93,53 @@ class Encoder(nn.Module):
 
         self.input_size = input_size
 
+        self.upsample = nn.Sequential(
+            nn.ConvTranspose2d(
+                in_channels=11,
+                out_channels=11,
+                kernel_size=3,
+                stride=2,
+                padding=0,
+                output_padding=0
+            ),
+            nn.PReLU(11),
+
+            nn.ConvTranspose2d(
+                in_channels=11,
+                out_channels=11,
+                kernel_size=3,
+                stride=2,
+                padding=0,
+                output_padding=0
+            ),
+            nn.PReLU(11),
+
+            nn.ConvTranspose2d(
+                in_channels=11,
+                out_channels=11,
+                kernel_size=3,
+                stride=2,
+                padding=0,
+                output_padding=1
+            ),
+            nn.PReLU(11),
+
+            nn.ConvTranspose2d(
+                in_channels=11,
+                out_channels=11,
+                kernel_size=3,
+                stride=2,
+                padding=0,
+                output_padding=0
+            ),
+            nn.PReLU(11),
+        )
+
     def forward(self, x):
         out1 = self.encode_local(x)
         out2 = self.encode_regional(x)
-        out3 = interpolate(out2, size=self.input_size, mode='bilinear', align_corners=True)
+        # out3 = interpolate(out2, size=self.input_size, mode='bilinear', align_corners=True)
+        out3 = self.upsample(out2)
 
         out = torch.cat([out1, out3], dim=1)
         return out

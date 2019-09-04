@@ -8,22 +8,22 @@ import sklearn.metrics
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import dsutils  # noqa: E402
 
-SUBJ_ID = "784565"
+SUBJ_ID = "789373"
 print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 # ----------------------------------------------Settings----------------------------------------------
 
 DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
-# FEATURES_NAME = "MODEL10"
-FEATURES_NAME = "SHORE4"
+FEATURES_NAME = "EXPERIMENT"
 # FEATURES_FILE = "data.nii.gz"
 # FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
-FEATURES_FILE = "learned_features/Model10_features_epoch_200.npz"
+# FEATURES_FILE = "voxels_pca_nc_22.npz"
+FEATURES_FILE = "learned_features/Model10_789373_features_epoch_200.npz"
 FULL_BRAIN = True
 ADD_COORDS = False
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
-MIN_SAMPLES_LEAF = 6
+MIN_SAMPLES_LEAF = 3
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
 
 # ---------------------------------------------Load Data----------------------------------------------
@@ -58,7 +58,7 @@ print("X_train shape: {}, y_train shape: {}".format(X_train.shape, y_train.shape
 # --------------------------------------Random Forest Classifier--------------------------------------
 
 print('Random Forest Classifier'.center(100, '-'))
-print("Fitting withh min_samples_leaf={}".format(MIN_SAMPLES_LEAF))
+print("Fitting with min_samples_leaf={}".format(MIN_SAMPLES_LEAF))
 
 clf = RandomForestClassifier(n_estimators=100,
                              bootstrap=True,

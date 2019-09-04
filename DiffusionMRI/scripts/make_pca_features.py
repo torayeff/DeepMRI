@@ -5,19 +5,17 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
 # settings
-subj_id = '784565'
+subj_id = '789373'
 exp_dir = '/home/agajan/experiment_DiffusionMRI/tractseg_data/'
-data_path = join(exp_dir, subj_id, 'shore_features/shore4_nh_3.npz')
+data_path = join(exp_dir, subj_id, 'data.nii.gz')
 mask_path = join(exp_dir, subj_id, 'nodif_brain_mask.nii.gz')
 
 nc = 22  # number of components
 
-# save_path = join(exp_dir, subj_id, 'voxels_pca_nc_{}.npz'.format(nc))
-save_path = join(exp_dir, subj_id, 'shore_features/shore4_pca_nc_{}.npz'.format(nc))
+save_path = join(exp_dir, subj_id, 'voxels_pca_nc_{}.npz'.format(nc))
 
 print("Loading data.")
-# data = nib.load(data_path).get_data()
-data = np.load(data_path)['data']
+data = nib.load(data_path).get_data()
 mask = nib.load(mask_path).get_data()
 
 print("Making data matrix")
