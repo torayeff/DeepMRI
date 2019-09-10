@@ -10,8 +10,8 @@ script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'tractseg_data/789373/training_slices/coronal/'
-model_name = "Model10_789373"
+data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
+model_name = "Model10_new"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -28,8 +28,8 @@ batch_size = 8
 noise_prob = None
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 200  # number of epochs to trains
-checkpoint = 200  # save model every checkpoint epoch
+num_epochs = 1000  # number of epochs to trains
+checkpoint = 10  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDataset(data_path,

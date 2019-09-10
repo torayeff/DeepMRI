@@ -1,31 +1,6 @@
-from os.path import join
-exp_dir = '/home/agajan/experiment_DiffusionMRI/tractseg_data/'
+import torchvision.models as models
 
-subj_id = '784565'
-pth = join(exp_dir, subj_id, 'bvals')
-with open(pth, "r") as f:
-    bvals = f.readlines()[0].rstrip(" \n")
-    bvals = bvals.split("  ")
+resnet18 = models.resnet18(pretrained=True)
 
-bvals_1 = [round(int(x)/100)*100 for x in bvals]
-
-subj_id = '786569'
-pth = join(exp_dir, subj_id, 'bvals')
-with open(pth, "r") as f:
-    bvals = f.readlines()[0].rstrip(" \n")
-    bvals = bvals.split("  ")
-
-bvals_2 = [round(int(x)/100)*100 for x in bvals]
-
-subj_id = '789373'
-pth = join(exp_dir, subj_id, 'bvals')
-with open(pth, "r") as f:
-    bvals = f.readlines()[0].rstrip(" \n")
-    bvals = bvals.split("  ")
-
-bvals_3 = [round(int(x)/100)*100 for x in bvals]
-
-for a, b, c in zip(bvals_1, bvals_2, bvals_3):
-    print(a, " -- ", b, " -- ", c)
-
-print(a==b)
+for n, p in resnet18.named_parameters():
+    print(n)

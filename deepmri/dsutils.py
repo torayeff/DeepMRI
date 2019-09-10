@@ -325,7 +325,7 @@ def create_multilabel_mask(labels, masks_path, nodif_brain_mask_path, vol_size=(
     return mask_ml.astype('uint8')
 
 
-def create_data_masks(ml_masks, slice_orients, labels):
+def create_data_masks(ml_masks, slice_orients, labels, verbose=True):
     """Creates multilabel binary mask from full multilabel binary mask for given orienations.
     Args:
         ml_masks: Full multilabel binary mask.
@@ -360,8 +360,10 @@ def create_data_masks(ml_masks, slice_orients, labels):
     for ch, label in enumerate(labels):
         annots = len(np.nonzero(data_masks[:, :, :, ch])[0])
         total += annots
-        print("\"{}\" has {} annotations.".format(labels[ch], annots))
-    print("Total annotations: {}".format(total))
+        if verbose:
+            print("\"{}\" has {} annotations.".format(labels[ch], annots))
+    if verbose:
+        print("Total annotations: {}".format(total))
 
     return data_masks
 
