@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 from dipy.tracking import utils as utils_trk
 from scipy import ndimage
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 
 def pooled_mean(mu_x, n_x, mu_y, n_y):
@@ -485,3 +487,30 @@ def make_training_slices(seed_slices, it, c, train_slices):
         train_slices.append(new_slc)
 
     return c, train_slices
+
+
+def make_pca_volume(data, mask, n_components, normalize=True, random_state=0):
+    print("Making data matrix")
+    coords = []
+    features = []
+    for x in range(145):
+        for y in range(174):
+            for z in range(145):
+                if mask[x, y, z]:
+                    coords.append((x, y, z))
+                    features.append(data[x, y, z, :])
+
+    if normalize:
+        print("Normalizing.")
+        features = StandardScaler().fit_transform(features)
+
+    print("Performing PCA.")
+    pca = PCA(n_components=n_components, random_state=random_state)
+    features_reduced = pca.fit_transform(features)
+
+    print("Making features volume.")
+    features_volume = np.zeros((145, 174, 145, n_components))
+    for idx, crd in enumerate(coords):
+        features_volume[crd[0], crd[1], crd[2], :] = features_reduced[idx]
+
+    return features_volume, pca

@@ -18,7 +18,7 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Model10_new"
+model_name = "Model10_new_norm"
 feature_shapes = [(174, 145, 145, 22)]
 noise_prob = None
 MIN_SAMPLES_LEAF = 3
@@ -31,6 +31,13 @@ TRACT_MASKS_PTH = join(DATA_DIR, subj_id, "tract_masks", "tract_masks.nii.gz")
 encoder = Encoder(input_size=(145, 145))
 encoder.to(device)
 encoder.eval()
+
+stats = {
+    "epochs": [],
+    "scores": []
+}
+best_score = 0
+best_epoch = None
 
 epochs = list(range(10, 1001, 10))
 for epoch in epochs:
@@ -118,3 +125,12 @@ for epoch in epochs:
             test_f1_macro = sklearn.metrics.f1_score(y_test, test_preds, average='macro')
 
             print("Epoch: {}, F1: {:.5f}".format(epoch, test_f1_macro))
+            stats["epochs"].append(epoch)
+            stats["scores"].append(test_f1_macro)
+
+            if test_f1_macro > best_score:
+                best_epoch = epoch
+                best_score = test_f1_macro
+
+print("Best score: {}, best epoch: {}".format(best_score, best_epoch))
+np.savez(model_name + "_epoch_search.npz", epochs=stats["epochs"], scores=stats["scores"])

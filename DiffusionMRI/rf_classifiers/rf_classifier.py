@@ -15,15 +15,15 @@ print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
-FEATURES_NAME = "MSCONVAE"
+FEATURES_NAME = "EXP"
 # FEATURES_FILE = "data.nii.gz"
-# FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
-# FEATURES_FILE = "voxels_pca_nc_22.npz"
-FEATURES_FILE = "learned_features/Model10_features_epoch_200.npz"
-FULL_BRAIN = True
+# FEATURES_FILE = "shore_features/shore_coefficients_radial_border_6.npz"
+FEATURES_FILE = "unnorm_voxels_pca_nc_22.npz"
+# FEATURES_FILE = "learned_features/Model10_features_epoch_200.npz"
+FULL_BRAIN = False
 ADD_COORDS = False
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
-MIN_SAMPLES_LEAF = 3
+MIN_SAMPLES_LEAF = 8
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
 
 # ---------------------------------------------Load Data----------------------------------------------
@@ -113,6 +113,6 @@ test_acc = sklearn.metrics.accuracy_score(y_test, test_preds)
 test_f1_macro = sklearn.metrics.f1_score(y_test, test_preds, average='macro')
 test_f1s = sklearn.metrics.f1_score(y_test, test_preds, average=None)
 
-print("Accuracy: {:.5f}, F1_macro: {:.5f}".format(test_acc, test_f1_macro))
 for c, f1 in enumerate(test_f1s):
     print("F1 for {}: {:.5f}".format(LABELS[c + 1], f1))
+print("F1_macro: {:.5f}".format(test_f1_macro))
