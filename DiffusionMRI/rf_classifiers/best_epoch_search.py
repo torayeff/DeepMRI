@@ -9,7 +9,7 @@ import sklearn.metrics
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, dsutils  # noqa: E402
-from DiffusionMRI.bkp.Model10 import Encoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models.MultiScale import Encoder  # noqa: E402  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
@@ -18,10 +18,10 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "Model10_new_norm"
-feature_shapes = [(174, 145, 145, 22)]
+model_name = "MultiScale"
+feature_shapes = [(174, 145, 145, 15)]
 noise_prob = None
-MIN_SAMPLES_LEAF = 3
+MIN_SAMPLES_LEAF = 8
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
 FULL_BRAIN = True
 ADD_COORDS = False
@@ -39,7 +39,7 @@ stats = {
 best_score = 0
 best_epoch = None
 
-epochs = list(range(10, 1001, 10))
+epochs = list(range(10, 201, 10))
 for epoch in epochs:
 
     for i, orient in enumerate(orients):
