@@ -6,8 +6,8 @@ class Encoder(nn.Module):
         super().__init__()
 
         self.encode = nn.Sequential(
-            nn.Linear(288, 22, bias=True),
-            nn.PReLU(22),
+            nn.Linear(288, 10, bias=True),
+            nn.PReLU(10),
         )
 
     def forward(self, x):
@@ -20,7 +20,7 @@ class Decoder(nn.Module):
         super().__init__()
 
         self.decode = nn.Sequential(
-            nn.Linear(22, 288, bias=True)
+            nn.Linear(10, 288, bias=True)
         )
 
     def forward(self, h):

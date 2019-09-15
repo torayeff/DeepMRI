@@ -11,51 +11,56 @@ class Encoder(nn.Module):
                 in_channels=288,
                 out_channels=144,
                 kernel_size=3,
-                stride=2,
+                stride=1,
                 padding=0,
                 bias=True
             ),
+            nn.MaxPool2d(2),
             nn.PReLU(144),
 
             nn.Conv2d(
                 in_channels=144,
                 out_channels=72,
                 kernel_size=3,
-                stride=2,
+                stride=1,
                 padding=0,
                 bias=True
             ),
+            nn.MaxPool2d(2),
             nn.PReLU(72),
 
             nn.Conv2d(
                 in_channels=72,
                 out_channels=36,
                 kernel_size=3,
-                stride=2,
+                stride=1,
                 padding=0,
                 bias=True
             ),
+            nn.MaxPool2d(2),
             nn.PReLU(36),
 
             nn.Conv2d(
                 in_channels=36,
                 out_channels=18,
                 kernel_size=3,
-                stride=2,
+                stride=1,
                 padding=0,
                 bias=True
             ),
+            nn.MaxPool2d(2),
             nn.PReLU(18),
 
             nn.Conv2d(
                 in_channels=18,
                 out_channels=9,
                 kernel_size=3,
-                stride=2,
+                stride=1,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(9),
+            nn.MaxPool2d(2),
+            nn.PReLU(9)
         )
 
         self.input_size = input_size

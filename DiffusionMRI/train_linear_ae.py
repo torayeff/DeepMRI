@@ -11,7 +11,7 @@ script_start = time.time()
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/'
-model_name = "Model1"
+model_name = "Model1_prelu"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -56,8 +56,7 @@ p1 = utils.count_model_parameters(encoder)
 p2 = utils.count_model_parameters(decoder)
 print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[1] + p2[1]))
 
-# criterion = torch.nn.MSELoss()
-criterion = torch.nn.BCEWithLogitsLoss()
+criterion = torch.nn.MSELoss()
 masked_loss = False
 denoising = False
 

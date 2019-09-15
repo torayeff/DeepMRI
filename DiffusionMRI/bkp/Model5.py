@@ -9,33 +9,33 @@ class Encoder(nn.Module):
         self.encode = nn.Sequential(
             nn.Conv2d(
                 in_channels=288,
-                out_channels=144,
+                out_channels=88,
                 kernel_size=3,
                 stride=2,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(144),
+            nn.PReLU(88),
 
             nn.Conv2d(
-                in_channels=144,
-                out_channels=72,
+                in_channels=88,
+                out_channels=44,
                 kernel_size=3,
                 stride=2,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(72),
+            nn.PReLU(44),
 
             nn.Conv2d(
-                in_channels=72,
-                out_channels=36,
+                in_channels=44,
+                out_channels=22,
                 kernel_size=3,
                 stride=2,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(36)
+            nn.PReLU(22),
         )
 
         self.input_size = input_size
@@ -52,31 +52,31 @@ class Decoder(nn.Module):
 
         self.decode = nn.Sequential(
             nn.Conv2d(
-                in_channels=36,
-                out_channels=72,
-                kernel_size=3,
+                in_channels=22,
+                out_channels=44,
+                kernel_size=1,
                 stride=1,
-                padding=1,
+                padding=0,
                 bias=True
             ),
-            nn.PReLU(72),
+            nn.PReLU(44),
 
             nn.Conv2d(
-                in_channels=72,
-                out_channels=144,
-                kernel_size=3,
+                in_channels=44,
+                out_channels=88,
+                kernel_size=1,
                 stride=1,
-                padding=1,
+                padding=0,
                 bias=True
             ),
-            nn.PReLU(144),
+            nn.PReLU(88),
 
             nn.Conv2d(
-                in_channels=144,
+                in_channels=88,
                 out_channels=288,
-                kernel_size=3,
+                kernel_size=1,
                 stride=1,
-                padding=1,
+                padding=0,
                 bias=True
             )
         )

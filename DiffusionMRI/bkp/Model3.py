@@ -9,13 +9,13 @@ class Encoder(nn.Module):
         self.encode = nn.Sequential(
             nn.Conv2d(
                 in_channels=288,
-                out_channels=10,
-                kernel_size=3,
+                out_channels=22,
+                kernel_size=5,
                 stride=2,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(10),
+            nn.PReLU(22),
         )
 
         self.input_size = input_size
@@ -32,11 +32,11 @@ class Decoder(nn.Module):
 
         self.decode = nn.Sequential(
             nn.Conv2d(
-                in_channels=10,
+                in_channels=22,
                 out_channels=288,
-                kernel_size=3,
+                kernel_size=5,
                 stride=1,
-                padding=1,
+                padding=2,
                 bias=True
             )
         )

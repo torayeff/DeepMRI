@@ -4,14 +4,14 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.models.Model10 import Encoder, Decoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models.Model5 import Encoder, Decoder  # noqa: E402  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "Model10_new_norm"
+model_name = "Model5"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -27,14 +27,14 @@ batch_size = 8
 # noise probability
 noise_prob = None
 
-start_epoch = 400  # for loading pretrained weights
+start_epoch = 200  # for loading pretrained weights
 num_epochs = 200  # number of epochs to trains
-checkpoint = 200  # save model every checkpoint epoch
+checkpoint = 10  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDataset(data_path,
-                                       scale=False,
-                                       normalize=True,
+                                       scale=True,
+                                       normalize=False,
                                        bg_zero=True,
                                        noise_prob=noise_prob,
                                        alpha=1)
@@ -68,7 +68,10 @@ masked_loss = True
 # masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters, lr=3e-3)
+# optimizer = torch.optim.Adam(parameters, lr=3e-3) # Important all models before Model3_k5
+# optimizer = torch.optim.Adam(parameters, lr=1e-4)
+optimizer = torch.optim.Adam(parameters, lr=3e-4)
+# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=100)
 scheduler = None
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))

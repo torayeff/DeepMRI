@@ -16,7 +16,7 @@ print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 FEATURES_NAME = "EXP"
-FEATURES_FILE = "data.nii.gz"
+FEATURES_FILE = "learned_features/Model3_tanh_features_epoch_200.npz"
 FULL_BRAIN = True
 ADD_COORDS = False
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
@@ -70,7 +70,7 @@ print("X_test shape: {}, y_test shape: {}".format(X_test.shape, y_test.shape))
 # --------------------------------------Random Forest Classifier--------------------------------------
 print('Random Forest Classifier'.center(100, '-'))
 
-msls = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+msls = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 train_scores = []
 test_scores = []

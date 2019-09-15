@@ -55,14 +55,26 @@ class Encoder(nn.Module):
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(9),
+            nn.PReLU(9)
+        )
+
+        self.upconv = nn.Sequential(
+            nn.ConvTranspose2d(
+                in_channels=9,
+                out_channels=9,
+                kernel_size=50,
+                stride=45,
+                padding=0,
+                output_padding=5
+            )
         )
 
         self.input_size = input_size
 
     def forward(self, x, return_all=False):
         out = self.encode(x)
-        out = interpolate(out, size=self.input_size, mode='bilinear', align_corners=True)
+        # out = interpolate(out, size=self.input_size, mode='bilinear', align_corners=True)
+        out = self.upconv(out)
         return out
 
 

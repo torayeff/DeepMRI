@@ -17,10 +17,10 @@ DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 FEATURES_NAME = "EXP"
 # FEATURES_FILE = "data.nii.gz"
-# FEATURES_FILE = "shore_features/shore_coefficients_radial_border_6.npz"
-FEATURES_FILE = "unnorm_voxels_pca_nc_22.npz"
-# FEATURES_FILE = "learned_features/Model10_features_epoch_200.npz"
-FULL_BRAIN = False
+# FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
+# FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
+FEATURES_FILE = "learned_features/Model4_features_epoch_200.npz"
+FULL_BRAIN = True
 ADD_COORDS = False
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
 MIN_SAMPLES_LEAF = 8
@@ -37,6 +37,9 @@ if FEATURES_PATH.endswith(".npz"):
     FEATURES = np.load(FEATURES_PATH)["data"]
 else:
     FEATURES = nib.load(FEATURES_PATH).get_data()
+
+f = np.load(join(DATA_DIR, SUBJ_ID, "learned_features/Model1_prelu_features_epoch_200.npz"))["data"]
+FEATURES = np.concatenate((f, FEATURES), axis=3)
 
 print("FEATURES Name: {}, shape: {}".format(FEATURES_NAME, FEATURES.shape))
 

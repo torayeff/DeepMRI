@@ -9,7 +9,7 @@ import sklearn.metrics
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, dsutils  # noqa: E402
-from DiffusionMRI.models.Model10 import Encoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.bkp.Model10 import Encoder  # noqa: E402  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
