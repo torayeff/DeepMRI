@@ -10,7 +10,7 @@ class Encoder(nn.Module):
             nn.Conv2d(
                 in_channels=288,
                 out_channels=144,
-                kernel_size=3,
+                kernel_size=5,
                 stride=2,
                 padding=0,
                 bias=True
@@ -20,7 +20,7 @@ class Encoder(nn.Module):
             nn.Conv2d(
                 in_channels=144,
                 out_channels=72,
-                kernel_size=3,
+                kernel_size=5,
                 stride=2,
                 padding=0,
                 bias=True
@@ -30,7 +30,7 @@ class Encoder(nn.Module):
             nn.Conv2d(
                 in_channels=72,
                 out_channels=36,
-                kernel_size=3,
+                kernel_size=5,
                 stride=2,
                 padding=0,
                 bias=True
@@ -54,9 +54,9 @@ class Decoder(nn.Module):
             nn.Conv2d(
                 in_channels=36,
                 out_channels=72,
-                kernel_size=3,
+                kernel_size=5,
                 stride=1,
-                padding=1,
+                padding=2,
                 bias=True
             ),
             nn.PReLU(72),
@@ -64,9 +64,9 @@ class Decoder(nn.Module):
             nn.Conv2d(
                 in_channels=72,
                 out_channels=144,
-                kernel_size=3,
+                kernel_size=5,
                 stride=1,
-                padding=1,
+                padding=2,
                 bias=True
             ),
             nn.PReLU(144),
@@ -74,9 +74,9 @@ class Decoder(nn.Module):
             nn.Conv2d(
                 in_channels=144,
                 out_channels=288,
-                kernel_size=3,
+                kernel_size=5,
                 stride=1,
-                padding=1,
+                padding=2,
                 bias=True
             )
         )

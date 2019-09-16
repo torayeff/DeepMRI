@@ -19,8 +19,7 @@ FEATURES_NAME = "EXP"
 # FEATURES_FILE = "data.nii.gz"
 # FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
 # FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
-FEATURES_FILE = "learned_features/MultiScale_features_epoch_150.npz"
-# FEATURES_FILE = "learned_features/bkp3/Model10_features_epoch_200.npz"
+FEATURES_FILE = "learned_features/ConvModel8_features_epoch_200.npz"
 FULL_BRAIN = True
 ADD_COORDS = False
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
@@ -39,6 +38,9 @@ if FEATURES_PATH.endswith(".npz"):
 else:
     FEATURES = nib.load(FEATURES_PATH).get_data()
 
+# f = np.load(join(DATA_DIR, SUBJ_ID, "learned_features/ConvModel3_features_epoch_200.npz"))["data"]
+# FEATURES = np.concatenate((f, FEATURES), axis=3)
+#
 # f = np.load(join(DATA_DIR, SUBJ_ID, "learned_features/Model1_prelu_features_epoch_200.npz"))["data"]
 # FEATURES = np.concatenate((f, FEATURES), axis=3)
 

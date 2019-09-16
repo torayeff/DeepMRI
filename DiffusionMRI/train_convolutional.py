@@ -4,14 +4,14 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.models.MultiScale import Encoder, Decoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models.ConvModel8 import Encoder, Decoder  # noqa: E402  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "MultiScale"
+model_name = "ConvModel8"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -68,10 +68,8 @@ masked_loss = True
 # masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-# optimizer = torch.optim.Adam(parameters, lr=3e-3) # Important all models before Model3_k5
-# optimizer = torch.optim.Adam(parameters, lr=1e-4)
-optimizer = torch.optim.Adam(parameters, lr=3e-4)
-# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=100)
+# optimizer = torch.optim.Adam(parameters, lr=1e-3)
+optimizer = torch.optim.Adam(parameters)
 scheduler = None
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))

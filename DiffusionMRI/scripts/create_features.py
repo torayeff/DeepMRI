@@ -5,7 +5,7 @@ import os
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets  # noqa: E402
-from DiffusionMRI.models.MultiScale import Encoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models.ConvModel8 import Encoder  # noqa: E402  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
@@ -14,8 +14,8 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "MultiScale"
-feature_shapes = [(174, 145, 145, 15)]
+model_name = "ConvModel8"
+feature_shapes = [(174, 145, 145, 10)]
 epoch = 200
 noise_prob = None
 
