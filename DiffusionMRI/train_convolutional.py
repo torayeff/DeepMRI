@@ -4,14 +4,14 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.models.ConvModel8 import Encoder, Decoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models.MultiScale import Encoder, Decoder  # noqa: E402  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "ConvModel8"
+model_name = "MultiScale"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -28,7 +28,7 @@ batch_size = 8
 noise_prob = None
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 1000  # number of epochs to trains
+num_epochs = 200  # number of epochs to trains
 checkpoint = 10  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
