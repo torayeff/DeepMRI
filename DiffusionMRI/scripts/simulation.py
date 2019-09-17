@@ -10,7 +10,7 @@ sys.path.append('/home/agajan/DeepMRI')
 from deepmri import dsutils  # noqa: E402
 
 script_start = time()
-SUBJ_ID = "789373"
+SUBJ_ID = "784565"
 print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 # ----------------------------------------------Settings----------------------------------------------
@@ -20,16 +20,17 @@ TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 
 FEATURES_NAMES = ["RAW288", "RAW288_COORDS",
                   "SHORE4", "SHORE4_COORDS",
-                  "PCA22", "PCA22_COORDS",
-                  "MODEL10"]
+                  "PCA10", "PCA10_COORDS",
+                  "MODEL8", "MULTISCALE"]
 FEATURES_FILES = ["data.nii.gz", "data.nii.gz",
                   "shore_features/shore_coefficients_radial_border_4.npz",
                   "shore_features/shore_coefficients_radial_border_4.npz",
-                  "voxels_pca_nc_22.npz", "voxels_pca_nc_22.npz",
-                  "learned_features/Model10_features_epoch_200.npz"
+                  "unnorm_voxels_pca_nc_10.npz", "unnorm_voxels_pca_nc_10.npz",
+                  "learned_features/ConvModel8_gold_features_epoch_160.npz",
+                  "learned_features/MultiScale_features_epoch_160.npz"
                   ]
-MIN_SAMPLES_LEAFS = [9, 9, 10, 9, 10, 9, 3]
-ADD_COORDS_VALUES = [False, True, False, True, False, True, False]
+
+ADD_COORDS_VALUES = [False, True, False, True, False, True, False, False]
 NUM_ITERS = 15
 FULL_BRAIN = True
 
@@ -37,7 +38,7 @@ for idx, FEATURES_FILE in enumerate(FEATURES_FILES):
     FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
     FEATURES_NAME = FEATURES_NAMES[idx]
     ADD_COORDS = ADD_COORDS_VALUES[idx]
-    MIN_SAMPLES_LEAF = MIN_SAMPLES_LEAFS[idx]
+    MIN_SAMPLES_LEAF = 8
 
     LABELS = ["Other", "CG", "CST", "FX", "CC"]
     save_path = join(DATA_DIR, SUBJ_ID, "simulation_data", FEATURES_NAME + ".npz")
