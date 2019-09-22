@@ -405,7 +405,8 @@ def train_ae(encoder,
              masked_loss=False,
              sparsity=None,
              denoising=False,
-             prec=5
+             prec=5,
+             logger=None
              ):
     """Trains AutoEncoder.
 
@@ -428,15 +429,16 @@ def train_ae(encoder,
       sparsity: If not None, sparsity penalty will be applied to hidden activations.
       denoising: If True, Denoising AE will be trained.
       prec: Error precision.
+      logger: Logger.
 
     Returns:
         None
     """
     print("Training started for {} epochs.".format(num_epochs))
     if sparsity is not None:
-        print('Sparsity is on with lambda={}'.format(sparsity))
+        print("Sparsity is on with lambda={}".format(sparsity))
     if denoising:
-        print('Training denoising autencoder.')
+        print("Training denoising autencoder.")
 
     for epoch in range(1, num_epochs + 1):
         encoder.train()
@@ -501,6 +503,12 @@ def train_ae(encoder,
                                                                                       epoch_loss,
                                                                                       prec,
                                                                                       time.time() - epoch_start))
+        if logger is not None:
+            logger.log({
+                "epoch": epoch + epoch_start,
+                "epoch_loss": epoch_loss
+
+            })
         # evaluate on trainloader
         if epoch % eval_epoch == 0:
             evaluate_ae(encoder, decoder, criterion, device, trainloader, print_iter=print_iter,

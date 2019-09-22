@@ -19,9 +19,8 @@ FEATURES_NAME = "EXP"
 # FEATURES_FILE = "data.nii.gz"
 # FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
 # FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
-FEATURES_FILE = "learned_features/ConvModel8_gold_features_epoch_160.npz"
-FULL_BRAIN = False
-ADD_COORDS = True
+FEATURES_FILE = "learned_features/ConvModel1_prelu_h22_bs1_k5_features_epoch_10.npz"
+ADD_COORDS = False
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
 MIN_SAMPLES_LEAF = 8
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
@@ -43,6 +42,7 @@ else:
 # f3 = FEATURES
 # FEATURES = np.concatenate((f1, f3), axis=3)
 
+print("FEATURES File: {}".format(FEATURES_FILE))
 print("FEATURES Name: {}, shape: {}".format(FEATURES_NAME, FEATURES.shape))
 
 # ---------------------------------------------Train Set----------------------------------------------
@@ -88,36 +88,34 @@ for c, f1 in enumerate(train_f1s):
     print("F1 for {}: {:.5f}".format(LABELS[c], f1))
 
 # ----------------------------------------------Test Set----------------------------------------------
+test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
+test_masks = dsutils.create_data_masks(TRACT_MASKS, test_slices, LABELS)
+tmsks = [test_masks, TRACT_MASKS.copy()]
+set_names = ["Neighboring slices", "Full brain"]
 
-print('Preparing the test set'.center(100, '-'))
-if FULL_BRAIN:
-    test_masks = TRACT_MASKS.copy()
-else:
-    test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
-    test_masks = dsutils.create_data_masks(TRACT_MASKS, test_slices, LABELS)
-X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(FEATURES,
-                                                                    test_masks,
-                                                                    labels=LABELS,
-                                                                    multi_label=True)
-if ADD_COORDS:
-    X_test = np.concatenate((X_test, test_coords), axis=1)
-print("X_test shape: {}, y_test shape: {}".format(X_test.shape, y_test.shape))
+for sn, tmsk in zip(set_names, tmsks):
+    print("Test set: {}".format(sn).center(100, "-"))
+    X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(FEATURES,
+                                                                        tmsk,
+                                                                        labels=LABELS,
+                                                                        multi_label=True)
+    if ADD_COORDS:
+        X_test = np.concatenate((X_test, test_coords), axis=1)
+    print("X_test shape: {}, y_test shape: {}".format(X_test.shape, y_test.shape))
 
-# ---------------------------------------Evaluation on test set---------------------------------------
+    # ---------------------------------------Evaluation on test set---------------------------------------
+    test_preds = clf.predict(X_test)
 
-print('Evaluating on the test set'.center(100, '-'))
-test_preds = clf.predict(X_test)
+    pred_masks = dsutils.preds_to_data_mask(test_preds, test_coords, LABELS)
+    dsutils.save_pred_masks(pred_masks, DATA_DIR, SUBJ_ID, FEATURES_NAME)
 
-pred_masks = dsutils.preds_to_data_mask(test_preds, test_coords, LABELS)
-dsutils.save_pred_masks(pred_masks, DATA_DIR, SUBJ_ID, FEATURES_NAME)
+    y_test = y_test[:, 1:]
+    test_preds = test_preds[:, 1:]
 
-y_test = y_test[:, 1:]
-test_preds = test_preds[:, 1:]
+    test_acc = sklearn.metrics.accuracy_score(y_test, test_preds)
+    test_f1_macro = sklearn.metrics.f1_score(y_test, test_preds, average='macro')
+    test_f1s = sklearn.metrics.f1_score(y_test, test_preds, average=None)
 
-test_acc = sklearn.metrics.accuracy_score(y_test, test_preds)
-test_f1_macro = sklearn.metrics.f1_score(y_test, test_preds, average='macro')
-test_f1s = sklearn.metrics.f1_score(y_test, test_preds, average=None)
-
-for c, f1 in enumerate(test_f1s):
-    print("F1 for {}: {:.5f}".format(LABELS[c + 1], f1))
-print("F1_macro: {:.5f}".format(test_f1_macro))
+    for c, f1 in enumerate(test_f1s):
+        print("F1 for {}: {:.5f}".format(LABELS[c + 1], f1))
+    print("F1_macro: {:.5f}".format(test_f1_macro))

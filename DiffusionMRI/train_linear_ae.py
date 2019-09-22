@@ -1,6 +1,7 @@
 import sys
 import time
 import torch
+import wandb
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
@@ -11,7 +12,8 @@ script_start = time.time()
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/'
-model_name = "Model1_prelu"
+model_name = "Model1_tanh_h10"
+wandb.init(project="deepmri", name=model_name)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -22,11 +24,15 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-batch_size = 2 ** 15
+batch_size = 2 ** 8
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 200  # number of epochs to trains
-checkpoint = 200  # save model every checkpoint epoch
+num_epochs = 10  # number of epochs to trains
+checkpoint = 10  # save model every checkpoint epoch
+
+masked_loss = False
+denoising = False
+h = 10
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.VoxelDataset(data_path,
@@ -37,13 +43,15 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuff
 total_examples = len(trainset)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
                                                                                 batch_size,
-                                                                                total_examples / batch_size))
+                                                                                len(trainloader)))
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = Encoder()
-decoder = Decoder()
+encoder = Encoder(h=h)
+decoder = Decoder(h=h)
 encoder.to(device)
 decoder.to(device)
+
+wandb.watch((encoder, decoder))
 
 if start_epoch != 0:
     encoder_path = "{}saved_models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
@@ -57,8 +65,6 @@ p2 = utils.count_model_parameters(decoder)
 print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[1] + p2[1]))
 
 criterion = torch.nn.MSELoss()
-masked_loss = False
-denoising = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
 optimizer = torch.optim.Adam(parameters)
@@ -68,6 +74,22 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
                                                        patience=5)
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
+# wandb settings
+wandb.config.model_name = model_name
+wandb.config.deterministic = deterministic
+wandb.config.seed = seed
+wandb.config.batch_size = batch_size
+wandb.config.start_epoch = start_epoch
+wandb.config.num_epochs = num_epochs
+wandb.config.checkpoint = checkpoint
+wandb.config.masked_loss = masked_loss
+wandb.config.denoising = denoising
+wandb.config.optimizer = "Adam"
+wandb.config.lr = 0.001
+wandb.config.h = h
+
+logger = wandb
+
 utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss, denoising=denoising)
 utils.train_ae(encoder,
                decoder,
@@ -84,6 +106,6 @@ utils.train_ae(encoder,
                print_iter=False,
                eval_epoch=50,
                masked_loss=masked_loss,
-               denoising=denoising)
-utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss, denoising=denoising)
+               denoising=denoising,
+               logger=wandb)
 print("Total running time: {:.5f} seconds.".format(time.time() - script_start))

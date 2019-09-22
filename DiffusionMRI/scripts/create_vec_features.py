@@ -11,7 +11,7 @@ from DiffusionMRI.models.SimpleModel1 import Encoder, Decoder  # noqa: E402
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 subj_id = '784565'
 data_path = join(experiment_dir, 'tractseg_data', subj_id)
-model_name = 'Model1_prelu'
+model_name = 'Model1_prelu_h10'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -22,7 +22,7 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 batch_size = 2 ** 15
-start_epoch = 200
+start_epoch = 10
 channels = 10
 noise_prob = None
 trainset = Datasets.VoxelDataset(data_path,
@@ -37,8 +37,8 @@ print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(
 
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = Encoder()
-decoder = Decoder()
+encoder = Encoder(h=10)
+decoder = Decoder(h=10)
 encoder.to(device)
 decoder.to(device)
 encoder.eval()
@@ -48,7 +48,7 @@ encoder_path = "{}/saved_models/{}_encoder_epoch_{}".format(experiment_dir, mode
 decoder_path = "{}/saved_models/{}_decoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
 encoder.load_state_dict(torch.load(encoder_path))
 decoder.load_state_dict(torch.load(decoder_path))
-print("Loaded pretrained weights starting from epoch {}".format(start_epoch))
+print("Loaded pretrained weights starting from epoch {} for {}".format(start_epoch, model_name))
 
 learned_features = np.zeros((145, 174, 145, channels))
 c = 0

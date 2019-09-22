@@ -3,19 +3,19 @@ from torch.nn.functional import interpolate
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self, input_size, h):
         super().__init__()
 
         self.encode = nn.Sequential(
             nn.Conv2d(
                 in_channels=288,
-                out_channels=10,
-                kernel_size=3,
+                out_channels=h,
+                kernel_size=5,
                 stride=2,
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(10),
+            nn.PReLU(h)
         )
 
         self.input_size = input_size
@@ -27,16 +27,16 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self):
+    def __init__(self, h):
         super().__init__()
 
         self.decode = nn.Sequential(
             nn.Conv2d(
-                in_channels=10,
+                in_channels=h,
                 out_channels=288,
-                kernel_size=3,
+                kernel_size=5,
                 stride=1,
-                padding=1,
+                padding=2,
                 bias=True
             )
         )

@@ -1,17 +1,19 @@
 import sys
 import time
 import torch
+import wandb
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.models.MultiScale import Encoder, Decoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models.ConcatModel import Encoder, Decoder  # noqa: E402  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "MultiScale"
+model_name = "ConcatModel"
+wandb.init(project="deepmri", name=model_name)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -22,14 +24,14 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-batch_size = 8
+batch_size = 1
 
 # noise probability
 noise_prob = None
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 1  # number of epochs to trains
-checkpoint = 1000  # save model every checkpoint epoch
+num_epochs = 30  # number of epochs to trains
+checkpoint = 1  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDataset(data_path,
@@ -64,13 +66,9 @@ print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[
 criterion = CustomLosses.MaskedLoss()
 masked_loss = True
 
-# criterion = torch.nn.BCEWithLogitsLoss()
-# masked_loss = False
-
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-# optimizer = torch.optim.Adam(parameters, lr=1e-3)
 optimizer = torch.optim.Adam(parameters)
-scheduler = None
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 25)
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
 utils.evaluate_ae(encoder, decoder, criterion, device, trainloader, masked_loss=masked_loss, denoising=bool(noise_prob))
@@ -87,9 +85,10 @@ utils.train_ae(encoder,
                scheduler=scheduler,
                checkpoint=checkpoint,
                print_iter=False,
-               eval_epoch=checkpoint,
+               eval_epoch=10,
                masked_loss=masked_loss,
                denoising=False,
-               prec=8)
+               prec=8,
+               logger=wandb)
 
 print("Total running time: {}".format(time.time() - script_start))
