@@ -5,7 +5,7 @@ from os.path import join
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets  # noqa: E402
-from DiffusionMRI.models.SimpleModel1 import Encoder, Decoder  # noqa: E402
+from DiffusionMRI.bkpmodels.bkp3.SimpleModel1 import Encoder, Decoder  # noqa: E402
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'

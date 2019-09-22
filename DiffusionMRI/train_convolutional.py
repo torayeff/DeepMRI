@@ -5,14 +5,14 @@ import wandb
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.models.ConcatModel import Encoder, Decoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models.MultiScale import Encoder, Decoder  # noqa: E402  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "ConcatModel"
+model_name = "ConcatModelDeep"
 wandb.init(project="deepmri", name=model_name)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
@@ -20,7 +20,7 @@ deterministic = True  # reproducibility
 seed = 0  # random seed for reproducibility
 if deterministic:
     torch.manual_seed(seed)
-torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input size varies
+torch.backends.cudnn.benchmark = not deterministic  # set False whenever input size varies
 torch.backends.cudnn.deterministic = deterministic
 
 # data
@@ -30,7 +30,7 @@ batch_size = 1
 noise_prob = None
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 30  # number of epochs to trains
+num_epochs = 10  # number of epochs to trains
 checkpoint = 1  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 

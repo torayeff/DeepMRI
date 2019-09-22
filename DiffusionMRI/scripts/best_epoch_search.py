@@ -9,7 +9,7 @@ import sklearn.metrics
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, dsutils  # noqa: E402
-from DiffusionMRI.models.ConcatModel import Encoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.bkpmodels.bkp3.ConcatModelDeep import Encoder  # noqa: E402  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
@@ -18,8 +18,8 @@ experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
 subj_id = '784565'
 orients = ['coronal']
-model_name = "ConcatModel"
-feature_shapes = [(174, 145, 145, 44)]
+model_name = "ConcatModelDeep"
+feature_shapes = [(174, 145, 145, 22)]
 noise_prob = None
 MIN_SAMPLES_LEAF = 8
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
@@ -39,7 +39,8 @@ stats = {
 best_score = 0
 best_epoch = None
 
-epochs = list(range(1, 31, 1))
+# epochs = list(range(1, 21, 1))
+epochs = [10, 50, 100, 150, 160, 190, 200]
 for epoch in epochs:
 
     for i, orient in enumerate(orients):

@@ -19,23 +19,25 @@ class Encoder(nn.Module):
             nn.PReLU(22)
         )
 
-        self.encode_regional = nn.Sequential(
+        self.encode_regional_1 = nn.Sequential(
             nn.Conv2d(
                 in_channels=288,
-                out_channels=88,
+                out_channels=22,
                 kernel_size=5,
                 stride=2,
-                padding=2,
+                padding=0,
                 bias=True
             ),
-            nn.PReLU(88),
+            nn.PReLU(22)
+        )
 
+        self.encode_regional_2 = nn.Sequential(
             nn.Conv2d(
-                in_channels=88,
+                in_channels=288,
                 out_channels=44,
                 kernel_size=5,
                 stride=2,
-                padding=2,
+                padding=0,
                 bias=True
             ),
             nn.PReLU(44),
@@ -45,7 +47,39 @@ class Encoder(nn.Module):
                 out_channels=22,
                 kernel_size=5,
                 stride=2,
-                padding=2,
+                padding=0,
+                bias=True
+            ),
+            nn.PReLU(22)
+        )
+
+        self.encode_regional_3 = nn.Sequential(
+            nn.Conv2d(
+                in_channels=288,
+                out_channels=88,
+                kernel_size=5,
+                stride=2,
+                padding=0,
+                bias=True
+            ),
+            nn.PReLU(88),
+
+            nn.Conv2d(
+                in_channels=88,
+                out_channels=44,
+                kernel_size=5,
+                stride=2,
+                padding=0,
+                bias=True
+            ),
+            nn.PReLU(44),
+
+            nn.Conv2d(
+                in_channels=44,
+                out_channels=22,
+                kernel_size=5,
+                stride=2,
+                padding=0,
                 bias=True
             ),
             nn.PReLU(22)
@@ -54,11 +88,18 @@ class Encoder(nn.Module):
         self.input_size = input_size
 
     def forward(self, x):
-        out1 = self.encode_local(x)
-        out2 = self.encode_regional(x)
-        out3 = interpolate(out2, size=self.input_size, mode='bilinear', align_corners=True)
+        out_local = self.encode_local(x)
 
-        out = torch.cat([out1, out3], dim=1)
+        out_regional_1 = self.encode_regional_1(x)
+        out1 = interpolate(out_regional_1, size=self.input_size, mode='bilinear', align_corners=True)
+
+        out_regional_2 = self.encode_regional_2(x)
+        out2 = interpolate(out_regional_2, size=self.input_size, mode='bilinear', align_corners=True)
+
+        out_regional_3 = self.encode_regional_3(x)
+        out3 = interpolate(out_regional_3, size=self.input_size, mode='bilinear', align_corners=True)
+
+        out = torch.cat([out_local, out1, out2, out3], dim=1)
         return out
 
 
@@ -67,16 +108,6 @@ class Decoder(nn.Module):
         super().__init__()
 
         self.decode = nn.Sequential(
-            nn.Conv2d(
-                in_channels=44,
-                out_channels=88,
-                kernel_size=1,
-                stride=1,
-                padding=0,
-                bias=True
-            ),
-            nn.PReLU(88),
-
             nn.Conv2d(
                 in_channels=88,
                 out_channels=288,

@@ -9,7 +9,7 @@ from time import time
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, dsutils  # noqa: E402
-from DiffusionMRI.models.ConvModel1 import Encoder, Decoder  # noqa: E402
+from DiffusionMRI.bkpmodels.bkp3.ConvModel1 import Encoder, Decoder  # noqa: E402
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'

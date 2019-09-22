@@ -1,7 +1,7 @@
 import sys
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import utils  # noqa: E402
-from DiffusionMRI.models.ConvModel5 import Encoder, Decoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.bkpmodels.bkp3.ConvModel5 import Encoder, Decoder  # noqa: E402  # noqa: E402
 
 encoder = Encoder(input_size=(145, 145))
 decoder = Decoder()
