@@ -3,7 +3,7 @@ from torch.nn.functional import interpolate
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self):
         super().__init__()
 
         self.encode = nn.Sequential(
@@ -35,34 +35,11 @@ class Encoder(nn.Module):
                 padding=0,
                 bias=True
             ),
-            nn.PReLU(36),
-
-            nn.Conv2d(
-                in_channels=36,
-                out_channels=18,
-                kernel_size=3,
-                stride=2,
-                padding=0,
-                bias=True
-            ),
-            nn.PReLU(18),
-
-            nn.Conv2d(
-                in_channels=18,
-                out_channels=9,
-                kernel_size=3,
-                stride=2,
-                padding=0,
-                bias=True
-            ),
-            nn.PReLU(9),
+            nn.PReLU(36)
         )
-
-        self.input_size = input_size
 
     def forward(self, x, return_all=False):
         out = self.encode(x)
-        out = interpolate(out, size=self.input_size, mode='bilinear', align_corners=True)
         return out
 
 
@@ -70,27 +47,7 @@ class Decoder(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.decode = nn.Sequential(
-            nn.Conv2d(
-                in_channels=9,
-                out_channels=18,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=True
-            ),
-            nn.PReLU(18),
-
-            nn.Conv2d(
-                in_channels=18,
-                out_channels=36,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=True
-            ),
-            nn.PReLU(36),
-
+        self.decode1 = nn.Sequential(
             nn.Conv2d(
                 in_channels=36,
                 out_channels=72,
@@ -99,8 +56,10 @@ class Decoder(nn.Module):
                 padding=1,
                 bias=True
             ),
-            nn.PReLU(72),
+            nn.PReLU(72)
+        )
 
+        self.decode2 = nn.Sequential(
             nn.Conv2d(
                 in_channels=72,
                 out_channels=144,
@@ -109,8 +68,10 @@ class Decoder(nn.Module):
                 padding=1,
                 bias=True
             ),
-            nn.PReLU(144),
+            nn.PReLU(144)
+        )
 
+        self.decode3 = nn.Sequential(
             nn.Conv2d(
                 in_channels=144,
                 out_channels=288,
@@ -122,5 +83,12 @@ class Decoder(nn.Module):
         )
 
     def forward(self, h):
-        y = self.decode(h)
+        y = interpolate(h, size=(35, 35), mode='bilinear', align_corners=True)
+        y = self.decode1(y)
+
+        y = interpolate(y, size=(72, 72), mode='bilinear', align_corners=True)
+        y = self.decode2(y)
+
+        y = interpolate(y, size=(145, 145), mode='bilinear', align_corners=True)
+        y = self.decode3(y)
         return y
