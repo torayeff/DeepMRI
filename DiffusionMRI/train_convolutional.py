@@ -5,14 +5,14 @@ import wandb
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, CustomLosses, utils  # noqa: E402
-from DiffusionMRI.models.UnetAE import Encoder, Decoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models.ConvModel1 import Encoder, Decoder  # noqa: E402  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
-model_name = "UnetAE"
+model_name = "ConvModel1_h22"
 wandb.init(project="deepmri", name=model_name)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
@@ -30,12 +30,12 @@ batch_size = 1
 noise_prob = None
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 10  # number of epochs to trains
+num_epochs = 3  # number of epochs to trains
 checkpoint = 10  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDataset(data_path,
-                                       scale=True,
+                                       scale=False,
                                        normalize=False,
                                        bg_zero=True,
                                        noise_prob=noise_prob,
@@ -47,10 +47,12 @@ print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
 # encoder = Encoder(input_size=(145, 145))
-encoder = Encoder()
-decoder = Decoder()
+encoder = Encoder(input_size=(145, 145), h=22)
+decoder = Decoder(h=22)
 encoder.to(device)
 decoder.to(device)
+
+wandb.watch((encoder, decoder))
 
 if start_epoch != 0:
     encoder_path = "{}/saved_models/{}_encoder_epoch_{}".format(experiment_dir, model_name, start_epoch)
@@ -64,11 +66,15 @@ p2 = utils.count_model_parameters(decoder)
 print("Total parameters: {}, trainable parameters: {}".format(p1[0] + p2[0], p1[1] + p2[1]))
 
 # criterion and optimizer settings
-criterion = CustomLosses.MaskedLoss()
-masked_loss = True
+# criterion = CustomLosses.MaskedLoss()
+# masked_loss = True
+
+criterion = torch.nn.MSELoss(reduction='mean')
+masked_loss = False
 
 parameters = list(encoder.parameters()) + list(decoder.parameters())
-optimizer = torch.optim.Adam(parameters)
+# optimizer = torch.optim.Adam(parameters)
+optimizer = torch.optim.SGD(parameters, lr=0.1)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 25)
 # ------------------------------------------Training--------------------------------------------------------------------
 print("Training: {}".format(model_name))
@@ -93,3 +99,6 @@ utils.train_ae(encoder,
                logger=wandb)
 
 print("Total running time: {}".format(time.time() - script_start))
+for param_group in optimizer.param_groups:
+    print("lr: ", param_group['lr'])
+

@@ -16,7 +16,7 @@ print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 FEATURES_NAME = "EXP"
-FEATURES_FILE = "learned_features/ConvModel8_gold_features_epoch_160.npz"
+FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
 FULL_BRAIN = True
 ADD_COORDS = False
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
@@ -40,7 +40,12 @@ print("FEATURES Name: {}, shape: {}".format(FEATURES_NAME, FEATURES.shape))
 
 print('Preparing the training set'.center(100, '-'))
 
-train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
+train_slices = []
+c = 0
+seed_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
+for it in range(5):
+    c, train_slices = dsutils.make_training_slices(seed_slices, it, c, train_slices)
+
 train_masks = dsutils.create_data_masks(TRACT_MASKS, train_slices, LABELS)
 
 X_train, y_train, train_coords = dsutils.create_dataset_from_data_mask(FEATURES,

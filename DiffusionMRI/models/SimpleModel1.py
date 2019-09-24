@@ -8,9 +8,9 @@ class Encoder(nn.Module):
         self.encode = nn.Sequential(
             nn.Linear(288, h, bias=True),
             # nn.Sigmoid()
-            nn.Tanh()
+            # nn.Tanh()
             # nn.ReLU()
-            # nn.PReLU(h)
+            nn.PReLU(h)
         )
 
     def forward(self, x):

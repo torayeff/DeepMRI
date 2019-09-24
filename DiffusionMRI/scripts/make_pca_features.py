@@ -7,7 +7,7 @@ sys.path.append('/home/agajan/DeepMRI')
 from deepmri import dsutils  # noqa: E402
 
 # settings
-subj_id = '784565'
+subj_id = '789373'
 exp_dir = '/home/agajan/experiment_DiffusionMRI/tractseg_data/'
 data_path = join(exp_dir, subj_id, 'data.nii.gz')
 mask_path = join(exp_dir, subj_id, 'nodif_brain_mask.nii.gz')

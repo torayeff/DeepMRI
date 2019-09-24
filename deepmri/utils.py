@@ -483,6 +483,10 @@ def train_ae(encoder,
             running_loss = running_loss + loss.item() * batch['data'].size(0)
             total_examples += batch['data'].size(0)
             if print_iter:
+                if logger is not None:
+                    logger.log({
+                        "iter_loss": loss.item()
+                    })
                 print("Iteration #{}, loss: {:.{}f}, iter time: {}".format(iters,
                                                                            loss.item(),
                                                                            prec,

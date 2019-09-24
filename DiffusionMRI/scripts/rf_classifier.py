@@ -15,15 +15,27 @@ print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
-FEATURES_NAME = "EXP"
+
+# FEATURES_NAME = "RAW"
 # FEATURES_FILE = "data.nii.gz"
+
+# FEATURES_NAME = "SHORE4
 # FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
+
+# FEATURES_NAME = "PCA"
 # FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
-FEATURES_FILE = "learned_features/UnetAE_features_epoch_10.npz"
-ADD_COORDS = False
+
+FEATURES_NAME = "MSCONVAE"
+FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
+
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
-MIN_SAMPLES_LEAF = 8
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
+
+MIN_SAMPLES_LEAF = 8
+ADD_COORDS = False
+if ADD_COORDS:
+    FEATURES_NAME = FEATURES_NAME + "_COORDS"
+RESULTS_PATH = join(DATA_DIR, SUBJ_ID, "outputs", FEATURES_NAME + "_dice_scores.npz")
 
 # ---------------------------------------------Load Data----------------------------------------------
 
@@ -37,6 +49,7 @@ if FEATURES_PATH.endswith(".npz"):
 else:
     FEATURES = nib.load(FEATURES_PATH).get_data()
 
+# FEATURES *= 1000
 # f1 = np.load(join(DATA_DIR, SUBJ_ID, "learned_features/Model1_prelu_features_epoch_200.npz"))["data"]
 # f2 = np.load(join(DATA_DIR, SUBJ_ID, "learned_features/ConvModel3_features_epoch_200.npz"))["data"]
 # f3 = FEATURES
@@ -50,6 +63,12 @@ print("FEATURES Name: {}, shape: {}".format(FEATURES_NAME, FEATURES.shape))
 print('Preparing the training set'.center(100, '-'))
 
 train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
+# train_slices = []
+# c = 0
+# seed_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
+# for it in range(10):
+#     c, train_slices = dsutils.make_training_slices(seed_slices, it, c, train_slices)
+
 train_masks = dsutils.create_data_masks(TRACT_MASKS, train_slices, LABELS)
 
 X_train, y_train, train_coords = dsutils.create_dataset_from_data_mask(FEATURES,
@@ -91,10 +110,13 @@ for c, f1 in enumerate(train_f1s):
 test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
 test_masks = dsutils.create_data_masks(TRACT_MASKS, test_slices, LABELS)
 tmsks = [test_masks, TRACT_MASKS.copy()]
-set_names = ["Neighboring slices", "Full brain"]
+set_names = ["testset1", "testset2"]
+
+results = {}
 
 for sn, tmsk in zip(set_names, tmsks):
     print("Test set: {}".format(sn).center(100, "-"))
+    results[sn] = []
     X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(FEATURES,
                                                                         tmsk,
                                                                         labels=LABELS,
@@ -118,4 +140,8 @@ for sn, tmsk in zip(set_names, tmsks):
 
     for c, f1 in enumerate(test_f1s):
         print("F1 for {}: {:.5f}".format(LABELS[c + 1], f1))
+        results[sn].append(f1)
+    results[sn].append(test_f1_macro)
     print("F1_macro: {:.5f}".format(test_f1_macro))
+
+np.savez(RESULTS_PATH, testset1=results["testset1"], testset2=results["testset2"])

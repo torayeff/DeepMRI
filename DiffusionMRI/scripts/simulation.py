@@ -10,7 +10,8 @@ sys.path.append('/home/agajan/DeepMRI')
 from deepmri import dsutils  # noqa: E402
 
 script_start = time()
-SUBJ_ID = "784565"
+# SUBJ_ID = "784565"
+SUBJ_ID = str(sys.argv[1])
 print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 # ----------------------------------------------Settings----------------------------------------------
@@ -18,21 +19,16 @@ print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 
-FEATURES_NAMES = ["RAW288", "RAW288_COORDS",
-                  "SHORE4", "SHORE4_COORDS",
-                  "PCA10", "PCA10_COORDS",
-                  "MODEL8", "MULTISCALE"]
-FEATURES_FILES = ["data.nii.gz", "data.nii.gz",
-                  "shore_features/shore_coefficients_radial_border_4.npz",
-                  "shore_features/shore_coefficients_radial_border_4.npz",
-                  "unnorm_voxels_pca_nc_10.npz", "unnorm_voxels_pca_nc_10.npz",
-                  "learned_features/ConvModel8_gold_features_epoch_160.npz",
-                  "learned_features/MultiScale_features_epoch_160.npz"
+FEATURES_NAMES = ["PCA", "PCA_COORDS",
+                  "MSCONVAE", "MSCONVAE_COORDS"]
+FEATURES_FILES = ["unnorm_voxels_pca_nc_10.npz",
+                  "unnorm_voxels_pca_nc_10.npz",
+                  "learned_features/MultiScale_features_epoch_10.npz",
+                  "learned_features/MultiScale_features_epoch_10.npz"
                   ]
 
-ADD_COORDS_VALUES = [False, True, False, True, False, True, False, False]
+ADD_COORDS_VALUES = [False, True, False, True]
 NUM_ITERS = 15
-FULL_BRAIN = True
 
 for idx, FEATURES_FILE in enumerate(FEATURES_FILES):
     FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
@@ -60,11 +56,7 @@ for idx, FEATURES_FILE in enumerate(FEATURES_FILES):
     # ----------------------------------------------Test Set----------------------------------------------
 
     print('Preparing the test set'.center(100, '-'))
-    if FULL_BRAIN:
-        test_masks = TRACT_MASKS.copy()
-    else:
-        test_slices = [('sagittal', 71), ('coronal', 86), ('axial', 71)]
-        test_masks = dsutils.create_data_masks(TRACT_MASKS, test_slices, LABELS)
+    test_masks = TRACT_MASKS.copy()
     X_test, y_test, test_coords = dsutils.create_dataset_from_data_mask(FEATURES,
                                                                         test_masks,
                                                                         labels=LABELS,
@@ -86,6 +78,10 @@ for idx, FEATURES_FILE in enumerate(FEATURES_FILES):
     }
     for it in range(NUM_ITERS):
         print("Simulation iter #{}".format(it + 1).center(100, "-"))
+        # decay MIN_SAMPLES_LEAF
+        if (it + 1) % 5 == 0:
+            MIN_SAMPLES_LEAF = (MIN_SAMPLES_LEAF // 2) or 1
+            print("MIN_SAMPLES_LEAF decayed to: ", MIN_SAMPLES_LEAF)
         train_start = time()
         c, train_slices = dsutils.make_training_slices(seed_slices, it, c, train_slices)
         train_masks = dsutils.create_data_masks(TRACT_MASKS, train_slices, LABELS)
@@ -127,8 +123,6 @@ for idx, FEATURES_FILE in enumerate(FEATURES_FILES):
         stats["iters"].append(it + 1)
         stats["train_voxels"].append((X_train.shape[0]))
         stats["scores"].append(test_f1_macro)
-        # for c, f1 in enumerate(test_f1s):
-        #     print("F1 for {}: {:.5f}".format(LABELS[c + 1], f1))
 
     np.savez(save_path, iters=stats["iters"],
              scores=stats["scores"],

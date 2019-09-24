@@ -5,13 +5,13 @@ from os.path import join
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets  # noqa: E402
-from DiffusionMRI.bkpmodels.bkp3.SimpleModel1 import Encoder, Decoder  # noqa: E402
+from DiffusionMRI.models.SimpleModel1 import Encoder, Decoder  # noqa: E402
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 subj_id = '784565'
 data_path = join(experiment_dir, 'tractseg_data', subj_id)
-model_name = 'Model1_prelu_h10'
+model_name = 'Model1_h10'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -22,13 +22,13 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 batch_size = 2 ** 15
-start_epoch = 10
+start_epoch = 1000
 channels = 10
 noise_prob = None
 trainset = Datasets.VoxelDataset(data_path,
                                  file_name='data.nii.gz',
                                  normalize=False,
-                                 scale=True)
+                                 scale=False)
 total_examples = len(trainset)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=6)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
