@@ -9,22 +9,22 @@ import sklearn.metrics
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, dsutils  # noqa: E402
-from DiffusionMRI.bkpmodels.bkp3.ConcatModelDeep import Encoder  # noqa: E402  # noqa: E402
+from DiffusionMRI.models.MultiScale import Encoder  # noqa: E402  # noqa: E402
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
-subj_id = '784565'
+subj_id = '789373'
 orients = ['coronal']
-model_name = "ConcatModelDeep"
-feature_shapes = [(174, 145, 145, 22)]
+model_name = "MultiScale_789373"
+feature_shapes = [(174, 145, 145, 44)]
 noise_prob = None
 MIN_SAMPLES_LEAF = 8
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
 FULL_BRAIN = True
-ADD_COORDS = False
+ADD_COORDS = True
 DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, subj_id, "tract_masks", "tract_masks.nii.gz")
 
@@ -40,7 +40,7 @@ best_score = 0
 best_epoch = None
 
 # epochs = list(range(1, 21, 1))
-epochs = [10, 50, 100, 150, 160, 190, 200]
+epochs = list(range(1, 31))
 for epoch in epochs:
 
     for i, orient in enumerate(orients):

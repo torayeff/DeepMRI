@@ -37,7 +37,7 @@ LABELS = ["Other", "CG", "CST", "FX", "CC"]
 
 SAVE_PATH = join(DATA_DIR, SUBJ_ID, "simulation_data", FEATURES_NAME + "_dice_based.npz")
 
-NUM_ITERS = 3
+NUM_ITERS = 15
 MIN_SAMPLES_LEAF = 8
 ADD_COORDS = False
 if ADD_COORDS:
@@ -65,13 +65,13 @@ mask_names = []
 test_sets = []
 results = {}
 orients_num_slices = {
-    "axial": 145,
-    "coronal": 174,
+    # "axial": 145,
+    # "coronal": 174,
     "sagittal": 145
 }
 
 for orient, num_slices in orients_num_slices.items():
-    for i in range(num_slices):
+    for i in range(60, 80):
         mask_name = (orient, i)
         tmsk = dsutils.create_data_masks(TRACT_MASKS, [mask_name], LABELS, verbose=False)
         mask_names.append(mask_name)
@@ -98,6 +98,7 @@ if ADD_COORDS:
 scores = []
 train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
 for its in range(NUM_ITERS):
+    iter_start = time()
     print("Simulation iteration: {}/{}".format(its, NUM_ITERS).center(100, "-"))
     # ---------------------------------------------Train Set----------------------------------------------
     train_masks = dsutils.create_data_masks(TRACT_MASKS, train_slices, LABELS, verbose=False)
@@ -136,7 +137,10 @@ for its in range(NUM_ITERS):
     sorted_results = sorted(results.items(), key=lambda kv: kv[1])[:3]
     for j in range(3):
         train_slices.append(sorted_results[j][0])
+        del results[sorted_results[j][0]]
+
     print("Extending the training set with: ", [s[0] for s in sorted_results[:3]])
+    print("Iteration time: {:.5f}".format(time() - iter_start))
 
 np.savez(SAVE_PATH, iters=list(range(1, NUM_ITERS)), scores=scores)
 print("Simulation took {:.5f} seconds".format(time() - script_start))
