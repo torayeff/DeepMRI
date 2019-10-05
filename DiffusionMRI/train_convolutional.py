@@ -11,8 +11,8 @@ script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
-data_path = experiment_dir + 'tractseg_data/789373/training_slices/coronal/'
-model_name = "MultiScale_789373"
+data_path = experiment_dir + 'tractseg_data/784565/training_slices/coronal/'
+model_name = "MultiScale_784565"
 wandb.init(project="deepmri", name=model_name)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
@@ -30,8 +30,8 @@ batch_size = 1
 noise_prob = None
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 30  # number of epochs to trains
-checkpoint = 1  # save model every checkpoint epoch
+num_epochs = 10  # number of epochs to trains
+checkpoint = 10  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.OrientationDataset(data_path,

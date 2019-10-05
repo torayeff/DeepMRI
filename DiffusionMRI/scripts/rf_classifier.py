@@ -8,7 +8,7 @@ import sklearn.metrics
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import dsutils  # noqa: E402
 
-SUBJ_ID = "789373"
+SUBJ_ID = "784565"
 print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 # ----------------------------------------------Settings----------------------------------------------
@@ -22,17 +22,17 @@ TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 # FEATURES_NAME = "SHORE4
 # FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
 
-FEATURES_NAME = "PCA"
-FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
+# FEATURES_NAME = "PCA_retrained"
+# FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
 
-# FEATURES_NAME = "MSCONVAE"
-# FEATURES_FILE = "learned_features/MultiScale_789373_features_epoch_5.npz"
+FEATURES_NAME = "MSCONVAE_retrained"
+FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
 
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
 
 MIN_SAMPLES_LEAF = 8
-ADD_COORDS = False
+ADD_COORDS = True
 if ADD_COORDS:
     FEATURES_NAME = FEATURES_NAME + "_COORDS"
 RESULTS_PATH = join(DATA_DIR, SUBJ_ID, "outputs", FEATURES_NAME + "_dice_scores.npz")
@@ -48,12 +48,6 @@ if FEATURES_PATH.endswith(".npz"):
     FEATURES = np.load(FEATURES_PATH)["data"]
 else:
     FEATURES = nib.load(FEATURES_PATH).get_data()
-
-# FEATURES *= 1000
-# f1 = np.load(join(DATA_DIR, SUBJ_ID, "learned_features/Model1_prelu_features_epoch_200.npz"))["data"]
-# f2 = np.load(join(DATA_DIR, SUBJ_ID, "learned_features/ConvModel3_features_epoch_200.npz"))["data"]
-# f3 = FEATURES
-FEATURES = np.random.rand(145, 174, 145, 10)
 
 print("FEATURES File: {}".format(FEATURES_FILE))
 print("FEATURES Name: {}, shape: {}".format(FEATURES_NAME, FEATURES.shape))

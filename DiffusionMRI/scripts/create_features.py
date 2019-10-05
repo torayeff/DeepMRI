@@ -12,11 +12,11 @@ torch.backends.cudnn.benchmark = True  # set False whenever input size varies
 
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 
-subj_id = '789373'
+subj_id = '784565'
 orients = ['coronal']
-model_name = "MultiScale_789373"
+model_name = "MultiScale"
 feature_shapes = [(174, 145, 145, 44)]
-epoch = 5
+epoch = 10
 noise_prob = None
 
 encoder = Encoder(input_size=(145, 145))

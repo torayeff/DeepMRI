@@ -11,10 +11,11 @@ subj_id = "784565"
 
 # data_pth = join(data_dir, subj_id, "tract_masks/tract_masks.nii.gz")
 # save_dir = join(data_dir, subj_id, "tract_masks/single_labels/")
-data_pth = join(data_dir, subj_id, "pred_masks/MODEL10_pred_masks.nii.gz")
-save_dir = join(data_dir, subj_id, "pred_masks/MODEL10_single_labels/")
+data_pth = join(data_dir, subj_id, "pred_masks/MSCONVAE_retrained_COORDS_pred_masks.nii.gz")
+save_dir = join(data_dir, subj_id, "pred_masks/MSCONVAE_COORDS/")
 
 labels = ["Other", "CG", "CST", "FX", "CC"]
+# labels = ["BG", "Other", "CG", "CST", "FX", "CC"]
 for idx, label in enumerate(labels):
     save_path = join(save_dir, label + ".nii.gz")
     dsutils.save_one_volume(data_pth, save_path, idx)
