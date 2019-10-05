@@ -10,8 +10,8 @@ sys.path.append('/home/agajan/DeepMRI')
 from deepmri import dsutils  # noqa: E402
 
 script_start = time()
-# SUBJ_ID = "784565"
-SUBJ_ID = str(sys.argv[1])
+SUBJ_ID = "784565"
+# SUBJ_ID = str(sys.argv[1])
 print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 # ----------------------------------------------Settings----------------------------------------------
@@ -19,16 +19,21 @@ print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 DATA_DIR = "/home/agajan/experiment_DiffusionMRI/tractseg_data/"
 TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 
-FEATURES_NAMES = ["PCA", "PCA_COORDS",
-                  "MSCONVAE", "MSCONVAE_COORDS"]
-FEATURES_FILES = ["unnorm_voxels_pca_nc_10.npz",
-                  "unnorm_voxels_pca_nc_10.npz",
-                  "learned_features/MultiScale_features_epoch_10.npz",
-                  "learned_features/MultiScale_features_epoch_10.npz"
-                  ]
+# FEATURES_NAMES = ["PCA", "PCA_COORDS",
+#                   "MSCONVAE", "MSCONVAE_COORDS"]
+# FEATURES_FILES = ["unnorm_voxels_pca_nc_10.npz",
+#                   "unnorm_voxels_pca_nc_10.npz",
+#                   "learned_features/MultiScale_features_epoch_10.npz",
+#                   "learned_features/MultiScale_features_epoch_10.npz"
+#                   ]
+#
+# ADD_COORDS_VALUES = [False, True, False, True]
 
-ADD_COORDS_VALUES = [False, True, False, True]
-NUM_ITERS = 15
+FEATURES_NAMES = ["MSCONVAE"]
+FEATURES_FILES = ["learned_features/MultiScale_features_epoch_10.npz"]
+
+ADD_COORDS_VALUES = [False]
+NUM_ITERS = 5
 
 for idx, FEATURES_FILE in enumerate(FEATURES_FILES):
     FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
@@ -77,14 +82,14 @@ for idx, FEATURES_FILE in enumerate(FEATURES_FILES):
         "train_times": []
     }
     for it in range(NUM_ITERS):
-        print("Simulation iter #{}".format(it + 1).center(100, "-"))
+        print("Simulation iterationL {}/{}".format(it + 1, NUM_ITERS).center(100, "-"))
         # decay MIN_SAMPLES_LEAF
         if (it + 1) % 5 == 0:
             MIN_SAMPLES_LEAF = (MIN_SAMPLES_LEAF // 2) or 1
             print("MIN_SAMPLES_LEAF decayed to: ", MIN_SAMPLES_LEAF)
         train_start = time()
         c, train_slices = dsutils.make_training_slices(seed_slices, it, c, train_slices)
-        train_masks = dsutils.create_data_masks(TRACT_MASKS, train_slices, LABELS)
+        train_masks = dsutils.create_data_masks(TRACT_MASKS, train_slices, LABELS, verbose=False)
 
         X_train, y_train, train_coords = dsutils.create_dataset_from_data_mask(FEATURES,
                                                                                train_masks,
@@ -92,7 +97,7 @@ for idx, FEATURES_FILE in enumerate(FEATURES_FILES):
                                                                                multi_label=True)
         if ADD_COORDS:
             X_train = np.concatenate((X_train, train_coords), axis=1)
-        print("Fitting with min_samples_leaf={}".format(MIN_SAMPLES_LEAF))
+        print("X_train shape: {}, y_train shape: {}".format(X_train.shape, y_train.shape))
         clf = RandomForestClassifier(n_estimators=100,
                                      bootstrap=True,
                                      oob_score=True,
@@ -119,7 +124,7 @@ for idx, FEATURES_FILE in enumerate(FEATURES_FILES):
         test_f1_macro = sklearn.metrics.f1_score(y_test_sub, test_preds_sub, average='macro')
         test_f1s = sklearn.metrics.f1_score(y_test_sub, test_preds_sub, average=None)
 
-        print("Accuracy: {:.5f}, F1_macro: {:.5f}".format(test_acc, test_f1_macro))
+        print("Full brain F1_macro: {:.5f}".format(test_f1_macro))
         stats["iters"].append(it + 1)
         stats["train_voxels"].append((X_train.shape[0]))
         stats["scores"].append(test_f1_macro)
