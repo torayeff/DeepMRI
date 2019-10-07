@@ -8,7 +8,7 @@ import sklearn.metrics
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import dsutils  # noqa: E402
 
-SUBJ_ID = "784565"
+SUBJ_ID = "789373"
 print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 # ----------------------------------------------Settings----------------------------------------------
@@ -56,7 +56,8 @@ print("FEATURES Name: {}, shape: {}".format(FEATURES_NAME, FEATURES.shape))
 
 print('Preparing the training set'.center(100, '-'))
 
-train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
+# train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
+train_slices = [('sagittal', 32), ('coronal', 47), ('axial', 32)]
 # train_slices = []
 # c = 0
 # seed_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]

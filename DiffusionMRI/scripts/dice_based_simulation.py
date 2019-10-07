@@ -26,22 +26,21 @@ TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 # FEATURES_NAME = "SHORE4
 # FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
 
-FEATURES_NAME = "PCA"
-FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
+# FEATURES_NAME = "PCA"
+# FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
 
-# FEATURES_NAME = "MSCONVAE"
-# FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
+FEATURES_NAME = "MSCONVAE"
+FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
 
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
 
-SAVE_PATH = join(DATA_DIR, SUBJ_ID, "simulation_data", FEATURES_NAME + "_dice_based.npz")
-
-NUM_ITERS = 5
+NUM_ITERS = 10
 MIN_SAMPLES_LEAF = 8
 ADD_COORDS = True
 if ADD_COORDS:
     FEATURES_NAME = FEATURES_NAME + "_COORDS"
+SAVE_PATH = join(DATA_DIR, SUBJ_ID, "simulation_data", FEATURES_NAME + "_dice_based.npz")
 RESULTS_PATH = join(DATA_DIR, SUBJ_ID, "outputs", FEATURES_NAME + "_dice_scores.npz")
 
 # ---------------------------------------------Load Data----------------------------------------------
@@ -103,6 +102,12 @@ if ADD_COORDS:
     full_X_test = np.concatenate((full_X_test, full_test_coords), axis=1)
 # ------------------------------------DICE score based simulation-------------------------------------
 scores = []
+tract_scores = {
+    "CG": [],
+    "CST": [],
+    "FX": [],
+    "CC": []
+}
 train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
 # remove from dictionary
 for slc in train_slices:
@@ -140,13 +145,24 @@ for its in range(NUM_ITERS):
             X_train = np.concatenate((X_test, test_coords), axis=1)
         test_preds = clf.predict(X_test)
         test_f1_macro = sklearn.metrics.f1_score(y_test[:, 1:], test_preds[:, 1:], average='macro')
+
         results[mask_name] = test_f1_macro
 
     # Evaluate on full brain
     test_preds = clf.predict(full_X_test)
+
+    pred_masks = dsutils.preds_to_data_mask(test_preds, full_test_coords, LABELS)
+    dsutils.save_pred_masks(pred_masks, DATA_DIR, SUBJ_ID, str(its) + "_" + FEATURES_NAME)
+
     test_f1_macro = sklearn.metrics.f1_score(full_y_test[:, 1:], test_preds[:, 1:], average='macro')
     scores.append(test_f1_macro)
     print("Full brain F1_macro: {:.5f}".format(test_f1_macro))
+    test_f1s = sklearn.metrics.f1_score(full_y_test[:, 1:], test_preds[:, 1:], average=None)
+
+    for c, f1 in enumerate(test_f1s):
+        print("{}: {:.5f}".format(LABELS[c + 1], f1), end=" ")
+        tract_scores[LABELS[c + 1]].append(f1)
+    print()
 
     sorted_results = sorted(results.items(), key=lambda kv: kv[1])
     extend_list = []
@@ -166,6 +182,10 @@ for its in range(NUM_ITERS):
     print("Extending the training set with: ", [s for s in extend_list])
     print("Iteration time: {:.5f}".format(time() - iter_start))
 
-
-np.savez(SAVE_PATH, iters=list(range(1, NUM_ITERS)), scores=scores)
+np.savez(SAVE_PATH, iters=list(range(1, NUM_ITERS+1)),
+         scores=scores,
+         cg=tract_scores["CG"],
+         cst=tract_scores["CST"],
+         fx=tract_scores["FX"],
+         cc=tract_scores["CC"])
 print("Simulation took {:.5f} seconds".format(time() - script_start))
