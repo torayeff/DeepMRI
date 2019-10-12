@@ -12,7 +12,7 @@ script_start = time.time()
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/'
-model_name = "Model1_h10"
+model_name = "MODEL1_DENOISING_P50"
 wandb.init(project="deepmri", name=model_name)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
@@ -27,18 +27,20 @@ torch.backends.cudnn.deterministic = deterministic
 batch_size = 2 ** 8
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 1000  # number of epochs to trains
-checkpoint = 1000  # save model every checkpoint epoch
+num_epochs = 10  # number of epochs to trains
+checkpoint = 10  # save model every checkpoint epoch
 
 masked_loss = False
-denoising = False
+denoising = True
+noise_prob = 0.5
 h = 10
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.VoxelDataset(data_path,
                                  file_name='data.nii.gz',
                                  normalize=False,
-                                 scale=False)
+                                 scale=True,
+                                 noise_prob=noise_prob)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=10)
 total_examples = len(trainset)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,

@@ -4,14 +4,14 @@ import torch
 
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import Datasets, utils  # noqa: E402
-from DiffusionMRI.VAE import Encoder, Decoder  # noqa: E402
+from DiffusionMRI.models.VAE import Encoder, Decoder  # noqa: E402
 
 script_start = time.time()
 
 # ------------------------------------------Settings--------------------------------------------------------------------
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 data_path = experiment_dir + 'tractseg_data/784565/'
-model_name = "Model14"
+model_name = "VAE"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -22,11 +22,11 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 # data
-batch_size = 2 ** 15
+batch_size = 2 ** 8
 
 start_epoch = 0  # for loading pretrained weights
-num_epochs = 200  # number of epochs to trains
-checkpoint = 100  # save model every checkpoint epoch
+num_epochs = 10  # number of epochs to trains
+checkpoint = 10  # save model every checkpoint epoch
 # ------------------------------------------Data------------------------------------------------------------------------
 
 trainset = Datasets.VoxelDataset(data_path,
@@ -40,8 +40,8 @@ print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(
                                                                                 total_examples / batch_size))
 # ------------------------------------------Model-----------------------------------------------------------------------
 # model settings
-encoder = Encoder(288, 144, 22, device)
-decoder = Decoder(288, 144, 22)
+encoder = Encoder(288, 10, 10, device)
+decoder = Decoder(288, 10, 10)
 encoder.to(device)
 decoder.to(device)
 

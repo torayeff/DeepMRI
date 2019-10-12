@@ -8,7 +8,7 @@ import sklearn.metrics
 sys.path.append('/home/agajan/DeepMRI')
 from deepmri import dsutils  # noqa: E402
 
-SUBJ_ID = "789373"
+SUBJ_ID = "784565"
 print("SUBJECT ID={}".format(SUBJ_ID).center(100, "-"))
 
 # ----------------------------------------------Settings----------------------------------------------
@@ -19,20 +19,23 @@ TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 # FEATURES_NAME = "RAW"
 # FEATURES_FILE = "data.nii.gz"
 
-# FEATURES_NAME = "SHORE4
+# FEATURES_NAME = "SHORE4"
 # FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
 
-# FEATURES_NAME = "PCA_retrained"
+FEATURES_NAME = "MODEL1_DENOISING_P50"
+FEATURES_FILE = "learned_features/MODEL1_DENOISING_P50_features_epoch_10.npz"
+
+# FEATURES_NAME = "PCA"
 # FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
 
-FEATURES_NAME = "MSCONVAE_retrained"
-FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
+# FEATURES_NAME = "MSCONVAE"
+# FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
 
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
 
 MIN_SAMPLES_LEAF = 8
-ADD_COORDS = True
+ADD_COORDS = False
 if ADD_COORDS:
     FEATURES_NAME = FEATURES_NAME + "_COORDS"
 RESULTS_PATH = join(DATA_DIR, SUBJ_ID, "outputs", FEATURES_NAME + "_dice_scores.npz")
@@ -56,14 +59,7 @@ print("FEATURES Name: {}, shape: {}".format(FEATURES_NAME, FEATURES.shape))
 
 print('Preparing the training set'.center(100, '-'))
 
-# train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
-train_slices = [('sagittal', 32), ('coronal', 47), ('axial', 32)]
-# train_slices = []
-# c = 0
-# seed_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
-# for it in range(10):
-#     c, train_slices = dsutils.make_training_slices(seed_slices, it, c, train_slices)
-
+train_slices = [('sagittal', 72), ('coronal', 87), ('axial', 72)]
 train_masks = dsutils.create_data_masks(TRACT_MASKS, train_slices, LABELS)
 
 X_train, y_train, train_coords = dsutils.create_dataset_from_data_mask(FEATURES,

@@ -470,11 +470,27 @@ def save_pred_masks(pred_masks, data_dir, subj_id, features_name):
     nib.save(nib.Nifti1Image(pred_masks.astype("uint8"), ref_affine), save_path)
 
 
-def save_one_volume(data_pth, save_pth, vol_idx):
+def save_one_volume(data_pth, save_pth, vol_idx, binary=True, midx=None):
     img = nib.load(data_pth)
     data = img.get_data()
+
     one_vol = data[:, :, :, vol_idx]
+    if not binary:
+        one_vol[one_vol == 1] = midx
     nib.save(nib.Nifti1Image(one_vol, img.affine, img.header), save_pth)
+
+
+def save_as_one_mask(data_pth, save_pth):
+    img = nib.load(data_pth)
+    data = img.get_data()
+    result = np.zeros((145, 174, 145))
+
+    result[data[:, :, :, 5] == 1] = int(4)  # CC
+    result[data[:, :, :, 2] == 1] = int(1)  # CG
+    result[data[:, :, :, 3] == 1] = int(2)  # CST
+    result[data[:, :, :, 4] == 1] = int(3)  # FX
+
+    nib.save(nib.Nifti1Image(result.astype("uint8"), img.affine, img.header), save_pth)
 
 
 def make_training_slices(seed_slices, it, c, train_slices):

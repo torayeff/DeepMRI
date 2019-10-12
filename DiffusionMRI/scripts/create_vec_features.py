@@ -11,7 +11,7 @@ from DiffusionMRI.models.SimpleModel1 import Encoder, Decoder  # noqa: E402
 experiment_dir = '/home/agajan/experiment_DiffusionMRI/'
 subj_id = '784565'
 data_path = join(experiment_dir, 'tractseg_data', subj_id)
-model_name = 'Model1_h10'
+model_name = 'MODEL1_DENOISING_P50'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # device
 deterministic = True  # reproducibility
@@ -22,13 +22,13 @@ torch.backends.cudnn.benchmark = (not deterministic)  # set False whenever input
 torch.backends.cudnn.deterministic = deterministic
 
 batch_size = 2 ** 15
-start_epoch = 1000
+start_epoch = 10
 channels = 10
 noise_prob = None
 trainset = Datasets.VoxelDataset(data_path,
                                  file_name='data.nii.gz',
                                  normalize=False,
-                                 scale=False)
+                                 scale=True)
 total_examples = len(trainset)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=False, num_workers=6)
 print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(total_examples,
@@ -39,6 +39,8 @@ print("Total training examples: {}, Batch size: {}, Iters per epoch: {}".format(
 # model settings
 encoder = Encoder(h=10)
 decoder = Decoder(h=10)
+# encoder = Encoder(288, 10, 10, device)
+# decoder = Decoder(288, 10, 10)
 encoder.to(device)
 decoder.to(device)
 encoder.eval()
