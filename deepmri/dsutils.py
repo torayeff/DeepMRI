@@ -493,6 +493,19 @@ def save_as_one_mask(data_pth, save_pth):
     nib.save(nib.Nifti1Image(result.astype("uint8"), img.affine, img.header), save_pth)
 
 
+def save_as_one_mask_for_preds(data_pth, save_pth):
+    img = nib.load(data_pth)
+    data = img.get_data()
+    result = np.zeros((145, 174, 145))
+
+    # result[data[:, :, :, 4] == 1] = int(4)  # CC
+    # result[data[:, :, :, 1] == 1] = int(1)  # CG
+    result[data[:, :, :, 2] == 1] = int(2)  # CST
+    result[data[:, :, :, 3] == 1] = int(3)  # FX
+
+    nib.save(nib.Nifti1Image(result.astype("uint8"), img.affine, img.header), save_pth)
+
+
 def make_training_slices(seed_slices, it, c, train_slices):
     idx = (-1) ** it * c
     if it % 2 == 0:

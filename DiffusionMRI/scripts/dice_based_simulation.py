@@ -35,7 +35,7 @@ FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
 
-NUM_ITERS = 10
+NUM_ITERS = 40
 MIN_SAMPLES_LEAF = 8
 ADD_COORDS = True
 if ADD_COORDS:

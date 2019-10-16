@@ -22,14 +22,14 @@ TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 # FEATURES_NAME = "SHORE4"
 # FEATURES_FILE = "shore_features/shore_coefficients_radial_border_4.npz"
 
-FEATURES_NAME = "MODEL1_DENOISING_P50"
-FEATURES_FILE = "learned_features/MODEL1_DENOISING_P50_features_epoch_10.npz"
+# FEATURES_NAME = "MODEL1_DENOISING_P50"
+# FEATURES_FILE = "learned_features/MODEL1_DENOISING_P50_features_epoch_10.npz"
 
 # FEATURES_NAME = "PCA"
 # FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
 
-# FEATURES_NAME = "MSCONVAE"
-# FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
+FEATURES_NAME = "MSCONVAE"
+FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
 
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
