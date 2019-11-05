@@ -3,6 +3,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import vtk
 
 
 def show_slices(slices,
@@ -199,64 +200,6 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
 
 
-def visualize_ae_results(data,
-                         t,
-                         encoder,
-                         decoder,
-                         criterion,
-                         device,
-                         suptitle="Visualization",
-                         cmap=None):
-    """Visualizes AE results.
-
-    Args:
-      data: Data to to evaluate and visualize.
-      t: Time point.
-      encoder: Encoder model.
-      decoder: Decoder model.
-      criterion: Criterion.
-      device: Device.
-      suptitle:  Sup title.(Default value = "Visualization")
-      cmap:  Color map. (Default value = None)
-    Returns:
-        None
-    """
-    encoder.eval()
-    decoder.eval()
-
-    with torch.no_grad():
-        x = data['data'].unsqueeze(0).to(device)
-        feature = encoder(x)
-        y = decoder(feature)
-
-    x = data['data']
-    mask = data['mask']
-    y = y.detach().cpu().squeeze()
-
-    # scale back to original voxel values
-    x = x * data['stds'] + data['means']
-    x[:, mask == 0] = 0
-    y = y * data['stds'] + data['means']
-    y[:, mask == 0] = 0
-
-    # region of interest
-    roi_x = x[:, mask == 1]
-    roi_y = y[:, mask == 1]
-
-
-
-    original_title = "Original\n Minval: {:.5f}, Maxval: {:.5f}".format(x[t].min(), x[t].max())
-    recons_title = "Reconstruction\n Minval: {:.5f}, Maxval: {:.5f}".format(out[t].min(), out[t].max())
-    show_slices([
-        x[t],
-        out[t]
-    ], suptitle=suptitle, titles=[original_title, recons_title], fontsize=16, cmap=cmap)
-    print("Loss: {}".format(loss_before_scaling))
-    if scale_back:
-        print("Loss after scaling back: {}".format(loss_after_scaling))
-    print("-" * 100)
-
-
 def visualize_masks(dmri_data,
                     ml_masks_list,
                     labels,
@@ -399,3 +342,89 @@ def visualize_preds(dmri,
             ax.set_xticks([])
             ax.set_yticks([])
     plt.show()
+
+
+def dvr_rgba(data_matrix, dims):
+    """Direct volume render a pre-classified RGBA volume.
+
+    Parameters
+    ----------
+    vol
+        4D numpy array of type uint8 and dimension (nx,ny,nz,4)
+    dims
+        tuple of voxel spacings (dx,dy,dz)
+    """
+
+    assert len(data_matrix.shape) == 4
+    (nx, ny, nz, nk) = data_matrix.shape
+    assert nk == 4
+    assert data_matrix.dtype == np.uint8
+    assert len(dims) == 3
+
+    # Create the renderer, the render window, and the interactor. The renderer
+    # draws into the render window, the interactor enables mouse- and
+    # keyboard-based interaction with the scene.
+    ren = vtk.vtkRenderer()
+    renWin = vtk.vtkRenderWindow()
+    renWin.AddRenderer(ren)
+    iren = vtk.vtkRenderWindowInteractor()
+    iren.SetRenderWindow(renWin)
+
+    # For VTK to be able to use the data, it must be stored as a VTK-image.
+    # This can be done by the vtkImageImport-class which
+    # imports raw data and stores it.
+    dataImporter = vtk.vtkImageImport()
+    # Convert numpy array to a string of chars and import it.
+    data_string = data_matrix.tostring()
+    dataImporter.CopyImportVoidPointer(data_string, len(data_string))
+    # The type of the newly imported data is set to unsigned char (uint8)
+    dataImporter.SetDataScalarTypeToUnsignedChar()
+    # We have four scalar components (RGBA) per voxel
+    dataImporter.SetNumberOfScalarComponents(4)
+    # Set data extent
+    dataImporter.SetWholeExtent(0, nx - 1, 0, ny - 1, 0, nz - 1)
+    dataImporter.SetDataExtentToWholeExtent()
+    dataImporter.SetDataSpacing(dims[0], dims[1], dims[2])
+
+    # Establish a trivial opacity transfer function
+    alphaChannelFunc = vtk.vtkPiecewiseFunction()
+    alphaChannelFunc.AddPoint(0, 0.0)
+    alphaChannelFunc.AddPoint(255, 1.0)
+
+    # usually maps data to color and opacity. here, we just use the given values
+    volumeProperty = vtk.vtkVolumeProperty()
+    volumeProperty.SetIndependentComponents(False)
+    volumeProperty.SetInterpolationTypeToLinear()
+    volumeProperty.ShadeOn()
+    volumeProperty.SetScalarOpacity(alphaChannelFunc)
+
+    # The volume will be displayed by ray-casting with alpha compositing.
+    volumeMapper = vtk.vtkGPUVolumeRayCastMapper()
+    volumeMapper.SetInputConnection(dataImporter.GetOutputPort())
+    volumeMapper.SetBlendModeToComposite()
+
+    # The vtkVolume is a vtkProp3D (like a vtkActor) and controls the position
+    # and orientation of the volume in world coordinates.
+    volume = vtk.vtkVolume()
+    volume.SetMapper(volumeMapper)
+    volume.SetProperty(volumeProperty)
+
+    # Finally, add the volume to the renderer
+    ren.AddVolume(volume)
+    ren.SetBackground(1, 1, 1)
+
+    # Set up an initial view of the volume.  The focal point will be the
+    # center of the volume, and the camera position will be 400mm to the left
+    camera = ren.GetActiveCamera()
+    c = volume.GetCenter()
+    camera.SetFocalPoint(c[0], c[1], c[2])
+    camera.SetPosition(c[0] + 400, c[1], c[2])
+    camera.SetViewUp(0, 0, -1)
+
+    # Increase the size of the render window
+    renWin.SetSize(640, 480)
+
+    # Interact with the data.
+    iren.Initialize()
+    renWin.Render()
+    iren.Start()

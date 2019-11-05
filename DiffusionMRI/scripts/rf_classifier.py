@@ -25,11 +25,11 @@ TRACT_MASKS_PTH = join(DATA_DIR, SUBJ_ID, "tract_masks", "tract_masks.nii.gz")
 # FEATURES_NAME = "MODEL1_DENOISING_P50"
 # FEATURES_FILE = "learned_features/MODEL1_DENOISING_P50_features_epoch_10.npz"
 
-# FEATURES_NAME = "PCA"
-# FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
+FEATURES_NAME = "PCA"
+FEATURES_FILE = "unnorm_voxels_pca_nc_10.npz"
 
-FEATURES_NAME = "MSCONVAE"
-FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
+# FEATURES_NAME = "MSCONVAE"
+# FEATURES_FILE = "learned_features/MultiScale_features_epoch_10.npz"
 
 FEATURES_PATH = join(DATA_DIR, SUBJ_ID, FEATURES_FILE)
 LABELS = ["Other", "CG", "CST", "FX", "CC"]
@@ -39,6 +39,7 @@ ADD_COORDS = False
 if ADD_COORDS:
     FEATURES_NAME = FEATURES_NAME + "_COORDS"
 RESULTS_PATH = join(DATA_DIR, SUBJ_ID, "outputs", FEATURES_NAME + "_dice_scores.npz")
+PROBS_PATH = join(DATA_DIR, SUBJ_ID, "outputs", FEATURES_NAME + "_probs_coords.npz")
 
 # ---------------------------------------------Load Data----------------------------------------------
 
@@ -118,6 +119,11 @@ for sn, tmsk in zip(set_names, tmsks):
 
     # ---------------------------------------Evaluation on test set---------------------------------------
     test_preds = clf.predict(X_test)
+
+    if sn == "testset2":
+        test_probs = clf.predict_proba(X_test)
+        test_probs = np.array(test_probs)
+        np.savez(PROBS_PATH, probs=test_probs, coords=test_coords)
 
     pred_masks = dsutils.preds_to_data_mask(test_preds, test_coords, LABELS)
     dsutils.save_pred_masks(pred_masks, DATA_DIR, SUBJ_ID, FEATURES_NAME)
