@@ -122,8 +122,10 @@ for sn, tmsk in zip(set_names, tmsks):
 
     if sn == "testset2":
         test_probs = clf.predict_proba(X_test)
-        test_probs = np.array(test_probs)
+        test_probs = np.array(test_probs)[:, :, 1]
+        print(test_probs.shape, y_test.T.shape)
         np.savez(PROBS_PATH, probs=test_probs, coords=test_coords)
+        # np.savez(PROBS_PATH + ".gt", probs=y_test.T, coords=test_coords)
 
     pred_masks = dsutils.preds_to_data_mask(test_preds, test_coords, LABELS)
     dsutils.save_pred_masks(pred_masks, DATA_DIR, SUBJ_ID, FEATURES_NAME)
